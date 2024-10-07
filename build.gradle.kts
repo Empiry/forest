@@ -17,6 +17,7 @@ repositories {
 
 dependencies {
     compileOnly(libs.ignite)
+    compileOnly(libs.hackscommon)
     // paper api
     compileOnly("io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT")
     // adventure for Bukkit

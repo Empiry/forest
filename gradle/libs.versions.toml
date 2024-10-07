@@ -8,6 +8,7 @@ ignite-1-21 = "1.0-SNAPSHOT"
 
 [libraries]
 ignite = { module = "com.empire:ignite", version.ref = "ignite-1-21" }
+hackscommon = { module = "com.empire:hacks-common", version = "1.0" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter-engine" }
 

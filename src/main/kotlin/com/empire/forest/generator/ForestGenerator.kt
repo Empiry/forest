@@ -3,6 +3,7 @@ package com.empire.forest.generator
 import com.empire.forest.ForestContext
 import com.empire.ignite.Ignite
 import com.empire.ignite.util.IgniteResource
+import com.empire.ignite.util.location.RawLocation
 import com.empire.ignite.util.text.TextUtils
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -17,13 +18,15 @@ class ForestGenerator(
     private val forestContext: ForestContext,
     private val location: Location,
     unlockSeconds: Int,
+    private val onProgress: (Int) -> Unit,
     private val onComplete: () -> Unit
 ) : IgniteResource, Listener {
     var completed : Boolean = false
         private set
     private var tickerTask : Int = -1
     private val unlockTicks = unlockSeconds*20
-    private var progress : Int = 0
+    var progressTicks : Int = 0
+        private set
 
     override fun load() {
         tickerTask = Bukkit.getScheduler().runTaskTimer(ignite, this::process, 0L, 1L).taskId
@@ -34,13 +37,21 @@ class ForestGenerator(
         if (completed) return
         var activeContributors = 0
         for (player in forestContext.playerTracker.players) {
+            if (player.location.world != this.location.world) continue
             if (player.location.distanceSquared(this.location) <= 4) {
                 workingPlayers += player
-                if (player.isSneaking) activeContributors++
+                if (player.isSneaking) {
+                    if (forestContext.isSurvivor(player))
+                        activeContributors++
+                    else if (forestContext.isHunter(player))
+                        activeContributors--
+                }
             }
         }
-        progress += activeContributors
-        val completion = ((progress.toDouble() / (unlockTicks)) * 100).toInt()
+        progressTicks += activeContributors
+        progressTicks = progressTicks.coerceAtLeast(0)
+        val completion = ((progressTicks.toDouble() / (unlockTicks)) * 100).toInt()
+        if (activeContributors != 0) onProgress(completion)
         val message = TextUtils.createProgressText("|", completion, 15)
         workingPlayers.forEach { workingPlayer ->
             if (workingPlayer.isSneaking) workingPlayer.sendActionBar(message)
@@ -52,7 +63,7 @@ class ForestGenerator(
                 )
         }
         workingPlayers.clear()
-        if (progress >= unlockTicks) {
+        if (progressTicks >= unlockTicks) {
             completed = true
             if (tickerTask != -1) Bukkit.getScheduler().cancelTask(tickerTask)
             onComplete()
@@ -63,3 +74,9 @@ class ForestGenerator(
         if (tickerTask != -1) Bukkit.getScheduler().cancelTask(tickerTask)
     }
 }
+
+class GeneratorDescription(
+    val name: String,
+    val place: RawLocation,
+    val unlockSeconds: Int
+)
