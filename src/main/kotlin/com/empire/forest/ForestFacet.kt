@@ -4,6 +4,7 @@ import com.empire.forest.bossbar.GameBossBar
 import com.empire.forest.constants.ForestConstants
 import com.empire.forest.gate.EscapeGate
 import com.empire.forest.generator.ForestGenerator
+import com.empire.forest.generator.ForestGeneratorDiscovery
 import com.empire.forest.generator.ForestGeneratorNameplate
 import com.empire.forest.generator.GeneratorDescription
 import com.empire.forest.kit.ForestKitKey
@@ -375,6 +376,9 @@ class ForestFacet(
         }
         val generatorsAssociationList = generatorMap.toList()
 
+        val discovery = ForestGeneratorDiscovery(context, generatorsAssociationList)
+        dump.add(discovery)
+
         context.tablist.registerGeneratorProgressUpdate(
             generatorsAssociationList, generatorProgressCallback, dump
         )
@@ -382,8 +386,13 @@ class ForestFacet(
             plugin, context, generatorsAssociationList,
             context.getSurvivorChangeSet(), generatorProgressCallback, dump
         )
+
         generatorsAssociationList.forEach { (desc, gen) ->
-            dump.add(ForestGeneratorNameplate(plugin, context, desc, gen))
+            dump.add(
+                ForestGeneratorNameplate(
+                    plugin, discovery,  context, desc, gen
+                )
+            )
         }
     }
 

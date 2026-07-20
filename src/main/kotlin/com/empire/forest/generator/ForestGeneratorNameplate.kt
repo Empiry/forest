@@ -10,6 +10,8 @@ import com.empire.ignite.util.collection.OnlinePlayerData
 import com.empire.ignite.util.entity.ClientEntity
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
+import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.entity.Display
 import org.bukkit.entity.Player
 import org.bukkit.entity.TextDisplay
@@ -21,6 +23,7 @@ import kotlin.math.min
 
 class ForestGeneratorNameplate(
     plugin: JavaPlugin,
+    private val generatorDiscovery: ForestGeneratorDiscovery,
     context: ForestContext,
     private val description: GeneratorDescription,
     private val generator: ForestGenerator
@@ -45,7 +48,7 @@ class ForestGeneratorNameplate(
 
     fun onAdd(p: Player) {
         val task = ForestGeneratorNameplateUpdateTask(
-            p,
+            p, generatorDiscovery,
             description, generator,
             clientEntity
         )
@@ -64,6 +67,7 @@ class ForestGeneratorNameplate(
 
 class ForestGeneratorNameplateUpdateTask(
     private val p: Player,
+    private val generatorDiscovery: ForestGeneratorDiscovery,
     private val desc: GeneratorDescription,
     private val generator: ForestGenerator,
     private val clientEntity: ClientEntity
@@ -78,35 +82,46 @@ class ForestGeneratorNameplateUpdateTask(
 
     private fun onEmit() {
         val rawDistance = desc.place.toLocation(p.world)!!.distance(p.location)
-        val distance = "%.1f".format(rawDistance)
-        val placeName = desc.name
-        val progress = floor(
-            (generator.progressTicks.toDouble() / (desc.unlockSeconds * 20)) * 100.0
-        ).toInt()
-        val displayText = Component.text("${distance}m").color(NamedTextColor.LIGHT_PURPLE).append(
-            Component.text(" | ").color(NamedTextColor.DARK_GRAY)
-        ).append(
-            Component.text("$placeName ").color(NamedTextColor.GOLD)
-        ).append(
-            Component.text("${progress}%").color(
-                if (progress < 100) NamedTextColor.YELLOW else NamedTextColor.GREEN
-            )
-        )
         val scalingFactor = max(1.75, min(16.0, rawDistance / 4)).toFloat()
-        val metadata = listOf(
-            ClientEntityMetadataHelpers.textDisplayText(displayText),
-            ClientEntityMetadataHelpers.textDisplayOpacity(0x7F),
-            ClientEntityMetadataHelpers.displayViewRange(10f),
-            ClientEntityMetadataHelpers.displayOptionsScale(
-                Vector(scalingFactor, scalingFactor, scalingFactor)
-            ),
-            ClientEntityMetadataHelpers.displayBillboard(HACKS, Display.Billboard.CENTER),
-            ClientEntityMetadataHelpers.textDisplayOptionsMask(
-                HACKS,
-                shadow = false, seeThrough = true, defaultBgColor = false,
-                alignment = TextDisplay.TextAlignment.CENTER
-            ),
-        )
+        val genMetadata = { displayText: Component ->
+            listOf(
+                ClientEntityMetadataHelpers.textDisplayText(displayText),
+                ClientEntityMetadataHelpers.textDisplayOpacity(0x7F),
+                ClientEntityMetadataHelpers.displayViewRange(10f),
+                ClientEntityMetadataHelpers.displayOptionsScale(
+                    Vector(scalingFactor, scalingFactor, scalingFactor)
+                ),
+                ClientEntityMetadataHelpers.displayBillboard(HACKS, Display.Billboard.CENTER),
+                ClientEntityMetadataHelpers.textDisplayOptionsMask(
+                    HACKS,
+                    shadow = false, seeThrough = true, defaultBgColor = false,
+                    alignment = TextDisplay.TextAlignment.CENTER
+                ),
+            )
+        }
+
+        val metadata = if (!generatorDiscovery.unlocked(desc)) {
+            genMetadata(
+                Component.text("[???]").color(NamedTextColor.DARK_GRAY)
+                    .decorate(TextDecoration.BOLD)
+            )
+        } else {
+            val distance = "%.1f".format(rawDistance)
+            val placeName = desc.name
+            val progress = floor(
+                (generator.progressTicks.toDouble() / (desc.unlockSeconds * 20)) * 100.0
+            ).toInt()
+            val displayText = Component.text("${distance}m").color(NamedTextColor.LIGHT_PURPLE).append(
+                Component.text(" | ").color(NamedTextColor.DARK_GRAY)
+            ).append(
+                Component.text("$placeName ").color(TextColor.color(222, 16, 26))
+            ).append(
+                Component.text("${progress}%").color(
+                    if (progress < 100) NamedTextColor.YELLOW else NamedTextColor.GREEN
+                )
+            )
+            genMetadata(displayText)
+        }
         clientEntity.metadataUpdate(p, metadata)
     }
 

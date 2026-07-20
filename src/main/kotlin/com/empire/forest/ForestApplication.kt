@@ -9,6 +9,7 @@ import com.empire.forest.config.ForestInteractiveData
 import com.empire.forest.constants.ForestConstants
 import com.empire.forest.constants.ForestConstants.CONFIG_DATA
 import com.empire.forest.gate.EscapeGateDescription
+import com.empire.forest.generator.ForestGeneratorDiscovery
 import com.empire.forest.generator.GeneratorDescription
 import com.empire.forest.lobby.LobbyListener
 import com.empire.forest.lobby.QueueSign
