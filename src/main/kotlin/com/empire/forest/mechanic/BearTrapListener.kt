@@ -1,6 +1,7 @@
 package com.empire.forest.mechanic
 
 import com.empire.forest.ForestContext
+import com.empire.forest.resourcepack.ResourcePackConstants
 import com.empire.ignite.util.*
 import com.empire.ignite.util.item.ItemBuilder
 import net.kyori.adventure.text.Component
@@ -23,6 +24,7 @@ class BearTrapListener(
     val bearTrapItemFn : (Player) -> ItemBuilder = {
         ItemBuilder(Material.SHEARS) {
             name(Component.text("Bear Trap!").color(NamedTextColor.YELLOW))
+            customModelData(ResourcePackConstants.BEAR_TRAP_OPEN_ITEM_CUSTOMMODELDATA)
 
             lore(InventoryUtils.postprocessLore(listOf(
                 Component.text("Drop this to plant a bear trap!").color(NamedTextColor.RED)

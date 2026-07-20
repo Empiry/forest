@@ -1,14 +1,13 @@
 package com.empire.forest.mechanic
 
 import com.empire.forest.ForestContext
+import com.empire.forest.resourcepack.ResourcePackConstants
 import com.empire.ignite.util.IgniteResource
 import com.empire.ignite.util.entity.EntityDecorator
 import com.empire.ignite.util.entity.EntityModelBuilder
-import com.empire.ignite.util.item.ItemBuilder
 import com.empire.ignite.util.registerListener
 import com.empire.ignite.util.unregisterListener
 import org.bukkit.Location
-import org.bukkit.Material
 import org.bukkit.Sound
 import org.bukkit.entity.ArmorStand
 import org.bukkit.entity.Entity
@@ -37,7 +36,7 @@ class BearTrap(
                     armorStand.isInvulnerable = true
                     armorStand.isInvisible = true
                     armorStand.setBasePlate(false)
-                    armorStand.setItem(EquipmentSlot.HAND, ItemBuilder(Material.SHEARS) {}.build())
+                    armorStand.setItem(EquipmentSlot.HAND, ResourcePackConstants.BEAR_TRAP_OPEN_ITEM.build())
                     armorStand.rightArmPose = EulerAngle(0.0, 180.0, 0.0)
                 }
             }.build()

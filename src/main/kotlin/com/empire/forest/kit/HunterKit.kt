@@ -3,13 +3,12 @@ package com.empire.forest.kit
 import com.empire.forest.ForestContext
 import com.empire.ignite.game.kit.GameKit
 import com.empire.ignite.game.kit.IgniteBundle
+import com.empire.ignite.game.kit.ItemKitComponent
 import com.empire.ignite.util.InventoryUtils
 import com.empire.ignite.util.item.ItemBuilder
-import com.empire.ignite.game.kit.ItemKitComponent
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Material
-import org.bukkit.entity.Player
 
 enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContext>) {
     HUNTER(ItemBuilder(Material.SHEARS) {

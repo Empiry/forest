@@ -4,7 +4,10 @@ import com.empire.forest.bossbar.GameBossBar
 import com.empire.forest.constants.ForestConstants
 import com.empire.forest.gate.EscapeGate
 import com.empire.forest.generator.ForestGenerator
+import com.empire.forest.generator.ForestGeneratorNameplate
 import com.empire.forest.generator.GeneratorDescription
+import com.empire.forest.kit.ForestKitKey
+import com.empire.forest.kit.ForestKitProvider
 import com.empire.forest.kit.HunterKit
 import com.empire.forest.kit.SurvivorKit
 import com.empire.forest.mechanic.ForestMechanics
@@ -16,13 +19,13 @@ import com.empire.ignite.game.application.GameFacetV2
 import com.empire.ignite.game.facets.DeathEvents
 import com.empire.ignite.game.facets.system.PlayerManagementFacetEvents
 import com.empire.ignite.game.facets.system.PlayerRemoveReason
+import com.empire.ignite.game.kit.KitTracker
 import com.empire.ignite.util.*
 import com.empire.ignite.util.callback.ForwardingCallback
 import com.empire.ignite.util.gui.GuiPrototypes
 import com.empire.ignite.util.item.ItemBuilder
 import com.empire.ignite.util.item.PlayerItemModder
 import com.empire.ignite.util.item.PlayerItemMods
-import com.empire.ignite.util.region.CuboidRegion
 import com.empire.ignite.util.region.RegionUtils
 import com.empire.ignite.util.timer.Timer
 import com.empire.ignite.util.timer.TimerCallback
@@ -32,36 +35,39 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
-import org.bukkit.Bukkit
-import org.bukkit.Material
-import org.bukkit.Sound
-import org.bukkit.SoundCategory
+import org.bukkit.*
 import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageEvent
+import org.bukkit.event.entity.FoodLevelChangeEvent
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
-import org.bukkit.util.Vector
 import java.util.*
 
 class ForestFacet(
     plugin: Ignite,
-    context: ForestContext
-) : GameFacetV2<ForestStaticData, ForestContext>(plugin, context), DeathEvents, PlayerManagementFacetEvents {
-    private val dump = GlobalResourceTrackers.createResourceDump()
+    context: ForestContext,
+    private val dump: ManagedResourceDump
+) : GameFacetV2<ForestStaticData, ForestContext>(plugin, context), DeathEvents, PlayerManagementFacetEvents, Listener {
     private val escapees : MutableSet<Player> = mutableSetOf()
     private val generatorProgressCallback = ForwardingCallback.create<Unit>()
+    private val kitTracker: KitTracker<ForestKitKey, ForestContext> = KitTracker(plugin, ForestKitProvider)
+    private val debug = (context.interactiveData?.isDebug ?: false)
 
     override fun onLoad() {
-//        val hunter = context.playerTracker.players.random()
+        val hunter = context.playerTracker.players.random()
+        healStabilizePlayers(context.playerTracker.players)
         context.playerTracker.players.forEach { player ->
-//            if (player == hunter) {
-//                context.addHunter(player)
-//            } else {
-//                context.addSurvivor(player)
-//            }
+            player.gameMode = GameMode.ADVENTURE
+            if (player == hunter && !debug) {
+                context.addHunter(player)
+            } else {
+                context.addSurvivor(player)
+            }
 //            context.addSurvivor(player)
-            context.addHunter(player)
+//            context.addHunter(player)
         }
 
 
@@ -70,6 +76,8 @@ class ForestFacet(
             this.panic("World was not loaded")
             return
         }
+        context.world!!.time = 19000
+        context.world!!.setGameRule(GameRules.ADVANCE_TIME, false)
         context.hunterTeam.players.forEach { player -> player.teleport(context.huntersSpawn) }
         context.survivorTeam.players.forEach { player -> player.teleport(context.survivorsSpawn) }
         dump.add(object : UnloadableResource {
@@ -94,13 +102,8 @@ class ForestFacet(
     }
 
     private fun setupHunterKitStage() {
-        val survivorBlockRegion =
-            CuboidRegion(
-                Vector(-43, 12, 274),
-                Vector(-49, 7, 274)
-            )
         RegionUtils.fillRegionReplacing(
-            survivorBlockRegion,
+            context.staticData.hunterSpawnBarrierRegion,
             context.world!!,
             Material.BARRIER,
             { it.type == Material.AIR }
@@ -130,15 +133,19 @@ class ForestFacet(
                 gui.show(player)
             }
         ))
-        context.hunterTeam.players.forEach { survivor ->
-            survivor.inventory.clear()
-            survivor.inventory.setItem(0, itemModderHunter.item)
-            survivor.inventory.heldItemSlot = 0
-            itemModderHunter.add(survivor)
+        context.hunterTeam.players.forEach { hunter ->
+            hunter.inventory.clear()
+            hunter.inventory.setItem(0, itemModderHunter.item)
+            hunter.inventory.heldItemSlot = 0
+            itemModderHunter.add(hunter)
+            hunter.showTitle(Title.title(
+                Component.text("Choose your kit!").color(NamedTextColor.DARK_RED),
+                Component.text("Right-click the kit selector item to choose").color(NamedTextColor.RED)
+            ))
         }
         itemModderHunter.load()
         hunterTimeDump.add(itemModderHunter)
-        val hunterWaitSeconds = 5L
+        val hunterWaitSeconds = context.staticData.hunterReleaseSeconds
         context.sendToAll(ForestMessaging.withPrefix(
             Component.text("Hunters will be released in ").color(NamedTextColor.GRAY)
                 .append(Component.text(hunterWaitSeconds.toString()).color(NamedTextColor.GOLD))
@@ -176,10 +183,11 @@ class ForestFacet(
                     player.closeInventory()
                     val selectedKit = hunterKitSelection[player.uniqueId] ?: defaultHunterKit
                     selectedKit.gameKit.apply(player, context)
+                    kitTracker.addKitToPlayer(player, ForestKitKey(selectedKit), context)
                     Bukkit.broadcast(Component.text("Player ${player.name} chose kit ${selectedKit.name}"))
                 }
                 RegionUtils.fillRegionReplacing(
-                    survivorBlockRegion,
+                    context.staticData.hunterSpawnBarrierRegion,
                     context.world!!,
                     Material.AIR,
                     { it.type == Material.BARRIER }
@@ -223,10 +231,14 @@ class ForestFacet(
             survivor.inventory.setItem(0, itemModderSurvivor.item)
             survivor.inventory.heldItemSlot = 0
             itemModderSurvivor.add(survivor)
+            survivor.showTitle(Title.title(
+                Component.text("Choose your kit!").color(ForestConstants.SURVIVORS_COLOR),
+                Component.text("Right-click the kit selector item to choose").color(NamedTextColor.YELLOW)
+            ))
         }
         itemModderSurvivor.load()
         survivorTimeDump.add(itemModderSurvivor)
-        val survivorWaitSeconds = 7L
+        val survivorWaitSeconds = context.staticData.survivorReleaseSeconds
         context.sendToAll(ForestMessaging.withPrefix(
             Component.text("Survivors will be released in ").color(NamedTextColor.GRAY)
                 .append(Component.text(survivorWaitSeconds.toString()).color(NamedTextColor.GOLD))
@@ -260,12 +272,13 @@ class ForestFacet(
             })
             .then {
                 survivorTimeDump.destroyAll()
+                healAndClearInventoryOfPlayers(context.survivorTeam.players)
                 context.survivorTeam.players.forEach { player ->
                     val selectedKit = survivorKitSelection[player.uniqueId] ?: defaultSurvivorKit
-                    Bukkit.broadcast(Component.text("Player ${player.name} chose kit ${selectedKit.name}"))
                     player.closeInventory()
+                    Bukkit.broadcast(Component.text("Player ${player.name} chose kit ${selectedKit.name}"))
+                    kitTracker.addKitToPlayer(player, ForestKitKey(selectedKit), context)
                 }
-                healAndClearInventoryOfPlayers(context.survivorTeam.players)
                 RegionUtils.fillRegion(
                     context.staticData.survivorSpawnBarrierRegion,
                     context.world!!,
@@ -294,11 +307,11 @@ class ForestFacet(
                     )
                     context.survivorTeam.players.forEach {
                             player -> player.showTitle(
-                        Title.title(
-                            Component.text("You can now escape!").color(NamedTextColor.GOLD),
-                            Component.text("Run to the gate!").color(NamedTextColor.YELLOW)
-                        )
-                    )
+                                Title.title(
+                                    Component.text("You can now escape!").color(NamedTextColor.GOLD),
+                                    Component.text("Run to the gate!").color(NamedTextColor.YELLOW)
+                                )
+                            )
                     }
                     val gate = EscapeGate(
                         plugin, context,
@@ -369,6 +382,9 @@ class ForestFacet(
             plugin, context, generatorsAssociationList,
             context.getSurvivorChangeSet(), generatorProgressCallback, dump
         )
+        generatorsAssociationList.forEach { (desc, gen) ->
+            dump.add(ForestGeneratorNameplate(plugin, context, desc, gen))
+        }
     }
 
     private var gameOver = false
@@ -389,6 +405,7 @@ class ForestFacet(
 
     override fun onPlayerDeath(player: Player, damageInfo: EntityDamageEvent) {
         if (gameOver) return
+        kitTracker.removeKitsFromPlayer(player)
         context.playerTracker.removePlayer(player, PlayerRemoveReason.SYSTEM)
         if (gameOver) return
         val addedAsSpectator = context.playerTracker.addSpectator(player)
@@ -417,12 +434,28 @@ class ForestFacet(
         player.addPotionEffect(PotionEffect(
             PotionEffectType.DARKNESS, 80, 1, true, false
         ))
-        player.addPotionEffect(PotionEffect(
-            PotionEffectType.BLINDNESS, 60, 1, true, false
-        ))
+        player.addPotionEffect(
+            PotionEffect(
+                PotionEffectType.BLINDNESS, 60, 1, true, false
+            )
+        )
+//        WorldBorderTint.add(player)
+//        val timer = Timer(plugin, 100L)
+//            .then { WorldBorderTint.remove(player) }
+//            .whenCancelled { WorldBorderTint.remove(player) }
+//        timer.start()
+//        dump.add(timer)
+    }
+
+    @EventHandler
+    private fun onHunger(event: FoodLevelChangeEvent) {
+        if (event.entity !in context.playerAccess.alive) return
+        event.isCancelled = true
+        event.entity.foodLevel = 20
     }
 
     override fun onUnload() {
         dump.destroyAll()
+        kitTracker.unload()
     }
 }

@@ -57,21 +57,27 @@ class ForestGenerator(
             if (workingPlayer.isSneaking) workingPlayer.sendActionBar(message)
             else
                 workingPlayer.sendActionBar(
-                    Component.text(
+                    if (forestContext.isSurvivor(workingPlayer))
+                        Component.text(
                         "Sneak to activate generator...", NamedTextColor.GRAY, TextDecoration.ITALIC
-                    )
+                        )
+                    else
+                        Component.text(
+                        "Sneak to de-activate generator...", NamedTextColor.GRAY, TextDecoration.ITALIC
+                        )
                 )
         }
         workingPlayers.clear()
         if (progressTicks >= unlockTicks) {
             completed = true
-            if (tickerTask != -1) Bukkit.getScheduler().cancelTask(tickerTask)
+            unload()
             onComplete()
         }
     }
 
     override fun unload(external: Boolean) {
         if (tickerTask != -1) Bukkit.getScheduler().cancelTask(tickerTask)
+        tickerTask = -1
     }
 }
 

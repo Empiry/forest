@@ -5,18 +5,13 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Default
 import com.empire.forest.ForestApplication
 import com.empire.forest.ForestContext
-import com.empire.forest.ForestStaticData
-import com.empire.forest.gate.EscapeGateDescription
-import com.empire.forest.generator.GeneratorDescription
+import com.empire.forest.config.ForestStaticDataConfig
 import com.empire.ignite.Ignite
 import com.empire.ignite.match.MatchConfiguration
 import com.empire.ignite.player.IgnitePlayerTracker
-import com.empire.ignite.util.location.RawLocation
-import com.empire.ignite.util.region.CuboidRegion
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.entity.Player
-import org.bukkit.util.Vector
 
 @CommandAlias("q|queue")
 class QueueCommand(
@@ -47,28 +42,7 @@ class QueueCommand(
                     null
                 } else {
                     val newMatch = plugin.matchManager.scheduleMatch(
-                        MatchConfiguration("main", app, ForestStaticData(
-                            survivorsSpawn = RawLocation(-150.0, 10.0, 89.0, 0.0F, 0.0F),
-                            huntersSpawn = RawLocation(-46.0, 9.0, 276.0, -180.0F, 0.0F),
-                            generators =
-                                listOf(
-                                    GeneratorDescription(
-                                        "Dock",
-                                        RawLocation(-66.0, 4.0, 125.0),
-                                        12
-                                    )
-                                ),
-                            escape = EscapeGateDescription(
-                                RawLocation(-18.0, 11.0, 238.0), 1
-                            ),
-                            survivorSpawnBarrierRegion = CuboidRegion(
-                                Vector(-151, 10, 93),
-                                Vector(-150, 12, 93)
-                            ),
-                            spectatorInitialLocation = RawLocation(
-                                -114.0, 24.0, 130.0, -154.0F, 44.0F
-                            )
-                        ))
+                        MatchConfiguration("main", app, ForestStaticDataConfig.MY_TEST_SERVER)
                     )
                     newMatch.start()
                     newMatch

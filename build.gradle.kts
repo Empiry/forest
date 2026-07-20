@@ -19,9 +19,9 @@ dependencies {
     compileOnly(libs.ignite)
     compileOnly(libs.hackscommon)
     // paper api
-    compileOnly("io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     // adventure for Bukkit
-    compileOnly("net.kyori:adventure-platform-bukkit:4.1.0")
+    compileOnly("net.kyori:adventure-platform-bukkit:4.4.1")
     // commands
     compileOnly("co.aikar:acf-paper:0.5.1-SNAPSHOT")
 }
