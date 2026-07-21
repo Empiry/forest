@@ -111,7 +111,7 @@ class ForestGeneratorNameplateUpdateTask(
             val progress = floor(
                 (generator.progressTicks.toDouble() / (desc.unlockSeconds * 20)) * 100.0
             ).toInt()
-            val displayText = Component.text("${distance}m").color(NamedTextColor.LIGHT_PURPLE).append(
+            val displayText = Component.text("${distance}m").color(NamedTextColor.RED).append(
                 Component.text(" | ").color(NamedTextColor.DARK_GRAY)
             ).append(
                 Component.text("$placeName ").color(TextColor.color(222, 16, 26))

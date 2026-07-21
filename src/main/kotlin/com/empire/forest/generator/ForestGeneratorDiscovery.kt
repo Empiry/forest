@@ -2,6 +2,7 @@ package com.empire.forest.generator
 
 import com.empire.forest.ForestContext
 import com.empire.ignite.util.GlobalResourceTrackers
+import com.empire.ignite.util.HACKS
 import com.empire.ignite.util.UnloadableResource
 
 /**
@@ -30,8 +31,8 @@ class ForestGeneratorDiscovery(
                     val genLoc = desc.place.toLocation(player.world)!!
                     val distanceSq = player.location.distanceSquared(genLoc)
 
-                    if (distanceSq < 48*48 ||
-                        (distanceSq < 72*72 && player.hasLineOfSight(genLoc))) {
+                    if (distanceSq < 4*4 ||
+                        (distanceSq < 156*156 && HACKS.lineOfSightGeneric(player, genLoc))) {
                         return@filter true
                     }
                 }
