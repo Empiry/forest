@@ -229,7 +229,8 @@ class ForestStaticData(
     val generators: List<GeneratorDescription>,
     val escape: EscapeGateDescription,
     val survivorSpawnBarrierRegion: Region,
-    val hunterSpawnBarrierRegion: Region
+    val hunterSpawnBarrierRegion: Region,
+    val contributionMultiplier: (Int) -> Double
 )
 class ForestContext(
     application: IgniteApplicationV2<ForestStaticData, *>,

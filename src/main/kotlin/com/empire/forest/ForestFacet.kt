@@ -351,7 +351,10 @@ class ForestFacet(
             val spot = desc.place.toLocation(context.world)!!
             val forwarder = ForwardingCallback.create<Int>()
             forwarder.register { generatorProgressCallback.sink(Unit) }
-            val generator = ForestGenerator(plugin, context, spot, desc.unlockSeconds, forwarder.sink) {
+            val generator = ForestGenerator(
+                plugin, context, spot, desc.unlockSeconds,
+                context.staticData.contributionMultiplier, forwarder.sink,
+            ) {
                 context.playerTracker.players.forEach { survivor ->
                     survivor.sendMessage(
                         ForestMessaging.withPrefix(

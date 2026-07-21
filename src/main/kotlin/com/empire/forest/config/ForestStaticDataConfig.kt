@@ -7,6 +7,9 @@ import com.empire.ignite.util.location.RawLocation
 import com.empire.ignite.util.region.CuboidRegion
 import org.bukkit.util.Vector
 
+private val DAMPENED_GENERATOR_CONTRIBUTION_MULTIPLIER: (Int) -> Double = { n -> (0.4 * (n - 1)) + 1 }
+private val TEST_CONTRIBUTION_MULTIPLIER: (Int) -> Double = { n -> 1.8 }
+
 object ForestStaticDataConfig {
     val MAIN_SERVER = ForestStaticData(
         queueCountdownSeconds = 20,
@@ -60,6 +63,7 @@ object ForestStaticDataConfig {
             Vector(-78, -14, 228),
             Vector(-85, -19, 228)
         ),
+        contributionMultiplier = DAMPENED_GENERATOR_CONTRIBUTION_MULTIPLIER
     )
 
     val MY_TEST_SERVER_OLD = ForestStaticData(
@@ -88,7 +92,8 @@ object ForestStaticDataConfig {
         hunterSpawnBarrierRegion = CuboidRegion(
             Vector(-151, 10, 93),
             Vector(-150, 12, 93)
-        )
+        ),
+        contributionMultiplier = TEST_CONTRIBUTION_MULTIPLIER
     )
 
     val MY_TEST_SERVER = ForestStaticData(
@@ -143,6 +148,7 @@ object ForestStaticDataConfig {
             Vector(-78, -14, 228),
             Vector(-85, -19, 228)
         ),
+        contributionMultiplier = DAMPENED_GENERATOR_CONTRIBUTION_MULTIPLIER
     )
 }
 

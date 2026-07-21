@@ -12,19 +12,24 @@ import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
+import java.util.Random
+import kotlin.math.floor
 
 class ForestGenerator(
     private val ignite: Ignite,
     private val forestContext: ForestContext,
     private val location: Location,
     unlockSeconds: Int,
+    private val contributionMultiplier: (Int) -> Double = { n -> n.toDouble() },
     private val onProgress: (Int) -> Unit,
-    private val onComplete: () -> Unit
+    private val onComplete: () -> Unit,
 ) : IgniteResource, Listener {
     var completed : Boolean = false
         private set
     private var tickerTask : Int = -1
     private val unlockTicks = unlockSeconds*20
+    private val random = Random()
+
     var progressTicks : Int = 0
         private set
 
@@ -48,7 +53,19 @@ class ForestGenerator(
                 }
             }
         }
-        progressTicks += activeContributors
+        var toAdd = 0
+        if (activeContributors > 0) {
+            val multiplier = contributionMultiplier(activeContributors)
+            toAdd = activeContributors
+            val integerPart = floor(multiplier).toInt()
+            val fractionalPart = (multiplier - integerPart)
+            toAdd *= integerPart
+            if (random.nextDouble() < fractionalPart) {
+                toAdd += 1
+            }
+        }
+
+        progressTicks += toAdd
         progressTicks = progressTicks.coerceAtLeast(0)
         val completion = ((progressTicks.toDouble() / (unlockTicks)) * 100).toInt()
         if (activeContributors != 0) onProgress(completion)
