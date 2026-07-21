@@ -1,6 +1,7 @@
 package com.empire.forest
 
 import co.aikar.commands.BaseCommand
+import com.empire.forest.command.CoinsCommand
 import com.empire.forest.command.LeaveCommand
 import com.empire.forest.command.QueueCommand
 import com.empire.forest.command.SpectateCommand
@@ -8,6 +9,8 @@ import com.empire.forest.command.TestIcvCommand
 import com.empire.forest.config.ForestInteractiveData
 import com.empire.forest.constants.ForestConstants
 import com.empire.forest.constants.ForestConstants.CONFIG_DATA
+import com.empire.forest.data.ForestUserDatabase
+import com.empire.forest.data.ForestUserDatabaseProvider
 import com.empire.forest.gate.EscapeGateDescription
 import com.empire.forest.generator.ForestGeneratorDiscovery
 import com.empire.forest.generator.GeneratorDescription
@@ -23,6 +26,8 @@ import com.empire.ignite.game.application.component.IDeathTrackerComponent
 import com.empire.ignite.game.application.component.IPlayerAccessComponent
 import com.empire.ignite.game.application.component.PlayerAccessContextComponent
 import com.empire.ignite.game.facets.*
+import com.empire.ignite.storage.SQLiteConfig
+import com.empire.ignite.storage.SQLiteStorage
 import com.empire.ignite.team.IgniteTeam
 import com.empire.ignite.team.IgniteTeamOptions
 import com.empire.ignite.util.*
@@ -56,6 +61,7 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
         private val SPAWN_LOCATION = RawLocation(50.0, 91.0, 9.0)
     }
     private val appLevelDump = GlobalResourceTrackers.createResourceDump()
+    private var userDatabase: ForestUserDatabase? = null
 
     override fun load(plugin: Ignite) {
         val lobbyWorld = Bukkit.getWorld(LOBBY_WORLD_NAME)!!
@@ -65,6 +71,11 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
         val lobbyListener = LobbyListener(plugin, SPAWN_LOCATION.toLocationNonNull(lobbyWorld), SPAWN_REGION)
         lobbyListener.load()
         appLevelDump.add(lobbyListener)
+
+        userDatabase = ForestUserDatabaseProvider.create(
+            File(getDirectory(plugin), "forest-data.db").absolutePath
+        )
+        appLevelDump.add(userDatabase!!)
     }
 
     override fun unload() {
@@ -77,12 +88,16 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
 
     override fun getName(): String = "The Forest"
 
+    override fun getDirectory(plugin: Ignite) =
+        File(plugin.applicationsDirectory, "the_forest")
+
     override fun getCommands(plugin: Ignite): List<BaseCommand> {
         return listOf(
             QueueCommand(this, plugin),
             LeaveCommand(),
             SpectateCommand(),
-            TestIcvCommand(plugin)
+            TestIcvCommand(plugin),
+            CoinsCommand(userDatabase!!)
         )
     }
 
