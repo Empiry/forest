@@ -10,10 +10,6 @@ import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 
-interface ForestPerk : UnloadableResource {
-    fun apply(player: Player)
-    fun remove(player: Player)
-}
 
 class HeartbeatPerk(
     plugin: JavaPlugin,

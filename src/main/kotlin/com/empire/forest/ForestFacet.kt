@@ -13,6 +13,7 @@ import com.empire.forest.kit.HunterKit
 import com.empire.forest.kit.SurvivorKit
 import com.empire.forest.mechanic.ForestMechanics
 import com.empire.forest.perk.HeartbeatPerk
+import com.empire.forest.perk.MotionSensorPerk
 import com.empire.forest.scoreboard.SurvivorScoreboard
 import com.empire.forest.tablist.ForestTablist
 import com.empire.forest.util.ForestMessaging
@@ -64,6 +65,7 @@ class ForestFacet(
         context.playerTracker.players.forEach { player ->
             player.gameMode = GameMode.ADVENTURE
             if (debug) {
+//                context.addSurvivor(player)
                 if ("ThatOneTqnk".equals(player.name, ignoreCase = true)) {
                     context.addHunter(player)
                 } else {
@@ -199,6 +201,7 @@ class ForestFacet(
                     Material.AIR,
                     { it.type == Material.BARRIER }
                 )
+                setupHunterPerks()
             }.start()
     }
 
@@ -333,7 +336,7 @@ class ForestFacet(
                     gate.load()
                     dump.add(gate)
                 }
-                setupPerks()
+                setupSurvivorPerks()
             }
             .start()
     }
@@ -466,12 +469,20 @@ class ForestFacet(
 //        dump.add(timer)
     }
 
-    private fun setupPerks() {
+    private fun setupSurvivorPerks() {
         val heartbeatPerk = HeartbeatPerk(plugin, context)
         if (debug) {
             context.survivorTeam.players.forEach { heartbeatPerk.apply(it) }
         }
         dump.add(heartbeatPerk)
+    }
+
+    private fun setupHunterPerks() {
+        val motionSensorPerk = MotionSensorPerk(plugin, context)
+        if (debug) {
+            context.hunterTeam.players.forEach { motionSensorPerk.apply(it) }
+        }
+        dump.add(motionSensorPerk)
     }
 
     @EventHandler
