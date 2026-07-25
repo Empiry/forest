@@ -89,10 +89,8 @@ class MotionSensorPerk(
                 mask or glowByte
             }
         ))
-        val glowOffPacket = UpdateEntityMetadataPacketBuilder(player, listOf(
-            UpdateEntityMetadataConverter.MainEntityByteMask { mask ->
-                mask and (glowByte.inv())
-            }
+        val metadataResetPacket = UpdateEntityMetadataPacketBuilder(player, listOf(
+            UpdateEntityMetadataConverter.MainEntityByteMask { mask -> mask }
         ))
         val unloadable = HACKS.overrideEntityMetadata(recipients, player, glowOnPacket)
 
@@ -101,8 +99,7 @@ class MotionSensorPerk(
 
         GlobalResourceTrackers.scheduler.after(duration) {
             unloadable.release()
-            // and same here (todo: this should be 'no-op'/regenerate server-side state)
-            recipients.forEach { r -> HACKS.sendDeltaUpdateEntityMetadataPacket(r, glowOffPacket) }
+            recipients.forEach { r -> HACKS.sendDeltaUpdateEntityMetadataPacket(r, metadataResetPacket) }
         }
     }
 

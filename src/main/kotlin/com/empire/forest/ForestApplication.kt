@@ -17,6 +17,10 @@ import com.empire.forest.generator.GeneratorDescription
 import com.empire.forest.lobby.LobbyListener
 import com.empire.forest.lobby.QueueSign
 import com.empire.forest.mechanic.ForestMechanics
+import com.empire.forest.mechanic.phantom.CloakingPerk
+import com.empire.forest.perk.ForestPerk
+import com.empire.forest.perk.HeartbeatPerk
+import com.empire.forest.perk.MotionSensorPerk
 import com.empire.forest.tablist.ForestTablist
 import com.empire.forest.util.ForestMatchStartEvent
 import com.empire.ignite.Ignite
@@ -26,6 +30,7 @@ import com.empire.ignite.game.application.component.IDeathTrackerComponent
 import com.empire.ignite.game.application.component.IPlayerAccessComponent
 import com.empire.ignite.game.application.component.PlayerAccessContextComponent
 import com.empire.ignite.game.facets.*
+import com.empire.ignite.game.kit.ability.AbilityCooldown
 import com.empire.ignite.storage.SQLiteConfig
 import com.empire.ignite.storage.SQLiteStorage
 import com.empire.ignite.team.IgniteTeam
@@ -225,10 +230,21 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
             SPAWN_LOCATION.toLocationNonNull(Bukkit.getWorld(LOBBY_WORLD_NAME)!!),
             plugin
         )
-        val unloadable = itemBuilderActiveListener(plugin, context.locateGeneratorsItemBuilder)  { p, b ->
+        context.perks.addAll(
+            listOf(
+                HeartbeatPerk(plugin, context),
+                MotionSensorPerk(plugin, context),
+                CloakingPerk(plugin)
+            )
+        )
+        dump.add(itemBuilderActiveListener(plugin, context.locateGeneratorsItemBuilder)  { p, b ->
             context.locateGeneratorsCallbackRegistration.sink(p to b)
-        }
-        dump.add(unloadable)
+        })
+        dump.add(object : UnloadableResource {
+            override fun unload(external: Boolean) {
+                context.perks.forEach { it.unload(external) }
+            }
+        })
         return context
     }
 }
@@ -283,6 +299,7 @@ class ForestContext(
     lateinit var hunterTeamChangeSetContract : ChangeSetContract<Player>
 
     lateinit var forestMechanics : ForestMechanics
+    val perks : MutableList<ForestPerk> = mutableListOf()
 
     fun loadSpawns() : Boolean {
         this.survivorsSpawn = staticData.survivorsSpawn.toLocation(world)!!
@@ -294,6 +311,9 @@ class ForestContext(
         survivorTeamChangeSetContract = ChangingSetUtils.createChangingSet(survivorTeam.players)
         hunterTeamChangeSetContract = ChangingSetUtils.createChangingSet(hunterTeam.players)
     }
+
+    fun getPerk(perkClass: Class<out ForestPerk>) : ForestPerk? =
+        perks.firstOrNull { perkClass.isAssignableFrom(it.javaClass) }
 
     // utility functions
     fun sendToHunters(component: Component) {

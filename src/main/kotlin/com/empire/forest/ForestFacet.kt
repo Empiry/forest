@@ -125,7 +125,7 @@ class ForestFacet(
         }
 
         val hunterTimeDump = GlobalResourceTrackers.createResourceDumpWithParent(dump)
-        val defaultHunterKit = HunterKit.HUNTER
+        val defaultHunterKit = HunterKit.SLASHER
         val hunterKitSelection = mutableMapOf<UUID, HunterKit>()
         val itemModderHunter = PlayerItemModder(plugin, hunterKitSelectionItem, PlayerItemMods(
             allowDrop = false,
@@ -191,7 +191,7 @@ class ForestFacet(
                 context.hunterTeam.players.forEach { player ->
                     player.closeInventory()
                     val selectedKit = hunterKitSelection[player.uniqueId] ?: defaultHunterKit
-                    selectedKit.gameKit.apply(player, context)
+//                    selectedKit.gameKit.apply(player, context)
                     kitTracker.addKitToPlayer(player, ForestKitKey(selectedKit), context)
                     Bukkit.broadcast(Component.text("Player ${player.name} chose kit ${selectedKit.name}"))
                 }
@@ -201,7 +201,7 @@ class ForestFacet(
                     Material.AIR,
                     { it.type == Material.BARRIER }
                 )
-                setupHunterPerks()
+//                setupHunterPerks()
             }.start()
     }
 
@@ -336,7 +336,7 @@ class ForestFacet(
                     gate.load()
                     dump.add(gate)
                 }
-                setupSurvivorPerks()
+//                setupSurvivorPerks()
             }
             .start()
     }
@@ -472,7 +472,7 @@ class ForestFacet(
     private fun setupSurvivorPerks() {
         val heartbeatPerk = HeartbeatPerk(plugin, context)
         if (debug) {
-            context.survivorTeam.players.forEach { heartbeatPerk.apply(it) }
+//            context.survivorTeam.players.forEach { heartbeatPerk.apply(it) }
         }
         dump.add(heartbeatPerk)
     }

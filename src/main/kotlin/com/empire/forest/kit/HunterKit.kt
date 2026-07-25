@@ -1,6 +1,9 @@
 package com.empire.forest.kit
 
 import com.empire.forest.ForestContext
+import com.empire.forest.mechanic.phantom.CloakingPerk
+import com.empire.forest.mechanic.survivalist.TallGrassInvisibility
+import com.empire.forest.perk.PerkAbilityAdapter
 import com.empire.ignite.game.kit.GameKit
 import com.empire.ignite.game.kit.IgniteBundle
 import com.empire.ignite.game.kit.ItemKitComponent
@@ -11,8 +14,8 @@ import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Material
 
 enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContext>) {
-    HUNTER(ItemBuilder(Material.SHEARS) {
-        name(Component.text("Hunter!").color(NamedTextColor.RED))
+    SLASHER(ItemBuilder(Material.SHEARS) {
+        name(Component.text("Slasher").color(NamedTextColor.DARK_RED))
 
         lore(
             InventoryUtils.postprocessLore(
@@ -21,7 +24,10 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
                     Component.text("Includes 5 bear traps").color(NamedTextColor.RED),
                     Component.text(
                         "Drop them to use, survivors who walk into them may experience pain"
-                    ).color(NamedTextColor.YELLOW)
+                    ).color(NamedTextColor.YELLOW),
+                    Component.text(
+                        "Careful! Stepping in them will self-inflict pain"
+                    ).color(NamedTextColor.RED)
                 )
             )
         )
@@ -34,7 +40,41 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
             ItemKitComponent(
                 listOf(
                     0 to bearTrapItem
-                ).toMap()
+                ).toMap(),
+            ),
+            abilityComponents = listOf(
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    TallGrassInvisibility(player, context)
+                )
+            )
+        )
+    }),
+    PHANTOM(ItemBuilder(Material.WIND_CHARGE) {
+        name(Component.text("Phantom").color(NamedTextColor.LIGHT_PURPLE))
+
+        lore(
+            InventoryUtils.postprocessLore(
+                listOf(
+                    Component.text("4 cloaking potions that").color(NamedTextColor.YELLOW),
+                    Component.text("help you sneak up on survivors").color(NamedTextColor.YELLOW),
+                )
+            )
+        )
+
+        unbreakable()
+    }, GameKit() { player, context ->
+        IgniteBundle(
+            abilityComponents = listOf(
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    TallGrassInvisibility(player, context)
+                ),
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    PerkAbilityAdapter(
+                        CloakingPerk::class.java,
+                        context,
+                        player
+                    )
+                )
             )
         )
     });
