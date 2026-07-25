@@ -3,6 +3,7 @@ package com.empire.forest.kit
 import com.empire.forest.ForestContext
 import com.empire.forest.mechanic.phantom.CloakingPerk
 import com.empire.forest.mechanic.survivalist.TallGrassInvisibility
+import com.empire.forest.mechanic.werewolf.WerewolfSpeedPerk
 import com.empire.forest.perk.PerkAbilityAdapter
 import com.empire.ignite.game.kit.GameKit
 import com.empire.ignite.game.kit.IgniteBundle
@@ -11,6 +12,7 @@ import com.empire.ignite.util.InventoryUtils
 import com.empire.ignite.util.item.ItemBuilder
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
 import org.bukkit.Material
 
 enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContext>) {
@@ -71,8 +73,34 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     PerkAbilityAdapter(
                         CloakingPerk::class.java,
-                        context,
-                        player
+                        context, player
+                    )
+                )
+            )
+        )
+    }),
+    WEREWOLF(ItemBuilder(Material.BONE) {
+        name(Component.text("Werewolf").color(TextColor.color(128, 66, 4)))
+
+        lore(
+            InventoryUtils.postprocessLore(
+                listOf(
+                    Component.text("3 speed boosts!").color(NamedTextColor.YELLOW)
+                )
+            )
+        )
+
+        unbreakable()
+    }, GameKit() { player, context ->
+        IgniteBundle(
+            abilityComponents = listOf(
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    TallGrassInvisibility(player, context)
+                ),
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    PerkAbilityAdapter(
+                        WerewolfSpeedPerk::class.java,
+                        context, player
                     )
                 )
             )
