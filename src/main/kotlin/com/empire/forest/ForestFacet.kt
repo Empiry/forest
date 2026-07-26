@@ -28,12 +28,15 @@ import com.empire.ignite.util.item.ItemBuilder
 import com.empire.ignite.util.item.PlayerItemModder
 import com.empire.ignite.util.item.PlayerItemMods
 import com.empire.ignite.util.region.RegionUtils
+import com.empire.ignite.util.text.TextUtils.flattenComponents
+import com.empire.ignite.util.text.TextUtils.normalizeComponent
 import com.empire.ignite.util.timer.Timer
 import com.empire.ignite.util.timer.TimerCallback
 import com.empire.ignite.util.ui.ManagedBossBar
 import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import org.bukkit.*
@@ -65,8 +68,8 @@ class ForestFacet(
             if (debug) {
 //                context.addSurvivor(player)
                 if ("ThatOneTqnk".equals(player.name, ignoreCase = true)) {
-//                    context.addHunter(player)
-                    context.addSurvivor(player)
+                    context.addHunter(player)
+//                    context.addSurvivor(player)
                 } else {
                     context.addSurvivor(player)
                 }
@@ -86,6 +89,7 @@ class ForestFacet(
         }
         context.world!!.time = 19000
         context.world!!.setGameRule(GameRules.ADVANCE_TIME, false)
+        context.world!!.setGameRule(GameRules.LOCATOR_BAR, false)
         context.hunterTeam.players.forEach { player -> player.teleport(context.huntersSpawn) }
         context.survivorTeam.players.forEach { player -> player.teleport(context.survivorsSpawn) }
         dump.add(object : UnloadableResource {
@@ -135,7 +139,7 @@ class ForestFacet(
                     HunterKit.entries.map { v ->
                         v.guiItem to v
                     },
-                    defaultHunterKit,
+                    hunterKitSelection[player.uniqueId] ?: defaultHunterKit,
                     true
                 ) { hunterKitSelection[player.uniqueId] = it }
                 gui.show(player)
@@ -185,6 +189,7 @@ class ForestFacet(
                     bossBar.bossbar.progress(remainingTicks.toFloat() / originalTicks.toFloat())
                 }
             }).then {
+                if (gameOver) return@then
                 hunterTimeDump.destroyAll()
                 healAndClearInventoryOfPlayers(context.hunterTeam.players)
                 context.hunterTeam.players.forEach { player ->
@@ -228,7 +233,7 @@ class ForestFacet(
                     SurvivorKit.entries.map { v ->
                         v.guiItem to v
                     },
-                    defaultSurvivorKit,
+                    survivorKitSelection[player.uniqueId] ?: defaultSurvivorKit,
                     true
                 ) { survivorKitSelection[player.uniqueId] = it }
                 gui.show(player)
@@ -279,6 +284,7 @@ class ForestFacet(
                 }
             })
             .then {
+                if (gameOver) return@then
                 survivorTimeDump.destroyAll()
                 healAndClearInventoryOfPlayers(context.survivorTeam.players)
                 context.survivorTeam.players.forEach { player ->
@@ -322,8 +328,7 @@ class ForestFacet(
                     }
                     val gate = EscapeGate(
                         plugin, context,
-                        context.staticData.escape.location.toLocation(context.world)!!,
-                        context.staticData.escape.radius
+                        context.staticData.escape.region
                     ) { escapee ->
                         escapees += escapee
                         if (escapees.size >= context.survivorTeam.players.size) {
@@ -408,16 +413,34 @@ class ForestFacet(
 
     private var gameOver = false
     private fun finishGame() {
-        Bukkit.broadcast(
-            Component.text("Match has ended!").color(NamedTextColor.GREEN)
-        )
+        val winnerMessage = if (context.survivorTeam.players.isEmpty())
+            Component.text("HUNTERS WIN!").color(NamedTextColor.RED)
+        else
+            Component.text("SURVIVORS WIN!").color(NamedTextColor.GREEN)
+        val dash =
+            Component.text(" ".repeat(20)).color(NamedTextColor.DARK_GRAY)
+                .decorate(TextDecoration.STRIKETHROUGH)
+        Bukkit.getScheduler().runTaskLater(plugin, Runnable {
+            Bukkit.broadcast(
+                flattenComponents(
+                    dash.appendNewline(),
+                    winnerMessage.appendNewline(),
+                    dash
+                )
+            )
+            playSoundToPlayers(
+                Bukkit.getOnlinePlayers(),
+                Sound.UI_TOAST_CHALLENGE_COMPLETE,
+                1f, 1f
+            )
+        }, 1L)
         gameOver = true
         destruct()
     }
 
     override fun onPlayerRemove(player: Player, reason: PlayerRemoveReason) {
         context.removeFromTeam(player)
-        if (!debug && context.playerAccess.all.isEmpty()) {
+        if ((context.hunterTeam.players.isEmpty() || context.survivorTeam.players.isEmpty())) {
             finishGame()
         }
     }

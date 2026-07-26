@@ -3,38 +3,37 @@ package com.empire.forest.gate
 import com.empire.forest.ForestContext
 import com.empire.ignite.util.IgniteResource
 import com.empire.ignite.util.location.RawLocation
-import com.empire.ignite.util.registerListener
-import com.empire.ignite.util.unregisterListener
-import org.bukkit.Location
+import com.empire.ignite.util.region.Region
+import com.empire.ignite.util.region.RegionPlayerTracker
+import com.empire.ignite.util.region.RegionPlayerTrackerCallback
 import org.bukkit.entity.Player
-import org.bukkit.event.EventHandler
-import org.bukkit.event.Listener
-import org.bukkit.event.player.PlayerMoveEvent
+import org.bukkit.event.Cancellable
 import org.bukkit.plugin.java.JavaPlugin
 
 class EscapeGate(
-    private val plugin: JavaPlugin,
+    plugin: JavaPlugin,
     private val context: ForestContext,
-    private val escapeLocation: Location,
-    radius: Int,
+    region: Region,
     private val escapeCallback: (Player) -> Unit
-) : IgniteResource, Listener {
-    private val distanceSquared = radius*radius
+) : IgniteResource, RegionPlayerTrackerCallback {
+    private val tracker = RegionPlayerTracker(plugin, region)
 
     override fun load() {
-        registerListener(plugin, this)
+        tracker.load()
+        tracker.callbacks.add(this)
     }
 
-    @EventHandler
-    private fun onMove(event: PlayerMoveEvent) {
-        if (event.player !in context.survivorTeam.players) return
-        if (event.to.distanceSquared(escapeLocation) > distanceSquared) return
-        escapeCallback(event.player)
+    override fun onPlayerEnter(movementEvent: Cancellable, player: Player) {
+        if (player !in context.survivorTeam.players) return
+        escapeCallback(player)
     }
 
     override fun unload(external: Boolean) {
-        unregisterListener(this)
+        tracker.callbacks.remove(this)
+        tracker.unload()
     }
 }
 
-data class EscapeGateDescription(val location: RawLocation, val radius: Int)
+data class EscapeGateDescription(
+    val region: Region
+)

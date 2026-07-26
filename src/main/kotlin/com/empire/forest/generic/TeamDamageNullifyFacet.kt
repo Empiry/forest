@@ -9,7 +9,6 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 
-// not sure why friendlyFire isn't working
 class TeamDamageNullifyFacet(
     plugin: Ignite,
     context: ForestContext,

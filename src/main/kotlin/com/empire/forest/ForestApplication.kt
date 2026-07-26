@@ -52,14 +52,14 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
             Vector(592, 22, 343),
             Vector(329,-17,127)
         )
-        private val SPAWN_LOCATION = RawLocation(50.0, 91.0, 9.0)
+        private val SPAWN_LOCATION = RawLocation(48.0,71.0,9.0)
     }
     private val appLevelDump = GlobalResourceTrackers.createResourceDump()
     private var userDatabase: ForestUserDatabase? = null
 
     override fun load(plugin: Ignite) {
         val lobbyWorld = Bukkit.getWorld(LOBBY_WORLD_NAME)!!
-        val sign = QueueSign(plugin, Location(lobbyWorld, 400.0, -15.0, 285.0))
+        val sign = QueueSign(plugin, Location(lobbyWorld, 50.0, 72.0, 11.0))
         sign.load()
         appLevelDump.add(sign)
         val lobbyListener = LobbyListener(plugin, SPAWN_LOCATION.toLocationNonNull(lobbyWorld), SPAWN_REGION)
@@ -162,7 +162,8 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
                                     prefix = Component.text("").color(ForestConstants.SURVIVORS_COLOR),
                                     options = listOf(
                                         Team.Option.COLLISION_RULE to Team.OptionStatus.NEVER,
-                                        Team.Option.NAME_TAG_VISIBILITY to Team.OptionStatus.FOR_OWN_TEAM
+                                        // "for other teams" means hide for other teams... thanks Bukkit
+                                        Team.Option.NAME_TAG_VISIBILITY to Team.OptionStatus.FOR_OTHER_TEAMS
                                     )
                                 )
                             )
@@ -178,7 +179,8 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
                                     prefix = Component.text("").color(NamedTextColor.RED),
                                     options = listOf(
                                         Team.Option.COLLISION_RULE to Team.OptionStatus.NEVER,
-                                        Team.Option.NAME_TAG_VISIBILITY to Team.OptionStatus.FOR_OWN_TEAM
+                                        // "for other teams" means hide for other teams... thanks Bukkit
+                                        Team.Option.NAME_TAG_VISIBILITY to Team.OptionStatus.FOR_OTHER_TEAMS
                                     )
                                 )
                             )

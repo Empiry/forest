@@ -4,6 +4,7 @@ import com.empire.forest.ForestStaticData
 import com.empire.forest.gate.EscapeGateDescription
 import com.empire.forest.generator.GeneratorDescription
 import com.empire.ignite.util.location.RawLocation
+import com.empire.ignite.util.region.AggregateRegion
 import com.empire.ignite.util.region.CuboidRegion
 import org.bukkit.util.Vector
 
@@ -52,8 +53,17 @@ object ForestStaticDataConfig {
             )
         ),
         escape = EscapeGateDescription(
-            location = RawLocation(-54.0, -15.0, 193.0),
-            radius = 2
+            region =
+                AggregateRegion(listOf(
+                    CuboidRegion(
+                        Vector(-54,-15,191),
+                        Vector(-53,-14,195),
+                    ),
+                    CuboidRegion(
+                        Vector(-49, -14, 156),
+                        Vector(-48, -13, 158),
+                    )
+                ))
         ),
         survivorSpawnBarrierRegion = CuboidRegion(
             Vector(-187, -16,48),
@@ -83,7 +93,17 @@ object ForestStaticDataConfig {
             )
         ),
         escape = EscapeGateDescription(
-            RawLocation(-18.0, 11.0, 238.0), 1
+            region =
+                AggregateRegion(listOf(
+                    CuboidRegion(
+                        Vector(-54,-15,191),
+                        Vector(-53,-14,195),
+                    ),
+                    CuboidRegion(
+                        Vector(-49, -14, 156),
+                        Vector(-48, -13, 158),
+                    )
+                ))
         ),
         survivorSpawnBarrierRegion = CuboidRegion(
             Vector(-151, 10, 93),
@@ -137,8 +157,17 @@ object ForestStaticDataConfig {
             )
         ),
         escape = EscapeGateDescription(
-            location = RawLocation(-54.0, -15.0, 193.0),
-            radius = 2
+            region =
+                AggregateRegion(listOf(
+                    CuboidRegion(
+                        Vector(-54,-15,191),
+                        Vector(-53,-14,195),
+                    ),
+                    CuboidRegion(
+                        Vector(-49, -14, 156),
+                        Vector(-48, -13, 158),
+                    )
+                ))
         ),
         survivorSpawnBarrierRegion = CuboidRegion(
             Vector(-187, -16,48),
