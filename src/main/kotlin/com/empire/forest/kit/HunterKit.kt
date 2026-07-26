@@ -4,6 +4,7 @@ import com.empire.forest.ForestContext
 import com.empire.forest.mechanic.phantom.CloakingPerk
 import com.empire.forest.mechanic.survivalist.TallGrassInvisibility
 import com.empire.forest.mechanic.werewolf.WerewolfSpeedPerk
+import com.empire.forest.perk.MotionSensorPerk
 import com.empire.forest.perk.PerkAbilityAdapter
 import com.empire.ignite.game.kit.GameKit
 import com.empire.ignite.game.kit.IgniteBundle
@@ -15,6 +16,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.Material
 
+private val SWORD = ItemBuilder(Material.IRON_SWORD) {}.build()
 enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContext>) {
     SLASHER(ItemBuilder(Material.SHEARS) {
         name(Component.text("Slasher").color(NamedTextColor.DARK_RED))
@@ -41,7 +43,8 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
         IgniteBundle(
             ItemKitComponent(
                 listOf(
-                    0 to bearTrapItem
+                    0 to SWORD,
+                    1 to bearTrapItem
                 ).toMap(),
             ),
             abilityComponents = listOf(
@@ -66,6 +69,11 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
         unbreakable()
     }, GameKit() { player, context ->
         IgniteBundle(
+            ItemKitComponent(
+                listOf(
+                    0 to SWORD
+                ).toMap(),
+            ),
             abilityComponents = listOf(
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     TallGrassInvisibility(player, context)
@@ -93,6 +101,11 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
         unbreakable()
     }, GameKit() { player, context ->
         IgniteBundle(
+            ItemKitComponent(
+                listOf(
+                    0 to SWORD
+                ).toMap(),
+            ),
             abilityComponents = listOf(
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     TallGrassInvisibility(player, context)
@@ -100,6 +113,39 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     PerkAbilityAdapter(
                         WerewolfSpeedPerk::class.java,
+                        context, player
+                    )
+                )
+            )
+        )
+    }),
+    SCARECROW(ItemBuilder(Material.HAY_BLOCK) {
+        name(Component.text("Scarecrow").color(NamedTextColor.GOLD))
+
+        lore(
+            InventoryUtils.postprocessLore(
+                listOf(
+                    Component.text("Place down a scarecrow to alert you").color(NamedTextColor.YELLOW),
+                    Component.text("of nearby survivors").color(NamedTextColor.YELLOW),
+                )
+            )
+        )
+
+        unbreakable()
+    }, GameKit() { player, context ->
+        IgniteBundle(
+            ItemKitComponent(
+                listOf(
+                    0 to SWORD
+                ).toMap(),
+            ),
+            abilityComponents = listOf(
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    TallGrassInvisibility(player, context)
+                ),
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    PerkAbilityAdapter(
+                        MotionSensorPerk::class.java,
                         context, player
                     )
                 )

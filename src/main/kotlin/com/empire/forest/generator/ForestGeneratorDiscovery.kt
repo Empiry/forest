@@ -4,6 +4,8 @@ import com.empire.forest.ForestContext
 import com.empire.ignite.util.GlobalResourceTrackers
 import com.empire.ignite.util.HACKS
 import com.empire.ignite.util.UnloadableResource
+import com.empire.ignite.util.callback.ForwardCallbackRegistration
+import com.empire.ignite.util.callback.ForwardingCallback
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.entity.Player
@@ -19,6 +21,7 @@ class ForestGeneratorDiscovery(
     private val unlocked : MutableMap<GeneratorDescription, Boolean> = generators.associate {
         it.first to false
     }.toMutableMap()
+    val onDiscover: ForwardCallbackRegistration<Unit> = ForwardingCallback.create()
 
     companion object {
         private val GENERATOR_BLOCK_TYPE : Material = Material.RED_WOOL
@@ -51,7 +54,10 @@ class ForestGeneratorDiscovery(
                 return@filter false
             }
             .map { (desc, _) -> desc }
-        newlyUnlocked.forEach { desc -> unlocked[desc] = true }
+        newlyUnlocked.forEach { desc ->
+            unlocked[desc] = true
+            onDiscover.sink(Unit)
+        }
     }
 
     private fun generatorDetectionHeuristic(player: Player, genLoc: Location, distanceSq: Double) : Boolean {

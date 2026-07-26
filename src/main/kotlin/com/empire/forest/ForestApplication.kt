@@ -1,19 +1,15 @@
 package com.empire.forest
 
 import co.aikar.commands.BaseCommand
-import com.empire.forest.command.CoinsCommand
-import com.empire.forest.command.LeaveCommand
-import com.empire.forest.command.QueueCommand
-import com.empire.forest.command.SpectateCommand
-import com.empire.forest.command.TestIcvCommand
+import com.empire.forest.command.*
 import com.empire.forest.config.ForestInteractiveData
 import com.empire.forest.constants.ForestConstants
 import com.empire.forest.constants.ForestConstants.CONFIG_DATA
 import com.empire.forest.data.ForestUserDatabase
 import com.empire.forest.data.ForestUserDatabaseProvider
 import com.empire.forest.gate.EscapeGateDescription
-import com.empire.forest.generator.ForestGeneratorDiscovery
 import com.empire.forest.generator.GeneratorDescription
+import com.empire.forest.generic.TeamDamageNullifyFacet
 import com.empire.forest.lobby.LobbyListener
 import com.empire.forest.lobby.QueueSign
 import com.empire.forest.mechanic.ForestMechanics
@@ -31,13 +27,9 @@ import com.empire.ignite.game.application.component.IDeathTrackerComponent
 import com.empire.ignite.game.application.component.IPlayerAccessComponent
 import com.empire.ignite.game.application.component.PlayerAccessContextComponent
 import com.empire.ignite.game.facets.*
-import com.empire.ignite.game.kit.ability.AbilityCooldown
-import com.empire.ignite.storage.SQLiteConfig
-import com.empire.ignite.storage.SQLiteStorage
 import com.empire.ignite.team.IgniteTeam
 import com.empire.ignite.team.IgniteTeamOptions
 import com.empire.ignite.util.*
-import com.empire.ignite.util.callback.ForwardCallbackRegistration
 import com.empire.ignite.util.callback.ForwardingCallback
 import com.empire.ignite.util.config.InteractiveConfigV2
 import com.empire.ignite.util.item.ItemBuilder
@@ -46,16 +38,12 @@ import com.empire.ignite.util.region.CuboidRegion
 import com.empire.ignite.util.region.Region
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import org.bukkit.Bukkit
-import org.bukkit.GameMode
-import org.bukkit.Location
-import org.bukkit.Material
-import org.bukkit.World
+import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.scoreboard.Team
 import org.bukkit.util.Vector
 import java.io.File
-import java.util.UUID
+import java.util.*
 
 class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>() {
     companion object {
@@ -173,7 +161,8 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
                                     friendlyFire = false,
                                     prefix = Component.text("").color(ForestConstants.SURVIVORS_COLOR),
                                     options = listOf(
-                                        Team.Option.COLLISION_RULE to Team.OptionStatus.NEVER
+                                        Team.Option.COLLISION_RULE to Team.OptionStatus.NEVER,
+                                        Team.Option.NAME_TAG_VISIBILITY to Team.OptionStatus.FOR_OWN_TEAM
                                     )
                                 )
                             )
@@ -181,12 +170,15 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
                                 "Hunters",
                                 emptySet(),
                                 IgniteTeamOptions(
-                                    displayName = Component.text("Hunters").color(NamedTextColor.RED),
+                                    displayName = Component.text("Hunters").color(
+                                        ForestConstants.HUNTERS_COLOR
+                                    ),
                                     color = NamedTextColor.RED,
                                     friendlyFire = false,
                                     prefix = Component.text("").color(NamedTextColor.RED),
                                     options = listOf(
-                                        Team.Option.COLLISION_RULE to Team.OptionStatus.NEVER
+                                        Team.Option.COLLISION_RULE to Team.OptionStatus.NEVER,
+                                        Team.Option.NAME_TAG_VISIBILITY to Team.OptionStatus.FOR_OWN_TEAM
                                     )
                                 )
                             )
@@ -217,9 +209,18 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
                     }
                 }
 
-                node {
+                parent {
                     ForestFacet(plugin, context, dump)
+                }.child {
+                    FacetTimelines.async {
+                        node {
+                            TeamDamageNullifyFacet(plugin, context)
+                        }
+                    }
                 }
+//                node {
+//                    ForestFacet(plugin, context, dump)
+//                }
             }
         }
         return context to definition
@@ -278,7 +279,7 @@ class ForestContext(
     override val deathTracker: DeathTrackerContextComponent = DeathTrackerContextComponent()
     override val playerAccess: PlayerAccessContextComponent = PlayerAccessContextComponent(playerTracker, deathTracker)
 
-    val locateGeneratorsItemBuilder = ItemBuilder(Material.COMPASS) {
+    val locateGeneratorsItemBuilder = ItemBuilder(Material.RECOVERY_COMPASS) {
         name(Component.text("Locate Generators").color(NamedTextColor.GOLD))
         lore(
             InventoryUtils.postprocessLore(

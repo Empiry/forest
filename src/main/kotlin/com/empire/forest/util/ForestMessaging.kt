@@ -16,7 +16,7 @@ object ForestMessaging {
         return withPrefix(Component.text(message).color(NamedTextColor.GRAY))
     }
 
-    private val GENERATOR_NOT_STARTED_COLOR = TextColor.color(128, 125, 120)
+    val GENERATOR_NOT_STARTED_COLOR = TextColor.color(128, 125, 120)
     private val GENERATOR_IN_PROGRESS_COLOR = NamedTextColor.YELLOW
     private val GENERATOR_COMPLETE_COLOR = NamedTextColor.GREEN
     fun getGeneratorProgressColor(generatorProgress: Int) : TextColor {

@@ -3,8 +3,10 @@ package com.empire.forest.scoreboard
 import com.empire.forest.ForestContext
 import com.empire.forest.constants.ForestConstants
 import com.empire.forest.generator.ForestGenerator
+import com.empire.forest.generator.ForestGeneratorDiscovery
 import com.empire.forest.generator.GeneratorDescription
 import com.empire.forest.util.ForestMessaging
+import com.empire.forest.util.ForestMessaging.GENERATOR_NOT_STARTED_COLOR
 import com.empire.ignite.util.*
 import com.empire.ignite.util.callback.ForwardCallbackRegistration
 import com.empire.ignite.util.callback.PassthroughFilterCallback
@@ -19,7 +21,8 @@ import kotlin.math.floor
 class SurvivorScoreboardAgent(
     private val player: Player,
     private val context: ForestContext,
-    val generators: List<Pair<GeneratorDescription, ForestGenerator>>
+    val generators: List<Pair<GeneratorDescription, ForestGenerator>>,
+    val discovery: ForestGeneratorDiscovery
 ) : SillyScoreboardAgent {}
 
 object SurvivorScoreboard {
@@ -30,11 +33,16 @@ object SurvivorScoreboard {
     fun create(
         plugin: JavaPlugin, context: ForestContext,
         generators: List<Pair<GeneratorDescription, ForestGenerator>>,
+        discovery: ForestGeneratorDiscovery,
         changeSetSurvivors: ChangingSet<Player>,
         generatorProgressCallback: ForwardCallbackRegistration<Unit>,
         dump: ManagedResourceDump
     ) {
-        val sb = SillyScoreboard(plugin, { player -> SurvivorScoreboardAgent(player, context, generators) }) {
+        val sb = SillyScoreboard(
+            plugin, {
+                player -> SurvivorScoreboardAgent(player, context, generators, discovery)
+            }
+        ) {
             title { Component.text("The Forest").color(ForestConstants.SURVIVORS_COLOR) }
             numbering(30)
 
@@ -44,6 +52,11 @@ object SurvivorScoreboard {
                 }
                 varyLine(pushKey = GENERATOR_STATUSES_PUSH_KEY) { agent ->
                     agent.generators.map { (desc, generator) ->
+                        if (!agent.discovery.unlocked(desc)) {
+                            return@map Component.text("${desc.name} ???").color(
+                                GENERATOR_NOT_STARTED_COLOR
+                            )
+                        }
                         val progress = floor(
                             100.0F * (generator.progressTicks.toFloat() / (desc.unlockSeconds * 20))
                         ).toInt()
@@ -63,7 +76,7 @@ object SurvivorScoreboard {
                     )
                 }
                 line(pushKey = HUNTER_TEAM_COUNT_UPDATE) {
-                    Component.text("Hunters: ").color(NamedTextColor.RED).append(
+                    Component.text("Hunters: ").color(ForestConstants.HUNTERS_COLOR).append(
                         Component.text(context.hunterTeam.players.size).color(NamedTextColor.GREEN)
                     )
                 }
@@ -101,5 +114,6 @@ object SurvivorScoreboard {
                 sb.trigger(SurvivorScoreboard.GENERATOR_STATUSES_PUSH_KEY)
             }
         )
+        discovery.onDiscover.register { sb.trigger(SurvivorScoreboard.GENERATOR_STATUSES_PUSH_KEY) }
     }
 }

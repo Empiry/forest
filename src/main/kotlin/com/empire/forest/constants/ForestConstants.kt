@@ -8,6 +8,7 @@ import net.kyori.adventure.text.format.TextColor
 object ForestConstants {
     val FOREST_COLOR = TextColor.color(59, 179, 91)
     val SURVIVORS_COLOR = TextColor.color(207, 103, 19)
+    val HUNTERS_COLOR = TextColor.color(194, 21, 21)
     val CONFIG_DATA = PluginResources.createManagedStore(
 InteractiveConfigV2Schema.NamedStructure(
             mutableMapOf(

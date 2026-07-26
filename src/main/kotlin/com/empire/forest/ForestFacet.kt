@@ -12,8 +12,6 @@ import com.empire.forest.kit.ForestKitProvider
 import com.empire.forest.kit.HunterKit
 import com.empire.forest.kit.SurvivorKit
 import com.empire.forest.mechanic.ForestMechanics
-import com.empire.forest.perk.HeartbeatPerk
-import com.empire.forest.perk.MotionSensorPerk
 import com.empire.forest.scoreboard.SurvivorScoreboard
 import com.empire.forest.tablist.ForestTablist
 import com.empire.forest.util.ForestMessaging
@@ -67,7 +65,8 @@ class ForestFacet(
             if (debug) {
 //                context.addSurvivor(player)
                 if ("ThatOneTqnk".equals(player.name, ignoreCase = true)) {
-                    context.addHunter(player)
+//                    context.addHunter(player)
+                    context.addSurvivor(player)
                 } else {
                     context.addSurvivor(player)
                 }
@@ -193,7 +192,6 @@ class ForestFacet(
                     val selectedKit = hunterKitSelection[player.uniqueId] ?: defaultHunterKit
 //                    selectedKit.gameKit.apply(player, context)
                     kitTracker.addKitToPlayer(player, ForestKitKey(selectedKit), context)
-                    Bukkit.broadcast(Component.text("Player ${player.name} chose kit ${selectedKit.name}"))
                 }
                 RegionUtils.fillRegionReplacing(
                     context.staticData.hunterSpawnBarrierRegion,
@@ -219,7 +217,7 @@ class ForestFacet(
         }
 
         val survivorTimeDump = GlobalResourceTrackers.createResourceDumpWithParent(dump)
-        val defaultSurvivorKit = SurvivorKit.SURVIVALIST
+        val defaultSurvivorKit = SurvivorKit.NAVIGATOR
         val survivorKitSelection = mutableMapOf<UUID, SurvivorKit>()
         val itemModderSurvivor = PlayerItemModder(plugin, survivorKitSelectionItem, PlayerItemMods(
             allowDrop = false,
@@ -286,7 +284,6 @@ class ForestFacet(
                 context.survivorTeam.players.forEach { player ->
                     val selectedKit = survivorKitSelection[player.uniqueId] ?: defaultSurvivorKit
                     player.closeInventory()
-                    Bukkit.broadcast(Component.text("Player ${player.name} chose kit ${selectedKit.name}"))
                     kitTracker.addKitToPlayer(player, ForestKitKey(selectedKit), context)
                 }
                 RegionUtils.fillRegion(
@@ -393,11 +390,11 @@ class ForestFacet(
         dump.add(discovery)
 
         context.tablist.registerGeneratorProgressUpdate(
-            generatorsAssociationList, generatorProgressCallback, dump
+            generatorsAssociationList, discovery, generatorProgressCallback, dump
         )
         SurvivorScoreboard.create(
             plugin, context, generatorsAssociationList,
-            context.getSurvivorChangeSet(), generatorProgressCallback, dump
+            discovery, context.getSurvivorChangeSet(), generatorProgressCallback, dump
         )
 
         generatorsAssociationList.forEach { (desc, gen) ->
@@ -420,9 +417,9 @@ class ForestFacet(
 
     override fun onPlayerRemove(player: Player, reason: PlayerRemoveReason) {
         context.removeFromTeam(player)
-//        if (context.playerAccess.all.isEmpty()) {
-//            finishGame()
-//        }
+        if (!debug && context.playerAccess.all.isEmpty()) {
+            finishGame()
+        }
     }
 
     override fun onPlayerDeath(player: Player, damageInfo: EntityDamageEvent) {
@@ -467,22 +464,6 @@ class ForestFacet(
 //            .whenCancelled { WorldBorderTint.remove(player) }
 //        timer.start()
 //        dump.add(timer)
-    }
-
-    private fun setupSurvivorPerks() {
-        val heartbeatPerk = HeartbeatPerk(plugin, context)
-        if (debug) {
-//            context.survivorTeam.players.forEach { heartbeatPerk.apply(it) }
-        }
-        dump.add(heartbeatPerk)
-    }
-
-    private fun setupHunterPerks() {
-        val motionSensorPerk = MotionSensorPerk(plugin, context)
-        if (debug) {
-            context.hunterTeam.players.forEach { motionSensorPerk.apply(it) }
-        }
-        dump.add(motionSensorPerk)
     }
 
     @EventHandler

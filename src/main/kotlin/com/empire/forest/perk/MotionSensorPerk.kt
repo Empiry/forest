@@ -10,7 +10,6 @@ import com.empire.ignite.util.entity.ClientEntity
 import com.empire.ignite.util.item.ItemBuilder
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import org.bukkit.Bukkit
 import org.bukkit.GameEvent
 import org.bukkit.Material
 import org.bukkit.block.Block
@@ -25,8 +24,6 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
-import kotlin.experimental.and
-import kotlin.experimental.inv
 import kotlin.experimental.or
 
 class MotionSensorPerk(
@@ -113,11 +110,9 @@ class BlockSelector(
     private val plugin: JavaPlugin,
     private val onBlockPlace: (Block) -> Unit = {}
 ) : IgniteResource {
-    companion object {
-        private val ITEM = ItemBuilder(Material.CARROT_ON_A_STICK) {
-            name(Component.text("Hold to target").color(NamedTextColor.GOLD))
-            unbreakable()
-        }
+    private val itemBuilder = ItemBuilder(Material.CARROT_ON_A_STICK) {
+        name(Component.text("Hold to target").color(NamedTextColor.GOLD))
+        unbreakable()
     }
     private var activeListener: UnloadableResource? = null
     private var rightClickListener: UnloadableResource? = null
@@ -128,9 +123,9 @@ class BlockSelector(
     private var item : ItemStack? = null
 
     override fun load() {
-        activeListener = itemBuilderActiveListener(plugin, ITEM, ::onItemActive)
-        rightClickListener = itemBuilderRightClickListener(plugin, ITEM, ::onItemRightClick)
-        item = ITEM.build()
+        activeListener = itemBuilderActiveListener(plugin, itemBuilder, ::onItemActive)
+        rightClickListener = itemBuilderRightClickListener(plugin, itemBuilder, ::onItemRightClick)
+        item = itemBuilder.build()
     }
 
     fun accept(player: Player, blockData: BlockData) {
