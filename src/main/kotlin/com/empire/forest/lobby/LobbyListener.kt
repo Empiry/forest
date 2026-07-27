@@ -1,5 +1,7 @@
 package com.empire.forest.lobby
 
+import com.empire.forest.ForestContext
+import com.empire.ignite.game.application.UnspectateMatchEvent
 import com.empire.ignite.match.event.PlayerQuitMatchEvent
 import com.empire.ignite.util.*
 import com.empire.ignite.util.item.ItemBuilder
@@ -9,7 +11,6 @@ import com.empire.ignite.util.region.RegionPlayerTrackerCallback
 import io.papermc.paper.event.player.PlayerItemFrameChangeEvent
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.Material
@@ -55,6 +56,15 @@ class LobbyListener(
 
     @EventHandler
     private fun onPlayerQuitMatch(event: PlayerQuitMatchEvent) {
+        if (event.match.context !is ForestContext) return
+        healAndClearInventoryOfPlayers(listOf(event.player))
+        event.player.teleport(spawnLocation)
+    }
+
+    @EventHandler
+    private fun onPlayerUnspectate(event: UnspectateMatchEvent) {
+        if (event.match.context !is ForestContext) return
+        healAndClearInventoryOfPlayers(listOf(event.player))
         event.player.teleport(spawnLocation)
     }
 

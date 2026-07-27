@@ -163,7 +163,7 @@ class ForestFacet(
                 .append(Component.text(hunterWaitSeconds.toString()).color(NamedTextColor.GOLD))
                 .append(Component.text(" seconds!").color(NamedTextColor.GRAY))
         ))
-        Timer(plugin, 20L * hunterWaitSeconds)
+        val chooseTimer = Timer(plugin, 20L * hunterWaitSeconds)
             .attach(object : TimerCallback {
                 private val bossBar: ManagedBossBar = ManagedBossBar(
                     plugin.adventure(), BossBar.Color.RED,
@@ -189,7 +189,6 @@ class ForestFacet(
                     bossBar.bossbar.progress(remainingTicks.toFloat() / originalTicks.toFloat())
                 }
             }).then {
-                if (gameOver) return@then
                 hunterTimeDump.destroyAll()
                 healAndClearInventoryOfPlayers(context.hunterTeam.players)
                 context.hunterTeam.players.forEach { player ->
@@ -205,7 +204,9 @@ class ForestFacet(
                     { it.type == Material.BARRIER }
                 )
 //                setupHunterPerks()
-            }.start()
+            }
+        dump.add(chooseTimer)
+        chooseTimer.start()
     }
 
     private fun setupSurvivorKitStage() {
@@ -257,7 +258,7 @@ class ForestFacet(
                 .append(Component.text(survivorWaitSeconds.toString()).color(NamedTextColor.GOLD))
                 .append(Component.text(" seconds!").color(NamedTextColor.GRAY))
         ))
-        Timer(plugin, 20L * survivorWaitSeconds)
+        val chooseTimer = Timer(plugin, 20L * survivorWaitSeconds)
             .attach(object : TimerCallback {
                 private val bossBar: ManagedBossBar = ManagedBossBar(
                     plugin.adventure(), BossBar.Color.RED,
@@ -284,7 +285,6 @@ class ForestFacet(
                 }
             })
             .then {
-                if (gameOver) return@then
                 survivorTimeDump.destroyAll()
                 healAndClearInventoryOfPlayers(context.survivorTeam.players)
                 context.survivorTeam.players.forEach { player ->
@@ -340,7 +340,8 @@ class ForestFacet(
                 }
 //                setupSurvivorPerks()
             }
-            .start()
+        dump.add(chooseTimer)
+        chooseTimer.start()
     }
 
     private fun setupGeneratorTask(generators: List<GeneratorDescription>, after: () -> Unit) {
@@ -413,6 +414,7 @@ class ForestFacet(
 
     private var gameOver = false
     private fun finishGame() {
+        if (gameOver) return
         val winnerMessage = if (context.survivorTeam.players.isEmpty())
             Component.text("HUNTERS WIN!").color(NamedTextColor.RED)
         else
@@ -435,6 +437,7 @@ class ForestFacet(
             )
         }, 1L)
         gameOver = true
+        context.playerAccess.all.forEach { context.playerTracker.removePlayer(it) }
         destruct()
     }
 

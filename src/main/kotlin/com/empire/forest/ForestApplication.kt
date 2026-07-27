@@ -53,6 +53,7 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
             Vector(329,-17,127)
         )
         private val SPAWN_LOCATION = RawLocation(48.0,71.0,9.0)
+        private val GAME_NAME = "The Forest"
     }
     private val appLevelDump = GlobalResourceTrackers.createResourceDump()
     private var userDatabase: ForestUserDatabase? = null
@@ -80,7 +81,7 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
     override fun getDisplayName(): Component =
         Component.text("The Forest").color(ForestConstants.FOREST_COLOR)
 
-    override fun getName(): String = "The Forest"
+    override fun getName(): String = GAME_NAME
 
     override fun getDirectory(plugin: Ignite) =
         File(plugin.applicationsDirectory, "the_forest")
@@ -89,7 +90,7 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
         return listOf(
             QueueCommand(this, plugin),
             LeaveCommand(),
-            SpectateCommand(),
+            SpectateCommand(plugin),
             TestIcvCommand(plugin),
             CoinsCommand(userDatabase!!)
         )
@@ -205,7 +206,8 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
                         }
                         node {
                             SpectatorFacet(
-                                plugin, context, null
+                                plugin, context,
+                                staticData.spectatorsSpawn.toLocation(context.world)!!
                             )
                         }
                     }
@@ -262,6 +264,7 @@ class ForestStaticData(
     val worldPath: String,
     val survivorsSpawn: RawLocation,
     val huntersSpawn: RawLocation,
+    val spectatorsSpawn: RawLocation,
     val generators: List<GeneratorDescription>,
     val escape: EscapeGateDescription,
     val survivorSpawnBarrierRegion: Region,

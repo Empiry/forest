@@ -19,7 +19,8 @@ object ForestStaticDataConfig {
         yLevelDeath = -40,
         worldPath = "./gamemaps/forestmapcopy",
         RawLocation(-187.0,-16.0,44.0,0.0F,0.0F),
-        RawLocation(-82.0, -17.0, 232.0),
+        RawLocation(-82.0, -17.0, 232.0, 180f, 0f),
+        spectatorsSpawn = RawLocation(-142.0, 8.0, 152.0, -53f, 37f),
         generators = listOf(
             GeneratorDescription(
                 name = "Dock",
@@ -84,6 +85,7 @@ object ForestStaticDataConfig {
         worldPath = "./gamemaps/forestmapcopy",
         survivorsSpawn = RawLocation(-150.0, 10.0, 89.0, 0.0F, 0.0F),
         huntersSpawn = RawLocation(-46.0, 9.0, 276.0, -180.0F, 0.0F),
+        spectatorsSpawn = RawLocation(-142.0, 8.0, 152.0, -53f, 37f),
         generators =
         listOf(
             GeneratorDescription(
@@ -123,7 +125,8 @@ object ForestStaticDataConfig {
         yLevelDeath = -40,
         worldPath = "./gamemaps/forestmapcopy",
         RawLocation(-187.0,-16.0,44.0,0.0F,0.0F),
-        RawLocation(-82.0, -17.0, 232.0),
+        RawLocation(-82.0, -17.0, 232.0, 180f, 0f),
+        spectatorsSpawn = RawLocation(-142.0, 8.0, 152.0, -53f, 37f),
         generators = listOf(
             GeneratorDescription(
                 name = "Dock",
