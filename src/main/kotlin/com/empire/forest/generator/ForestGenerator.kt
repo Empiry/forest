@@ -3,6 +3,7 @@ package com.empire.forest.generator
 import com.empire.forest.ForestContext
 import com.empire.ignite.Ignite
 import com.empire.ignite.util.IgniteResource
+import com.empire.ignite.util.entity.EntityModelBuilder
 import com.empire.ignite.util.location.RawLocation
 import com.empire.ignite.util.text.TextUtils
 import net.kyori.adventure.text.Component
@@ -10,9 +11,14 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Bukkit
 import org.bukkit.Location
+import org.bukkit.Material
+import org.bukkit.NamespacedKey
+import org.bukkit.entity.Entity
+import org.bukkit.entity.ItemDisplay
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
-import java.util.Random
+import org.bukkit.inventory.ItemStack
+import java.util.*
 import kotlin.math.floor
 
 class ForestGenerator(
@@ -29,12 +35,29 @@ class ForestGenerator(
     private var tickerTask : Int = -1
     private val unlockTicks = unlockSeconds*20
     private val random = Random()
+    private var modelEntity: Entity? = null
+    companion object {
+        private val GENERATOR_DISPLAY : EntityModelBuilder<ItemDisplay>
+
+        init {
+            val itemModel = ItemStack(Material.STONE)
+            val meta = itemModel.itemMeta;
+            meta.itemModel = NamespacedKey("horror", "objects/big_generator_off");
+            itemModel.setItemMeta(meta);
+            GENERATOR_DISPLAY = EntityModelBuilder(ItemDisplay::class.java) {
+                onSpawn {
+                    this.setItemStack(itemModel)
+                }
+            }
+        }
+    }
 
     var progressTicks : Int = 0
         private set
 
     override fun load() {
         tickerTask = Bukkit.getScheduler().runTaskTimer(ignite, this::process, 0L, 1L).taskId
+        modelEntity = GENERATOR_DISPLAY.spawn(location)
     }
 
     private val workingPlayers : MutableList<Player> = mutableListOf()
@@ -95,6 +118,8 @@ class ForestGenerator(
     override fun unload(external: Boolean) {
         if (tickerTask != -1) Bukkit.getScheduler().cancelTask(tickerTask)
         tickerTask = -1
+        modelEntity?.remove()
+        modelEntity = null
     }
 }
 

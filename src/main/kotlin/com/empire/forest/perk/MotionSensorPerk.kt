@@ -1,6 +1,7 @@
 package com.empire.forest.perk
 
 import com.empire.forest.ForestContext
+import com.empire.forest.util.ForestUtils
 import com.empire.hacks.common.builder.ClientEntityMetadataHelpers
 import com.empire.hacks.common.builder.UpdateEntityMetadataConverter
 import com.empire.hacks.common.builder.UpdateEntityMetadataPacketBuilder
@@ -63,7 +64,10 @@ class MotionSensorPerk(
                     )
                 )
             }
-            fakeGlow(context.hunterTeam.players.toList() + survivor, survivor, 15L * 20L)
+            ForestUtils.fakeGlow(
+                context.hunterTeam.players.toList() + survivor, listOf(survivor),
+                15L * 20L
+            )
             sensorBlocks -= event.block
             event.block.type = Material.AIR
         } else {
@@ -77,27 +81,6 @@ class MotionSensorPerk(
 
     override fun remove(player: Player) {
         bs.remove(player)
-    }
-
-    private fun fakeGlow(recipients: List<Player>, player: Player, duration: Long) {
-        val glowByte : Byte = 0x40
-        val glowOnPacket = UpdateEntityMetadataPacketBuilder(player, listOf(
-            UpdateEntityMetadataConverter.MainEntityByteMask { mask ->
-                mask or glowByte
-            }
-        ))
-        val metadataResetPacket = UpdateEntityMetadataPacketBuilder(player, listOf(
-            UpdateEntityMetadataConverter.MainEntityByteMask { mask -> mask }
-        ))
-        val unloadable = HACKS.overrideEntityMetadata(recipients, player, glowOnPacket)
-
-        // force-update before data-watcher kicks in
-        recipients.forEach { r -> HACKS.sendDeltaUpdateEntityMetadataPacket(r, glowOnPacket) }
-
-        GlobalResourceTrackers.scheduler.after(duration) {
-            unloadable.release()
-            recipients.forEach { r -> HACKS.sendDeltaUpdateEntityMetadataPacket(r, metadataResetPacket) }
-        }
     }
 
     override fun unload(external: Boolean) {

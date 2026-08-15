@@ -18,6 +18,7 @@ import com.empire.forest.mechanic.werewolf.WerewolfSpeedPerk
 import com.empire.forest.perk.ForestPerk
 import com.empire.forest.perk.HeartbeatPerk
 import com.empire.forest.perk.MotionSensorPerk
+import com.empire.forest.perk.RoarPerk
 import com.empire.forest.tablist.ForestTablist
 import com.empire.forest.util.ForestMatchStartEvent
 import com.empire.ignite.Ignite
@@ -241,7 +242,8 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
                 HeartbeatPerk(plugin, context),
                 MotionSensorPerk(plugin, context),
                 CloakingPerk(plugin),
-                WerewolfSpeedPerk(plugin)
+                WerewolfSpeedPerk(plugin),
+                RoarPerk(plugin, context)
             )
         )
         dump.add(itemBuilderActiveListener(plugin, context.locateGeneratorsItemBuilder)  { p, b ->

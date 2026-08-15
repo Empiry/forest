@@ -6,6 +6,7 @@ import com.empire.forest.mechanic.survivalist.TallGrassInvisibility
 import com.empire.forest.mechanic.werewolf.WerewolfSpeedPerk
 import com.empire.forest.perk.MotionSensorPerk
 import com.empire.forest.perk.PerkAbilityAdapter
+import com.empire.forest.perk.RoarPerk
 import com.empire.ignite.game.kit.GameKit
 import com.empire.ignite.game.kit.IgniteBundle
 import com.empire.ignite.game.kit.ItemKitComponent
@@ -50,6 +51,12 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
             abilityComponents = listOf(
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     TallGrassInvisibility(player, context)
+                ),
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    PerkAbilityAdapter(
+                        RoarPerk::class.java,
+                        context, player
+                    )
                 )
             )
         )

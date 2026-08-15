@@ -12,6 +12,7 @@ import org.bukkit.plugin.java.JavaPlugin
 
 class CooldownRightClickAbility(
     plugin: JavaPlugin, cooldownTicks: Long,
+    private val options: CooldownRightClickAbilityOptions,
     itemBuilder: ItemBuilder,
     private val effect: (Player) -> Unit
 ) : UnloadableResource {
@@ -46,10 +47,14 @@ class CooldownRightClickAbility(
             return
         }
         effect(player)
-        item.amount -= 1
+        if (options.consume) {
+            item.amount -= 1
+        }
     }
 
     override fun unload(external: Boolean) {
         dump.destroyAll()
     }
 }
+
+data class CooldownRightClickAbilityOptions(val consume: Boolean = true)
