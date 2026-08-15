@@ -99,10 +99,10 @@ class ForestFacet(
             }
         })
 
-        val tab = ForestTablist(plugin, context)
-        tab.load()
-        dump.add(tab)
-        context.tablist = tab
+//        val tab = ForestTablist(plugin, context)
+//        tab.load()
+//        dump.add(tab)
+//        context.tablist = tab
 
         val forestMechanics = ForestMechanics(plugin, context, dump)
         forestMechanics.load()
@@ -395,7 +395,7 @@ class ForestFacet(
         val discovery = ForestGeneratorDiscovery(context, generatorsAssociationList)
         dump.add(discovery)
 
-        context.tablist.registerGeneratorProgressUpdate(
+        context.tablist?.registerGeneratorProgressUpdate(
             generatorsAssociationList, discovery, generatorProgressCallback, dump
         )
         SurvivorScoreboard.create(

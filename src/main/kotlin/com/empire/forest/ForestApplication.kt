@@ -303,7 +303,7 @@ class ForestContext(
     lateinit var survivorTeam : IgniteTeam
     lateinit var survivorsSpawn: Location
     lateinit var huntersSpawn: Location
-    lateinit var tablist: ForestTablist
+    var tablist: ForestTablist? = null
 
     lateinit var survivorTeamChangeSetContract : ChangeSetContract<Player>
     lateinit var hunterTeamChangeSetContract : ChangeSetContract<Player>

@@ -11,6 +11,7 @@ import org.bukkit.Location
 import org.bukkit.Sound
 import org.bukkit.entity.ArmorStand
 import org.bukkit.entity.Entity
+import org.bukkit.entity.ItemDisplay
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerMoveEvent
@@ -42,11 +43,20 @@ class BearTrap(
             }.build()
         )
     }
-    private var armorstand : ArmorStand? = null
+    private val altemb = EntityModelBuilder(ItemDisplay::class.java) {
+        onSpawn(
+            EntityDecorator<ItemDisplay> {
+                direct {  id ->
+                    id.setItemStack(ResourcePackConstants.BEAR_TRAP_OPEN_ITEM_V2.build())
+                }
+            }.build()
+        )
+    }
+    private var armorstand : Entity? = null
 
     override fun load() {
         registerListener(plugin, this)
-        armorstand = emb.spawn(location.clone().subtract(Vector(0.0F, 0.8F, 0.0F)))
+        armorstand = altemb.spawn(location.clone().add(Vector(0.0F, 0.5F, 0.0F)))
     }
 
     @EventHandler

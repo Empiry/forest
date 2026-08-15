@@ -22,9 +22,9 @@ class BearTrapListener(
     private val keyName = "forestbeartrap"
     private val key = NamespacedKey(plugin, keyName)
     val bearTrapItemFn : (Player) -> ItemBuilder = {
-        ItemBuilder(Material.SHEARS) {
+        ItemBuilder(Material.STONE) {
             name(Component.text("Bear Trap!").color(NamedTextColor.YELLOW))
-            customModelData(ResourcePackConstants.BEAR_TRAP_OPEN_ITEM_CUSTOMMODELDATA)
+            itemModel(NamespacedKey("horror", "objects/survivor_beartrap"))
 
             lore(InventoryUtils.postprocessLore(listOf(
                 Component.text("Drop this to plant a bear trap!").color(NamedTextColor.RED)
