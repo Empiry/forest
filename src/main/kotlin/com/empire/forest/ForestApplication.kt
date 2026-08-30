@@ -15,6 +15,7 @@ import com.empire.forest.lobby.QueueSign
 import com.empire.forest.mechanic.ForestMechanics
 import com.empire.forest.mechanic.phantom.CloakingPerk
 import com.empire.forest.mechanic.werewolf.WerewolfSpeedPerk
+import com.empire.forest.perk.BuckshotPerk
 import com.empire.forest.perk.ForestPerk
 import com.empire.forest.perk.HeartbeatPerk
 import com.empire.forest.perk.MotionSensorPerk
@@ -243,7 +244,8 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
                 MotionSensorPerk(plugin, context),
                 CloakingPerk(plugin),
                 WerewolfSpeedPerk(plugin),
-                RoarPerk(plugin, context)
+                RoarPerk(plugin, context),
+                BuckshotPerk(plugin, context)
             )
         )
         dump.add(itemBuilderActiveListener(plugin, context.locateGeneratorsItemBuilder)  { p, b ->
@@ -258,7 +260,12 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
     }
 }
 
+typealias GeneratorSelection = ((List<GeneratorDescription>) -> (List<GeneratorDescription>))
+
 class ForestStaticData(
+    val mapName: String? = null,
+    val minRequiredGenerators : Int = -1,
+    val generatorSelection: GeneratorSelection? = null,
     val queueCountdownSeconds: Int,
     val survivorReleaseSeconds: Int,
     val hunterReleaseSeconds: Int,

@@ -28,7 +28,9 @@ class ForestGeneratorNameplate(
     private val description: GeneratorDescription,
     private val generator: ForestGenerator
 ) : UnloadableResource {
-    private val clientEntity = ClientEntity.textDisplay(description.place.toVector())
+    private val clientEntity = ClientEntity.textDisplay(
+        description.place.toVector().add(Vector(0.0, 0.5, 0.0))
+    )
     private val taskMap : OnlinePlayerData<ForestGeneratorNameplateUpdateTask> = OnlinePlayerData(
         plugin,
         onEvict = {_, task: ForestGeneratorNameplateUpdateTask ->

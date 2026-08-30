@@ -5,6 +5,8 @@ import com.empire.ignite.Ignite
 import com.empire.ignite.util.IgniteResource
 import com.empire.ignite.util.entity.EntityModelBuilder
 import com.empire.ignite.util.location.RawLocation
+import com.empire.ignite.util.region.CuboidRegion
+import com.empire.ignite.util.region.Region
 import com.empire.ignite.util.text.TextUtils
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -13,11 +15,11 @@ import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
-import org.bukkit.entity.Entity
 import org.bukkit.entity.ItemDisplay
 import org.bukkit.entity.Player
 import org.bukkit.event.Listener
 import org.bukkit.inventory.ItemStack
+import org.bukkit.util.Vector
 import java.util.*
 import kotlin.math.floor
 
@@ -35,7 +37,16 @@ class ForestGenerator(
     private var tickerTask : Int = -1
     private val unlockTicks = unlockSeconds*20
     private val random = Random()
-    private var modelEntity: Entity? = null
+    private var modelEntity: ItemDisplay? = null
+    private val captureRegion : Region
+
+    init {
+        captureRegion = CuboidRegion(
+            Vector(location.x + 2.5, location.y - 1, location.z + 1.5),
+            Vector(location.x - 2.5, location.y, location.z - 2.5)
+        )
+    }
+
     companion object {
         private val GENERATOR_DISPLAY : EntityModelBuilder<ItemDisplay>
 
@@ -57,7 +68,9 @@ class ForestGenerator(
 
     override fun load() {
         tickerTask = Bukkit.getScheduler().runTaskTimer(ignite, this::process, 0L, 1L).taskId
-        modelEntity = GENERATOR_DISPLAY.spawn(location)
+        if (modelEntity == null) {
+            modelEntity = GENERATOR_DISPLAY.spawn(location)
+        }
     }
 
     private val workingPlayers : MutableList<Player> = mutableListOf()
@@ -66,7 +79,9 @@ class ForestGenerator(
         var activeContributors = 0
         for (player in forestContext.playerTracker.players) {
             if (player.location.world != this.location.world) continue
-            if (player.location.distanceSquared(this.location) <= 4) {
+//            val inRegion = player.location.distanceSquared(this.location) <= 4
+            val inRegion = captureRegion.contains(player.location.toVector())
+            if (inRegion) {
                 workingPlayers += player
                 if (player.isSneaking) {
                     if (forestContext.isSurvivor(player))
@@ -111,6 +126,7 @@ class ForestGenerator(
         if (progressTicks >= unlockTicks) {
             completed = true
             unload()
+            turnOnGenerator()
             onComplete()
         }
     }
@@ -118,8 +134,14 @@ class ForestGenerator(
     override fun unload(external: Boolean) {
         if (tickerTask != -1) Bukkit.getScheduler().cancelTask(tickerTask)
         tickerTask = -1
-        modelEntity?.remove()
-        modelEntity = null
+    }
+
+    private fun turnOnGenerator() {
+        val itemModel = ItemStack(Material.STONE)
+        val meta = itemModel.itemMeta;
+        meta.itemModel = NamespacedKey("horror", "objects/big_generator_on");
+        itemModel.setItemMeta(meta);
+        modelEntity?.setItemStack(itemModel)
     }
 }
 

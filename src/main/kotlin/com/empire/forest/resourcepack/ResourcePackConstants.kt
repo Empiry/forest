@@ -14,8 +14,12 @@ object ResourcePackConstants {
         customModelData(BEAR_TRAP_OPEN_ITEM_CUSTOMMODELDATA)
     }
 
-    val BEAR_TRAP_OPEN_ITEM_V2 = ItemBuilder(Material.STONE) {
+    val BEAR_TRAP_OPEN_ITEM_SURVIVOR = ItemBuilder(Material.STONE) {
         itemModel(NamespacedKey("horror", "objects/survivor_beartrap"))
+    }
+
+    val BEAR_TRAP_OPEN_ITEM_HUNTER = ItemBuilder(Material.STONE) {
+        itemModel(NamespacedKey("horror", "objects/hunter_beartrap"))
     }
 
     val BEAR_TRAP_CLOSED_ITEM = ItemBuilder(Material.STONE) {

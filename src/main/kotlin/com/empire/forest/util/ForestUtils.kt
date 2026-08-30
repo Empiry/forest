@@ -4,7 +4,12 @@ import com.empire.hacks.common.builder.UpdateEntityMetadataConverter
 import com.empire.hacks.common.builder.UpdateEntityMetadataPacketBuilder
 import com.empire.ignite.util.GlobalResourceTrackers
 import com.empire.ignite.util.HACKS
+import com.empire.ignite.util.region.CuboidRegion
+import com.empire.ignite.util.region.RegionUtils
+import org.bukkit.Location
+import org.bukkit.Material
 import org.bukkit.entity.Player
+import org.bukkit.util.Vector
 import kotlin.collections.forEach
 import kotlin.experimental.or
 
@@ -44,5 +49,22 @@ object ForestUtils {
                 }
             }
         }
+    }
+
+    fun replacePlaceholderBlocks(generatorSource: Location) {
+        val broadRegion = CuboidRegion(
+            Vector(generatorSource.x + 3, generatorSource.y + 3, generatorSource.z + 3),
+            Vector(generatorSource.x - 3, generatorSource.y - 3, generatorSource.z - 3)
+        )
+        RegionUtils.fillRegionReplacing(
+            broadRegion, generatorSource.world, Material.AIR, { it.type == Material.RED_TERRACOTTA }
+        )
+//        val innerRegion = CuboidRegion(
+//            Vector(generatorSource.x + 1, generatorSource.y - 1, generatorSource.z),
+//            Vector(generatorSource.x - 1, generatorSource.y, generatorSource.z - 1)
+//        )
+//        RegionUtils.fillRegion(
+//            innerRegion, generatorSource.world, Material.BARRIER
+//        )
     }
 }

@@ -13,6 +13,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.Listener
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.java.JavaPlugin
+import java.util.UUID
 
 class BearTrapListener(
     private val plugin: JavaPlugin,
@@ -48,7 +49,7 @@ class BearTrapListener(
             if (entity !is Item) return@forEach
             val dropper = entity.itemStack.persistentDataContainer.get(key, PersistentDataType.STRING)
                 ?: return@forEach
-            val planter = Bukkit.getPlayer(dropper)
+            val planter = Bukkit.getPlayer(UUID.fromString(dropper))
             entity.world.playSound(entity.location.clone(), Sound.UI_BUTTON_CLICK, 1.0F, 1.0F)
             val location = entity.location.clone()
             entity.remove()
@@ -56,8 +57,12 @@ class BearTrapListener(
         }
     }
 
-    private fun spawnBearTrap(planter: Entity?, location: Location) {
-        val bt = BearTrap(plugin, context, planter, location)
+    private fun spawnBearTrap(planter: Player?, location: Location) {
+        val isSurvivor = planter != null && planter in context.survivorTeam.players
+        val bt = BearTrap(
+            plugin, context, planter, location,
+            if (isSurvivor) BearTrap.Type.SURVIVOR else BearTrap.Type.HUNTER
+        )
         bt.load()
         dump.add(bt)
     }

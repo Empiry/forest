@@ -13,8 +13,8 @@ import com.empire.forest.kit.HunterKit
 import com.empire.forest.kit.SurvivorKit
 import com.empire.forest.mechanic.ForestMechanics
 import com.empire.forest.scoreboard.SurvivorScoreboard
-import com.empire.forest.tablist.ForestTablist
 import com.empire.forest.util.ForestMessaging
+import com.empire.forest.util.ForestUtils
 import com.empire.ignite.Ignite
 import com.empire.ignite.game.application.GameFacetV2
 import com.empire.ignite.game.facets.DeathEvents
@@ -29,14 +29,12 @@ import com.empire.ignite.util.item.PlayerItemModder
 import com.empire.ignite.util.item.PlayerItemMods
 import com.empire.ignite.util.region.RegionUtils
 import com.empire.ignite.util.text.TextUtils.flattenComponents
-import com.empire.ignite.util.text.TextUtils.normalizeComponent
 import com.empire.ignite.util.timer.Timer
 import com.empire.ignite.util.timer.TimerCallback
 import com.empire.ignite.util.ui.ManagedBossBar
 import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.Style
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import org.bukkit.*
@@ -44,8 +42,10 @@ import org.bukkit.block.BlockFace
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.block.BlockFadeEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.FoodLevelChangeEvent
+import org.bukkit.event.player.PlayerMoveEvent
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.util.*
@@ -68,8 +68,8 @@ class ForestFacet(
             if (debug) {
 //                context.addSurvivor(player)
                 if ("ThatOneTqnk".equals(player.name, ignoreCase = true)) {
-                    context.addHunter(player)
-//                    context.addSurvivor(player)
+//                    context.addHunter(player)
+                    context.addSurvivor(player)
                 } else {
                     context.addSurvivor(player)
                 }
@@ -197,12 +197,20 @@ class ForestFacet(
 //                    selectedKit.gameKit.apply(player, context)
                     kitTracker.addKitToPlayer(player, ForestKitKey(selectedKit), context)
                 }
-                RegionUtils.fillRegionReplacing(
-                    context.staticData.hunterSpawnBarrierRegion,
-                    context.world!!,
-                    Material.AIR,
-                    { it.type == Material.BARRIER }
-                )
+                if (context.staticData.mapName == "farm") {
+                    RegionUtils.fillRegion(
+                        context.staticData.hunterSpawnBarrierRegion,
+                        context.world!!,
+                        Material.AIR
+                    )
+                } else {
+                    RegionUtils.fillRegionReplacing(
+                        context.staticData.hunterSpawnBarrierRegion,
+                        context.world!!,
+                        Material.AIR,
+                        { it.type == Material.BARRIER }
+                    )
+                }
 //                setupHunterPerks()
             }
         dump.add(chooseTimer)
@@ -210,11 +218,14 @@ class ForestFacet(
     }
 
     private fun setupSurvivorKitStage() {
-        RegionUtils.fillRegionBlockData(
-            context.staticData.survivorSpawnBarrierRegion,
-            context.world!!,
-            HACKS.createIronBarsBlockData(listOf(BlockFace.EAST, BlockFace.WEST))
-        )
+        if (context.staticData.mapName == "farm") {
+        } else {
+            RegionUtils.fillRegionBlockData(
+                context.staticData.survivorSpawnBarrierRegion,
+                context.world!!,
+                HACKS.createIronBarsBlockData(listOf(BlockFace.EAST, BlockFace.WEST))
+            )
+        }
 
         val survivorKitSelectionItem = ItemBuilder(Material.CLOCK) {
             name(Component.text("Choose Survivor Kit").color(ForestConstants.SURVIVORS_COLOR))
@@ -299,7 +310,11 @@ class ForestFacet(
                 )
                 context.sendToAll(ForestMessaging.createForestMessage("Survivors have been released!"))
 
-                setupGeneratorTask(context.staticData.generators) {
+                val selectedGenerators = if (context.staticData.generatorSelection == null)
+                    context.staticData.generators
+                else
+                    context.staticData.generatorSelection!!.invoke(context.staticData.generators)
+                setupGeneratorTask(selectedGenerators) {
                     sendMessageToPlayers(
                         context.playerAccess.all,
                         Component.newline()
@@ -345,7 +360,9 @@ class ForestFacet(
     }
 
     private fun setupGeneratorTask(generators: List<GeneratorDescription>, after: () -> Unit) {
-        val generatorCount = generators.size
+        val generatorCount =
+            if (context.staticData.minRequiredGenerators == -1) generators.size
+            else context.staticData.minRequiredGenerators
         var generatorsFinished = 0
 
         val generatorBossBar = GameBossBar(
@@ -368,7 +385,7 @@ class ForestFacet(
                 plugin, context, spot, desc.unlockSeconds,
                 context.staticData.contributionMultiplier, forwarder.sink,
             ) {
-                context.playerTracker.players.forEach { survivor ->
+                context.survivorTeam.players.forEach { survivor ->
                     survivor.sendMessage(
                         ForestMessaging.withPrefix(
                             Component.text("Generator ", NamedTextColor.GRAY)
@@ -388,6 +405,7 @@ class ForestFacet(
             }
             dump.add(generator)
             generator.load()
+            ForestUtils.replacePlaceholderBlocks(spot)
             generatorMap += desc to generator
         }
         val generatorsAssociationList = generatorMap.toList()
@@ -498,6 +516,34 @@ class ForestFacet(
         event.isCancelled = true
         event.entity.foodLevel = 20
     }
+
+    @EventHandler
+    private fun onBlockFade(event: BlockFadeEvent) {
+        if (event.block.world != context.world) return
+        if (event.block.type.name.contains("CORAL_FAN")) {
+            event.isCancelled = true
+        }
+    }
+
+    @EventHandler
+    private fun onMove(event: PlayerMoveEvent) {
+        if (event.from.world != context.world) return
+        if (event.player !in context.playerAccess.alive || event.player !in context.survivorTeam.players) return
+        if (!getBodyBlocks(event.from).any { it.block.type.name.contains("CORAL_FAN") }) return
+        if (event.player.activePotionEffects.any { it.type == PotionEffectType.SLOWNESS }) return
+        event.player.addPotionEffect(
+            PotionEffect(
+                PotionEffectType.SLOWNESS, 10, 0, true, false
+            )
+        )
+    }
+
+    private fun getBodyBlocks(source: Location) : List<Location> =
+        listOf(
+            source,
+            source.clone().add(0.0, 1.0, 0.0),
+            source.clone().add(0.0, 2.0, 0.0)
+        )
 
     override fun onUnload() {
         dump.destroyAll()
