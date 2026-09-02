@@ -348,6 +348,13 @@ class ForestContext(
     fun isSurvivor(player: Player) = survivorTeam.players.contains(player)
     fun isHunter(player: Player) = hunterTeam.players.contains(player)
 
+    fun canDamage(p1: Player, p2: Player) : Boolean {
+        if (p1 !in playerAccess.alive || p2 !in playerAccess.alive) return false
+        val p1team = findPlayerTeam(p1) ?: return false
+        val p2team = findPlayerTeam(p2) ?: return false
+        return p1team != p2team
+    }
+
     fun addSurvivor(player: Player) {
         survivorTeam.addPlayer(player)
         survivorTeamChangeSetContract.addSink(player)

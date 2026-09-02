@@ -68,8 +68,8 @@ class ForestFacet(
             if (debug) {
 //                context.addSurvivor(player)
                 if ("ThatOneTqnk".equals(player.name, ignoreCase = true)) {
-//                    context.addHunter(player)
-                    context.addSurvivor(player)
+                    context.addHunter(player)
+//                    context.addSurvivor(player)
                 } else {
                     context.addSurvivor(player)
                 }
