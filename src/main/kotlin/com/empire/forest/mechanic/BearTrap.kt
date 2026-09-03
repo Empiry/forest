@@ -1,17 +1,22 @@
 package com.empire.forest.mechanic
 
 import com.empire.forest.ForestContext
+import com.empire.forest.perk.BuckshotPerk
 import com.empire.forest.resourcepack.ResourcePackConstants
+import com.empire.ignite.util.GlobalResourceTrackers
 import com.empire.ignite.util.IgniteResource
 import com.empire.ignite.util.entity.EntityDecorator
 import com.empire.ignite.util.entity.EntityModelBuilder
 import com.empire.ignite.util.item.ItemBuilder
 import com.empire.ignite.util.registerListener
 import com.empire.ignite.util.unregisterListener
+import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Sound
+import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Entity
 import org.bukkit.entity.ItemDisplay
+import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerMoveEvent
@@ -61,10 +66,26 @@ class BearTrap(
         val dmg = 3.5
         if (planter == null) player.damage(dmg)
         else player.damage(dmg, planter)
-        player.addPotionEffect(
-            PotionEffect(PotionEffectType.SLOWNESS, 60, 120, true, false)
-        )
+
+        freeze(player)
+
+//        player.addPotionEffect(
+//            PotionEffect(PotionEffectType.SLOWNESS, 60, 120, true, false)
+//        )
+        Bukkit.getScheduler().runTaskLater(GlobalResourceTrackers.plugin!!, Runnable {
+            unfreeze(player)
+        }, 60L)
         unload()
+    }
+
+    private fun freeze(player: Player) {
+        player.getAttribute(Attribute.MOVEMENT_SPEED)?.let { it.baseValue = 0.0 }
+        player.getAttribute(Attribute.JUMP_STRENGTH)?.let { it.baseValue = 0.0 }
+    }
+
+    private fun unfreeze(player: Player) {
+        player.getAttribute(Attribute.MOVEMENT_SPEED)?.let { it.baseValue = 0.10000000149011612 }
+        player.getAttribute(Attribute.JUMP_STRENGTH)?.let { it.baseValue = it.defaultValue }
     }
 
     override fun unload(external: Boolean) {

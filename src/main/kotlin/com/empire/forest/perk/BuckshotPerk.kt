@@ -13,6 +13,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import org.bukkit.*
+import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -139,7 +140,7 @@ class BuckshotPerk(
         val rays = directions.map { direction ->
             val raySpot = spot.clone()
             raySpot.direction = direction.clone()
-            val ray = Ray(raySpot, distance = 3.5, stepSize = 0.25)
+            val ray = Ray(raySpot, distance = 12.0, stepSize = 0.25)
             ray
         }
         return rays
@@ -291,6 +292,7 @@ class BuckshotPlayerData(
     fun reloadAmmo() {
         if (ammo >= BuckshotPerk.AMMO_INIT || reloading) return
         var updateTicks = 0
+        freeze()
         Displays.getSubtitle(player).displayQueueManager.submitTemporary(50L) {
             updateTicks++
             val dots = ".".repeat(((updateTicks / 8) % 3) + 1)
@@ -304,6 +306,7 @@ class BuckshotPlayerData(
         Bukkit.getScheduler().runTaskLater(GlobalResourceTrackers.plugin!!, Runnable {
             ammo = BuckshotPerk.AMMO_INIT
             player.inventory.setItem(17, BuckshotPerk.arrowIB.build())
+            unfreeze()
             reloading = false
         }, 50L)
         player.playSound(
@@ -311,6 +314,16 @@ class BuckshotPlayerData(
             SoundCategory.MASTER, 1.0f, 1.0f
         )
         reloading = true
+    }
+
+    fun freeze() {
+        player.getAttribute(Attribute.MOVEMENT_SPEED)?.let { it.baseValue = 0.0 }
+        player.getAttribute(Attribute.JUMP_STRENGTH)?.let { it.baseValue = 0.0 }
+    }
+
+    fun unfreeze() {
+        player.getAttribute(Attribute.MOVEMENT_SPEED)?.let { it.baseValue = 0.10000000149011612 }
+        player.getAttribute(Attribute.JUMP_STRENGTH)?.let { it.baseValue = it.defaultValue }
     }
 
     fun disableSubtitle() {
