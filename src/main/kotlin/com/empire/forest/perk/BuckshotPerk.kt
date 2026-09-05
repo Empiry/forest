@@ -2,6 +2,7 @@ package com.empire.forest.perk
 
 import com.empire.forest.ForestContext
 import com.empire.forest.constants.ForestConstants
+import com.empire.forest.util.PlayerDataAccess
 import com.empire.ignite.display.DisplayUpdater
 import com.empire.ignite.display.Displays
 import com.empire.ignite.util.*
@@ -27,7 +28,7 @@ import org.bukkit.util.Vector
 class BuckshotPerk(
     plugin: JavaPlugin,
     private val context: ForestContext
-) : ForestPerk, Listener {
+) : ForestPerk<Unit>, Listener {
     companion object {
         private val crossbowIdentifier = NamespacedKey("chud", "buckshot")
         private val crossbowIB = ItemBuilder(Material.CROSSBOW) {
@@ -53,6 +54,7 @@ class BuckshotPerk(
     private val players = OnlinePlayerSet()
     private val playerData = OnlinePlayerData<BuckshotPlayerData>(plugin, onEvict = { _, rel -> rel.unload() })
     private var task : Int = -1
+    override val contextManager: PlayerDataAccess<Unit> = PlayerDataAccess.noop()
 
     init {
         registerListener(plugin, this)

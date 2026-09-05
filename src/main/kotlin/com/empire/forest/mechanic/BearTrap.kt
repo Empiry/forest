@@ -5,6 +5,7 @@ import com.empire.forest.perk.BuckshotPerk
 import com.empire.forest.resourcepack.ResourcePackConstants
 import com.empire.ignite.util.GlobalResourceTrackers
 import com.empire.ignite.util.IgniteResource
+import com.empire.ignite.util.callback.ForwardCallbackRegistration
 import com.empire.ignite.util.entity.EntityDecorator
 import com.empire.ignite.util.entity.EntityModelBuilder
 import com.empire.ignite.util.item.ItemBuilder
@@ -50,6 +51,11 @@ class BearTrap(
     private val survivorEMB = bearTrapEMB(ResourcePackConstants.BEAR_TRAP_OPEN_ITEM_SURVIVOR)
     private val hunterEMB = bearTrapEMB(ResourcePackConstants.BEAR_TRAP_OPEN_ITEM_HUNTER)
     private var itemDisplay : Entity? = null
+    private val callbacks: MutableList<BearTrapCallback> = mutableListOf()
+
+    fun onTrap(callback: BearTrapCallback) {
+        callbacks += callback
+    }
 
     override fun load() {
         registerListener(plugin, this)
@@ -69,12 +75,10 @@ class BearTrap(
 
         freeze(player)
 
-//        player.addPotionEffect(
-//            PotionEffect(PotionEffectType.SLOWNESS, 60, 120, true, false)
-//        )
         Bukkit.getScheduler().runTaskLater(GlobalResourceTrackers.plugin!!, Runnable {
             unfreeze(player)
         }, 60L)
+        callbacks.forEach { callback -> callback.onTrap(this) }
         unload()
     }
 
@@ -93,4 +97,8 @@ class BearTrap(
         itemDisplay?.remove()
         itemDisplay = null
     }
+}
+
+fun interface BearTrapCallback {
+    fun onTrap(trap: BearTrap)
 }

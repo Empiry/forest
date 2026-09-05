@@ -3,6 +3,7 @@ package com.empire.forest.mechanic.werewolf
 import com.empire.forest.mechanic.CooldownRightClickAbility
 import com.empire.forest.mechanic.CooldownRightClickAbilityOptions
 import com.empire.forest.perk.ForestPerk
+import com.empire.forest.util.PlayerDataAccess
 import com.empire.ignite.util.item.ItemBuilder
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -15,9 +16,10 @@ import org.bukkit.potion.PotionEffectType
 
 class WerewolfSpeedPerk(
     plugin: JavaPlugin
-) : ForestPerk {
+) : ForestPerk<Unit> {
     private val ability: CooldownRightClickAbility
     private val item: ItemStack
+    override val contextManager: PlayerDataAccess<Unit> = PlayerDataAccess.noop()
 
     init {
         val itemBuilder = ItemBuilder(Material.QUARTZ) {

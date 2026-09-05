@@ -101,6 +101,10 @@ object ForestStaticDataConfig {
         yLevelDeath = -40,
         worldPath = "./gamemaps/farm",
         survivorsSpawn = RawLocation(-109.0,-1.0,423.0,0.0F,0.0F),
+        survivorsRegion = CuboidRegion(
+            Vector(-106.0,-1.0,421.0),
+            Vector(-111.0,-1.0,427.0)
+        ),
         huntersSpawn = RawLocation(-216.0,-3.0,446.0, -90f, 0f),
         spectatorsSpawn = RawLocation(-188.0,10.0,464.0,-31.9f,33.4f),
         generators = listOf(
@@ -150,7 +154,7 @@ object ForestStaticDataConfig {
                 AggregateRegion(listOf(
                     CuboidRegion(
                         Vector(-117,-1,419),
-                        Vector(-116,1,418),
+                        Vector(-116,1,420),
                     ),
                     CuboidRegion(
                         Vector(-100,1,429),
@@ -171,7 +175,7 @@ object ForestStaticDataConfig {
 
     val TEST_SERVER_FARM = ForestStaticData(
         mapName = "farm",
-        minRequiredGenerators = 6,
+        minRequiredGenerators = 1,
         generatorSelection = FARM_SELECTION,
         queueCountdownSeconds = 3,
         survivorReleaseSeconds = 4,
@@ -179,6 +183,10 @@ object ForestStaticDataConfig {
         yLevelDeath = -40,
         worldPath = "./gamemaps/farm",
         survivorsSpawn = RawLocation(-109.0,-1.0,423.0,0.0F,0.0F),
+        survivorsRegion = CuboidRegion(
+            Vector(-106.0,-1.0,421.0),
+            Vector(-111.0,-1.0,427.0)
+        ),
         huntersSpawn = RawLocation(-216.0,-3.0,446.0, -90f, 0f),
         spectatorsSpawn = RawLocation(-188.0,10.0,464.0,-31.9f,33.4f),
         generators = listOf(
@@ -228,7 +236,7 @@ object ForestStaticDataConfig {
                 AggregateRegion(listOf(
                     CuboidRegion(
                         Vector(-117,-1,419),
-                        Vector(-116,1,418),
+                        Vector(-116,1,420),
                     ),
                     CuboidRegion(
                         Vector(-100,1,429),

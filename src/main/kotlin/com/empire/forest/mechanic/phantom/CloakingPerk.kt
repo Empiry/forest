@@ -1,6 +1,7 @@
 package com.empire.forest.mechanic.phantom
 
 import com.empire.forest.perk.ForestPerk
+import com.empire.forest.util.PlayerDataAccess
 import com.empire.ignite.game.kit.ability.AbilityCooldown
 import com.empire.ignite.util.GlobalResourceTrackers
 import com.empire.ignite.util.UnloadableResource
@@ -18,7 +19,7 @@ import org.bukkit.potion.PotionEffectType
 
 class CloakingPerk(
     plugin: JavaPlugin
-) : ForestPerk {
+) : ForestPerk<Unit> {
     private val itemBuilder = ItemBuilder(Material.PURPLE_STAINED_GLASS_PANE) {
         name(Component.text("Cloaking item").color(NamedTextColor.DARK_BLUE))
         lore(
@@ -32,6 +33,7 @@ class CloakingPerk(
     private val item : ItemStack
     private val cooldown: AbilityCooldown = AbilityCooldown(plugin, 20L * 25L)
     private val dump = GlobalResourceTrackers.createResourceDump()
+    override val contextManager: PlayerDataAccess<Unit> = PlayerDataAccess.noop()
 
     init {
         onlinePlayerSet.load()

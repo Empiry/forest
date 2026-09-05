@@ -8,6 +8,7 @@ import com.empire.ignite.util.region.CuboidRegion
 import com.empire.ignite.util.region.RegionUtils
 import org.bukkit.Location
 import org.bukkit.Material
+import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
 import org.bukkit.util.Vector
 import kotlin.collections.forEach
@@ -66,5 +67,16 @@ object ForestUtils {
 //        RegionUtils.fillRegion(
 //            innerRegion, generatorSource.world, Material.BARRIER
 //        )
+    }
+
+
+    fun freezePlayer(player: Player) {
+        player.getAttribute(Attribute.MOVEMENT_SPEED)?.let { it.baseValue = 0.0 }
+        player.getAttribute(Attribute.JUMP_STRENGTH)?.let { it.baseValue = 0.0 }
+    }
+
+    fun unfreezePlayer(player: Player) {
+        player.getAttribute(Attribute.MOVEMENT_SPEED)?.let { it.baseValue = 0.10000000149011612 }
+        player.getAttribute(Attribute.JUMP_STRENGTH)?.let { it.baseValue = it.defaultValue }
     }
 }

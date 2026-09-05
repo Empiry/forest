@@ -4,8 +4,11 @@ import com.empire.forest.ForestContext
 import com.empire.forest.mechanic.phantom.CloakingPerk
 import com.empire.forest.mechanic.survivalist.TallGrassInvisibility
 import com.empire.forest.mechanic.werewolf.WerewolfSpeedPerk
+import com.empire.forest.perk.BearTrapPerk
+import com.empire.forest.perk.BearTrapPlayerData
 import com.empire.forest.perk.BuckshotPerk
 import com.empire.forest.perk.MotionSensorPerk
+import com.empire.forest.perk.NewMotionSensorPerk
 import com.empire.forest.perk.PerkAbilityAdapter
 import com.empire.forest.perk.RoarPerk
 import com.empire.ignite.game.kit.GameKit
@@ -40,13 +43,10 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
 
         unbreakable()
     }, GameKit() { player, context ->
-        val bearTrapItem = context.forestMechanics.getBearTrapItem(player)
-        bearTrapItem.amount = 10
         IgniteBundle(
             ItemKitComponent(
                 listOf(
-                    0 to SWORD,
-                    1 to bearTrapItem
+                    0 to SWORD
                 ).toMap(),
             ),
             abilityComponents = listOf(
@@ -56,14 +56,26 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     PerkAbilityAdapter(
                         RoarPerk::class.java,
-                        context, player
+                        context, player, { }
                     )
                 ),
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     PerkAbilityAdapter(
                         BuckshotPerk::class.java,
-                        context, player
+                        context, player, { }
                     )
+                ),
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    PerkAbilityAdapter(
+                        BearTrapPerk::class.java,
+                        context, player
+                    ) { BearTrapPlayerData(trapCount = 8) }
+                ),
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    PerkAbilityAdapter(
+                        NewMotionSensorPerk::class.java,
+                        context, player
+                    ) { }
                 )
             )
         )
@@ -95,7 +107,7 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     PerkAbilityAdapter(
                         CloakingPerk::class.java,
-                        context, player
+                        context, player, { }
                     )
                 )
             )
@@ -127,7 +139,7 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     PerkAbilityAdapter(
                         WerewolfSpeedPerk::class.java,
-                        context, player
+                        context, player, { }
                     )
                 )
             )
@@ -160,7 +172,7 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     PerkAbilityAdapter(
                         MotionSensorPerk::class.java,
-                        context, player
+                        context, player, { }
                     )
                 )
             )

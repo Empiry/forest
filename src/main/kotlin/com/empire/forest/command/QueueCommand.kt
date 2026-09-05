@@ -42,7 +42,7 @@ class QueueCommand(
                     null
                 } else {
                     val newMatch = plugin.matchManager.scheduleMatch(
-                        MatchConfiguration("main", app, ForestStaticDataConfig.TEST_SERVER_FARM)
+                        MatchConfiguration("main", app, ForestStaticDataConfig.MAIN_SERVER_FARM)
                     )
                     newMatch.start()
                     newMatch

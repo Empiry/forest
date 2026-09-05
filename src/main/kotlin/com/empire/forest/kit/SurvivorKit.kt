@@ -2,6 +2,9 @@ package com.empire.forest.kit
 
 import com.empire.forest.ForestContext
 import com.empire.forest.mechanic.survivalist.TallGrassInvisibility
+import com.empire.forest.perk.BearTrapPerk
+import com.empire.forest.perk.BearTrapPlayerData
+import com.empire.forest.perk.PerkAbilityAdapter
 import com.empire.ignite.game.kit.GameKit
 import com.empire.ignite.game.kit.ItemKitComponent
 import com.empire.ignite.util.InventoryUtils
@@ -81,13 +84,14 @@ enum class SurvivorKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestCont
 
         unbreakable()
     }, GameKit() { player, context ->
-        val bearTrapItem = context.forestMechanics.getBearTrapItem(player)
-        bearTrapItem.amount = 8
         com.empire.ignite.game.kit.IgniteBundle(
-            ItemKitComponent(
-                listOf(
-                    0 to bearTrapItem
-                ).toMap(),
+            abilityComponents = listOf(
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    PerkAbilityAdapter(
+                        BearTrapPerk::class.java,
+                        context, player
+                    ) { BearTrapPlayerData(trapCount = 8) }
+                )
             )
         )
     });

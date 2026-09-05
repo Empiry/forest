@@ -5,6 +5,7 @@ import com.empire.forest.constants.ForestConstants
 import com.empire.forest.mechanic.CooldownRightClickAbility
 import com.empire.forest.mechanic.CooldownRightClickAbilityOptions
 import com.empire.forest.util.ForestUtils
+import com.empire.forest.util.PlayerDataAccess
 import com.empire.ignite.util.item.ItemBuilder
 import com.empire.ignite.util.playSoundToPlayers
 import net.kyori.adventure.text.Component
@@ -18,9 +19,10 @@ import org.bukkit.plugin.java.JavaPlugin
 class RoarPerk(
     plugin: JavaPlugin,
     private val context: ForestContext
-) : ForestPerk {
+) : ForestPerk<Unit> {
     private val ability: CooldownRightClickAbility
     private val item: ItemStack
+    override val contextManager: PlayerDataAccess<Unit> = PlayerDataAccess.noop()
 
     init {
         val itemBuilder = ItemBuilder(Material.BELL) {

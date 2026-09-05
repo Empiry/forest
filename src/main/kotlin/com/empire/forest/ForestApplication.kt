@@ -12,14 +12,9 @@ import com.empire.forest.generator.GeneratorDescription
 import com.empire.forest.generic.TeamDamageNullifyFacet
 import com.empire.forest.lobby.LobbyListener
 import com.empire.forest.lobby.QueueSign
-import com.empire.forest.mechanic.ForestMechanics
 import com.empire.forest.mechanic.phantom.CloakingPerk
 import com.empire.forest.mechanic.werewolf.WerewolfSpeedPerk
-import com.empire.forest.perk.BuckshotPerk
-import com.empire.forest.perk.ForestPerk
-import com.empire.forest.perk.HeartbeatPerk
-import com.empire.forest.perk.MotionSensorPerk
-import com.empire.forest.perk.RoarPerk
+import com.empire.forest.perk.*
 import com.empire.forest.tablist.ForestTablist
 import com.empire.forest.util.ForestMatchStartEvent
 import com.empire.ignite.Ignite
@@ -240,12 +235,14 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
         )
         context.perks.addAll(
             listOf(
+                BearTrapPerk(plugin, context),
                 HeartbeatPerk(plugin, context),
                 MotionSensorPerk(plugin, context),
                 CloakingPerk(plugin),
                 WerewolfSpeedPerk(plugin),
                 RoarPerk(plugin, context),
-                BuckshotPerk(plugin, context)
+                BuckshotPerk(plugin, context),
+                NewMotionSensorPerk(plugin, context)
             )
         )
         dump.add(itemBuilderActiveListener(plugin, context.locateGeneratorsItemBuilder)  { p, b ->
@@ -272,6 +269,7 @@ class ForestStaticData(
     val yLevelDeath: Int,
     val worldPath: String,
     val survivorsSpawn: RawLocation,
+    val survivorsRegion: CuboidRegion? = null,
     val huntersSpawn: RawLocation,
     val spectatorsSpawn: RawLocation,
     val generators: List<GeneratorDescription>,
@@ -309,17 +307,18 @@ class ForestContext(
     lateinit var hunterTeam : IgniteTeam
     lateinit var survivorTeam : IgniteTeam
     lateinit var survivorsSpawn: Location
+    var survivorsRegion: CuboidRegion? = null
     lateinit var huntersSpawn: Location
     var tablist: ForestTablist? = null
 
     lateinit var survivorTeamChangeSetContract : ChangeSetContract<Player>
     lateinit var hunterTeamChangeSetContract : ChangeSetContract<Player>
 
-    lateinit var forestMechanics : ForestMechanics
-    val perks : MutableList<ForestPerk> = mutableListOf()
+    val perks : MutableList<ForestPerk<*>> = mutableListOf()
 
     fun loadSpawns() : Boolean {
         this.survivorsSpawn = staticData.survivorsSpawn.toLocation(world)!!
+        this.survivorsRegion = staticData.survivorsRegion
         this.huntersSpawn = staticData.huntersSpawn.toLocation(world)!!
         return true
     }
@@ -329,8 +328,8 @@ class ForestContext(
         hunterTeamChangeSetContract = ChangingSetUtils.createChangingSet(hunterTeam.players)
     }
 
-    fun getPerk(perkClass: Class<out ForestPerk>) : ForestPerk? =
-        perks.firstOrNull { perkClass.isAssignableFrom(it.javaClass) }
+    fun <C> getPerk(perkClass: Class<out ForestPerk<C>>) : ForestPerk<C>? =
+        perks.firstOrNull { perkClass.isAssignableFrom(it.javaClass) } as ForestPerk<C>?
 
     // utility functions
     fun sendToHunters(component: Component) {

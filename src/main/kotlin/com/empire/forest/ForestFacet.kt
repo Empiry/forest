@@ -7,11 +7,11 @@ import com.empire.forest.generator.ForestGenerator
 import com.empire.forest.generator.ForestGeneratorDiscovery
 import com.empire.forest.generator.ForestGeneratorNameplate
 import com.empire.forest.generator.GeneratorDescription
+import com.empire.forest.hud.HunterHUD
 import com.empire.forest.kit.ForestKitKey
 import com.empire.forest.kit.ForestKitProvider
 import com.empire.forest.kit.HunterKit
 import com.empire.forest.kit.SurvivorKit
-import com.empire.forest.mechanic.ForestMechanics
 import com.empire.forest.scoreboard.SurvivorScoreboard
 import com.empire.forest.util.ForestMessaging
 import com.empire.forest.util.ForestUtils
@@ -55,10 +55,11 @@ class ForestFacet(
     context: ForestContext,
     private val dump: ManagedResourceDump
 ) : GameFacetV2<ForestStaticData, ForestContext>(plugin, context), DeathEvents, PlayerManagementFacetEvents, Listener {
-    private val escapees : MutableSet<Player> = mutableSetOf()
+    private val escapees : MutableSet<UUID> = mutableSetOf()
     private val generatorProgressCallback = ForwardingCallback.create<Unit>()
     private val kitTracker: KitTracker<ForestKitKey, ForestContext> = KitTracker(plugin, ForestKitProvider)
     private val debug = (context.interactiveData?.isDebug ?: false)
+    private var hunterHUD : HunterHUD? = null
 
     override fun onLoad() {
         val hunter = context.playerTracker.players.random()
@@ -91,7 +92,12 @@ class ForestFacet(
         context.world!!.setGameRule(GameRules.ADVANCE_TIME, false)
         context.world!!.setGameRule(GameRules.LOCATOR_BAR, false)
         context.hunterTeam.players.forEach { player -> player.teleport(context.huntersSpawn) }
-        context.survivorTeam.players.forEach { player -> player.teleport(context.survivorsSpawn) }
+        context.survivorTeam.players.forEach { player ->
+            player.teleport(
+                context.survivorsRegion?.random(0.4)?.toLocation(context.world!!) ?:
+                context.survivorsSpawn
+            )
+        }
         dump.add(object : UnloadableResource {
             override fun unload(external: Boolean) {
                 context.hunterTeam.unload()
@@ -104,10 +110,9 @@ class ForestFacet(
 //        dump.add(tab)
 //        context.tablist = tab
 
-        val forestMechanics = ForestMechanics(plugin, context, dump)
-        forestMechanics.load()
-        dump.add(forestMechanics)
-        context.forestMechanics = forestMechanics
+        this.hunterHUD = HunterHUD(plugin, context, kitTracker)
+        this.hunterHUD!!.load()
+        dump.add(hunterHUD!!)
 
         setupHunterKitStage()
         setupSurvivorKitStage()
@@ -197,6 +202,7 @@ class ForestFacet(
 //                    selectedKit.gameKit.apply(player, context)
                     kitTracker.addKitToPlayer(player, ForestKitKey(selectedKit), context)
                 }
+                hunterHUD!!.onKitSelection()
                 if (context.staticData.mapName == "farm") {
                     RegionUtils.fillRegion(
                         context.staticData.hunterSpawnBarrierRegion,
@@ -260,6 +266,7 @@ class ForestFacet(
                 Component.text("Choose your kit!").color(ForestConstants.SURVIVORS_COLOR),
                 Component.text("Right-click the kit selector item to choose").color(NamedTextColor.YELLOW)
             ))
+            ForestUtils.freezePlayer(survivor)
         }
         itemModderSurvivor.load()
         survivorTimeDump.add(itemModderSurvivor)
@@ -345,9 +352,26 @@ class ForestFacet(
                         plugin, context,
                         context.staticData.escape.region
                     ) { escapee ->
-                        escapees += escapee
-                        if (escapees.size >= context.survivorTeam.players.size) {
-                            finishGame()
+                        val survivorCount = context.survivorTeam.players.size
+                        escapees += escapee.uniqueId
+                        context.sendToAll(
+                ForestMessaging.withPrefix(
+                    escapee.displayName()
+                                    .append(Component.text(" has ", NamedTextColor.GRAY))
+                                    .append(Component.text("escaped!", NamedTextColor.YELLOW))
+                            )
+                        )
+                        playSoundToPlayers(
+                            context.playerAccess.all,
+                            Sound.UI_BUTTON_CLICK,
+                            1.0F, 1.0F
+                        )
+                        skipGameOverCheck = true
+                        context.playerTracker.removePlayer(escapee, PlayerRemoveReason.SYSTEM)
+                        context.playerTracker.addSpectator(escapee)
+                        skipGameOverCheck = false
+                        if (survivorCount <= 1) {
+                            finishGame(Winner.SURVIVOR)
                         }
                     }
                     gate.load()
@@ -430,10 +454,19 @@ class ForestFacet(
         }
     }
 
+    private var skipGameOverCheck = false
     private var gameOver = false
-    private fun finishGame() {
-        if (gameOver) return
-        val winnerMessage = if (context.survivorTeam.players.isEmpty())
+    enum class Winner {
+        SURVIVOR, HUNTER
+    }
+    private fun finishGame(override: Winner? = null) {
+        if (skipGameOverCheck || gameOver) return
+        var winner : Winner? = null
+        if (override != null) winner = override
+        else if (context.survivorTeam.players.isEmpty()) winner = Winner.HUNTER
+        else winner = Winner.SURVIVOR
+
+        val winnerMessage = if (winner == Winner.HUNTER)
             Component.text("HUNTERS WIN!").color(NamedTextColor.RED)
         else
             Component.text("SURVIVORS WIN!").color(NamedTextColor.GREEN)

@@ -1,6 +1,7 @@
 package com.empire.forest.perk
 
 import com.empire.forest.ForestContext
+import com.empire.forest.util.PlayerDataAccess
 import com.empire.ignite.util.GlobalResourceTrackers
 import com.empire.ignite.util.IgniteResource
 import com.empire.ignite.util.UnloadableResource
@@ -14,11 +15,12 @@ import org.bukkit.plugin.java.JavaPlugin
 class HeartbeatPerk(
     plugin: JavaPlugin,
     private val context: ForestContext
-) : ForestPerk {
+) : ForestPerk<Unit> {
     private val applied : OnlinePlayerData<HeartbeatTask?> = OnlinePlayerData(plugin, onEvict = { _, task ->
         task?.unload()
     })
     private val task = GlobalResourceTrackers.scheduler.repeatTask(1L, ::heartbeat)
+    override val contextManager: PlayerDataAccess<Unit> = PlayerDataAccess.noop()
 
     override fun apply(player: Player) {
         applied += (player to null)
