@@ -7,6 +7,7 @@ import com.empire.forest.mechanic.BearTrap
 import com.empire.forest.perk.BearTrapPerk
 import com.empire.forest.perk.ForestPerk
 import com.empire.forest.perk.NewMotionSensorPerk
+import com.empire.forest.perk.RoarPerk
 import com.empire.ignite.display.Displays
 import com.empire.ignite.game.kit.KitTracker
 import com.empire.ignite.util.ChangingSetReceiver
@@ -93,13 +94,21 @@ class HunterHUD(
                 Component.text(String(Character.toChars(sensorBaseChar)))
             val sensorTicksComponent = formatTime(sensorPerk.cooldown.getRemainingCooldownTicks(player))
 
+            val roarPerk : ForestPerk<*>? = context.getPerk(RoarPerk::class.java)
+            if (roarPerk == null || roarPerk !is RoarPerk) return@submitTask Component.empty()
+            val playerCanUse = roarPerk.ability.cooldown.canUse(player)
+            val roarComponent = Component.text(if (playerCanUse) "\uE113" else "\uE112")
+            val roarTicksComponent = formatTime(roarPerk.ability.cooldown.getRemainingCooldownTicks(player))
+
             flattenComponents(
                 *(
                     listOf(
                         listOf(trapComponent, timeComponent)
                             .withSeperatingElement(Component.text(" ")),
                         listOf(sensorCharComponent, sensorTicksComponent)
-                            .withSeperatingElement(Component.text(" "))
+                            .withSeperatingElement(Component.text(" ")),
+                        listOf(roarComponent, roarTicksComponent)
+                            .withSeperatingElement(Component.text(" ")),
                     ).withSeperatingElement(listOf(Component.text(" ".repeat(3)))).flatten()
                 ).toTypedArray()
             )

@@ -5,6 +5,7 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Default
 import com.empire.forest.ForestApplication
 import com.empire.forest.ForestContext
+import com.empire.forest.config.ACTIVE_SERVER_CONFIG
 import com.empire.forest.config.ForestStaticDataConfig
 import com.empire.ignite.Ignite
 import com.empire.ignite.match.MatchConfiguration
@@ -42,7 +43,10 @@ class QueueCommand(
                     null
                 } else {
                     val newMatch = plugin.matchManager.scheduleMatch(
-                        MatchConfiguration("main", app, ForestStaticDataConfig.MAIN_SERVER_FARM)
+                        MatchConfiguration(
+                            "main", app,
+                            ACTIVE_SERVER_CONFIG.forest
+                        )
                     )
                     newMatch.start()
                     newMatch

@@ -2,6 +2,7 @@ package com.empire.forest
 
 import co.aikar.commands.BaseCommand
 import com.empire.forest.command.*
+import com.empire.forest.config.ACTIVE_SERVER_CONFIG
 import com.empire.forest.config.ForestInteractiveData
 import com.empire.forest.constants.ForestConstants
 import com.empire.forest.constants.ForestConstants.CONFIG_DATA
@@ -44,23 +45,29 @@ import java.util.*
 
 class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>() {
     companion object {
-        private val LOBBY_WORLD_NAME = "world"
-        private val SPAWN_REGION = CuboidRegion(
-            Vector(592, 22, 343),
-            Vector(329,-17,127)
-        )
-        private val SPAWN_LOCATION = RawLocation(48.0,71.0,9.0)
         private val GAME_NAME = "The Forest"
     }
     private val appLevelDump = GlobalResourceTrackers.createResourceDump()
     private var userDatabase: ForestUserDatabase? = null
 
     override fun load(plugin: Ignite) {
-        val lobbyWorld = Bukkit.getWorld(LOBBY_WORLD_NAME)!!
-        val sign = QueueSign(plugin, Location(lobbyWorld, 50.0, 72.0, 11.0))
+        val lobbyWorld = Bukkit.getWorld(ACTIVE_SERVER_CONFIG.lobby.lobbyWorld)!!
+        val sign = QueueSign(
+            plugin,
+            Location(
+                lobbyWorld,
+                ACTIVE_SERVER_CONFIG.lobby.queueSignLoc.x,
+                ACTIVE_SERVER_CONFIG.lobby.queueSignLoc.y,
+                ACTIVE_SERVER_CONFIG.lobby.queueSignLoc.z
+            )
+        )
         sign.load()
         appLevelDump.add(sign)
-        val lobbyListener = LobbyListener(plugin, SPAWN_LOCATION.toLocationNonNull(lobbyWorld), SPAWN_REGION)
+        val lobbyListener = LobbyListener(
+            plugin,
+            ACTIVE_SERVER_CONFIG.lobby.spawnLocation.toLocationNonNull(lobbyWorld),
+            ACTIVE_SERVER_CONFIG.lobby.spawnRegion
+        )
         lobbyListener.load()
         appLevelDump.add(lobbyListener)
 
@@ -230,7 +237,9 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
     private fun setupContext(plugin: Ignite, forestData: ForestStaticData, dump: ManagedResourceDump) : ForestContext {
         val context = ForestContext(
             this, forestData, interactiveData(),
-            SPAWN_LOCATION.toLocationNonNull(Bukkit.getWorld(LOBBY_WORLD_NAME)!!),
+            ACTIVE_SERVER_CONFIG.lobby.spawnLocation.toLocationNonNull(
+                Bukkit.getWorld(ACTIVE_SERVER_CONFIG.lobby.lobbyWorld)!!
+            ),
             plugin
         )
         context.perks.addAll(
@@ -242,7 +251,8 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
                 WerewolfSpeedPerk(plugin),
                 RoarPerk(plugin, context),
                 BuckshotPerk(plugin, context),
-                NewMotionSensorPerk(plugin, context)
+                NewMotionSensorPerk(plugin, context),
+                BloodhoundPerk(plugin, context)
             )
         )
         dump.add(itemBuilderActiveListener(plugin, context.locateGeneratorsItemBuilder)  { p, b ->

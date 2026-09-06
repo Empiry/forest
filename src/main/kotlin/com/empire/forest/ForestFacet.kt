@@ -12,6 +12,7 @@ import com.empire.forest.kit.ForestKitKey
 import com.empire.forest.kit.ForestKitProvider
 import com.empire.forest.kit.HunterKit
 import com.empire.forest.kit.SurvivorKit
+import com.empire.forest.mechanic.stamina.SurvivorStamina
 import com.empire.forest.scoreboard.SurvivorScoreboard
 import com.empire.forest.util.ForestMessaging
 import com.empire.forest.util.ForestUtils
@@ -91,6 +92,7 @@ class ForestFacet(
         context.world!!.time = 19000
         context.world!!.setGameRule(GameRules.ADVANCE_TIME, false)
         context.world!!.setGameRule(GameRules.LOCATOR_BAR, false)
+        context.world!!.setGameRule(GameRules.NATURAL_HEALTH_REGENERATION, false)
         context.hunterTeam.players.forEach { player -> player.teleport(context.huntersSpawn) }
         context.survivorTeam.players.forEach { player ->
             player.teleport(
@@ -113,6 +115,10 @@ class ForestFacet(
         this.hunterHUD = HunterHUD(plugin, context, kitTracker)
         this.hunterHUD!!.load()
         dump.add(hunterHUD!!)
+
+        val stamina = SurvivorStamina(plugin, context, drainSeconds = 15, regainSeconds = 10)
+        stamina.load()
+        dump.add(stamina)
 
         setupHunterKitStage()
         setupSurvivorKitStage()
@@ -545,7 +551,8 @@ class ForestFacet(
 
     @EventHandler
     private fun onHunger(event: FoodLevelChangeEvent) {
-        if (event.entity !in context.playerAccess.alive) return
+//        if (event.entity !in context.playerAccess.alive) return
+        if (event.entity !in context.hunterTeam.players) return
         event.isCancelled = true
         event.entity.foodLevel = 20
     }

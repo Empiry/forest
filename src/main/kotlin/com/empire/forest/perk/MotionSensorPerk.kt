@@ -316,7 +316,6 @@ class FakeBlockSelector(
             ItemDisplay::class.java
         )
         idisplay.setItemStack(state.istack)
-        state.block!!.type = Material.BARRIER
         listener.onBlockPlace(PlaceContext(idisplay, player, i))
         state.unload()
     }

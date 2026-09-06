@@ -34,7 +34,7 @@ class EscapeGate(
                 loc, ClientEntity.textDisplay(loc),
                 options = setOf(ManagedEntityOptions.DYNAMIC_SCALING)
             )
-            for (player in context.survivorTeam.players) {
+            for (player in context.playerAccess.alive) {
                 me.apply(player)
                 me.metadataUpdate(
                     player,

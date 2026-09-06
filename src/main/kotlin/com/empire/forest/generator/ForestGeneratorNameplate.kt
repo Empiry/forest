@@ -29,7 +29,7 @@ class ForestGeneratorNameplate(
     private val generator: ForestGenerator
 ) : UnloadableResource {
     private val clientEntity = ClientEntity.textDisplay(
-        description.place.toVector().add(Vector(0.0, 0.5, 0.0))
+        description.place.toVector().add(Vector(0.0, 1.0, 0.0))
     )
     private val taskMap : OnlinePlayerData<ForestGeneratorNameplateUpdateTask> = OnlinePlayerData(
         plugin,

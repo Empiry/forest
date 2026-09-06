@@ -17,7 +17,7 @@ class CooldownRightClickAbility(
     private val effect: (Player) -> Unit
 ) : UnloadableResource {
     private val onlinePlayerSet: OnlinePlayerSet = OnlinePlayerSet()
-    private val cooldown: AbilityCooldown = AbilityCooldown(plugin, cooldownTicks)
+    val cooldown: AbilityCooldown = AbilityCooldown(plugin, cooldownTicks)
     private val dump = GlobalResourceTrackers.createResourceDump()
 
     init {

@@ -132,13 +132,15 @@ private class MotionSensorApparatus(
                 val inRangePlayers = context.survivorTeam.players.filter { player ->
                     player.location.distanceSquared(idisplay.location) <= 16 * 16 && !player.isSneaking
                 }
-                (inRangePlayers - detected).forEach { newDetected ->
-                    newDetected.addPotionEffect(
+                inRangePlayers.forEach {
+                    it.addPotionEffect(
                         PotionEffect(
                             PotionEffectType.GLOWING, 40, 0,
                             true, false
                         )
                     )
+                }
+                (inRangePlayers - detected).forEach { newDetected ->
                     detected += newDetected
                 }
                 val inRange = inRangePlayers.isNotEmpty()

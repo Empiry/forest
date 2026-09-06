@@ -6,6 +6,7 @@ import com.empire.forest.mechanic.survivalist.TallGrassInvisibility
 import com.empire.forest.mechanic.werewolf.WerewolfSpeedPerk
 import com.empire.forest.perk.BearTrapPerk
 import com.empire.forest.perk.BearTrapPlayerData
+import com.empire.forest.perk.BloodhoundPerk
 import com.empire.forest.perk.BuckshotPerk
 import com.empire.forest.perk.MotionSensorPerk
 import com.empire.forest.perk.NewMotionSensorPerk
@@ -74,6 +75,12 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     PerkAbilityAdapter(
                         NewMotionSensorPerk::class.java,
+                        context, player
+                    ) { }
+                ),
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    PerkAbilityAdapter(
+                        BloodhoundPerk::class.java,
                         context, player
                     ) { }
                 )

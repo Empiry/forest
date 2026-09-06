@@ -74,6 +74,12 @@ class BearTrap(
         else player.damage(dmg, planter)
 
         freeze(player)
+        player.addPotionEffect(
+            PotionEffect(
+                PotionEffectType.GLOWING, 20 * 3, 0,
+                true, false
+            )
+        )
 
         Bukkit.getScheduler().runTaskLater(GlobalResourceTrackers.plugin!!, Runnable {
             unfreeze(player)

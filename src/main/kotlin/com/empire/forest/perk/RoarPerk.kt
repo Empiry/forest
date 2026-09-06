@@ -15,12 +15,14 @@ import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 
 class RoarPerk(
     plugin: JavaPlugin,
     private val context: ForestContext
 ) : ForestPerk<Unit> {
-    private val ability: CooldownRightClickAbility
+    val ability: CooldownRightClickAbility
     private val item: ItemStack
     override val contextManager: PlayerDataAccess<Unit> = PlayerDataAccess.noop()
 
@@ -56,11 +58,14 @@ class RoarPerk(
             2.0F,
             0.0F
         )
-        ForestUtils.fakeGlow(
-            listOf(player),
-            context.survivorTeam.players.toList(),
-            7L * 20L
-        )
+        context.survivorTeam.players.forEach { player ->
+            player.addPotionEffect(
+                PotionEffect(
+                    PotionEffectType.GLOWING, 20 * 7, 0,
+                    true, false
+                )
+            )
+        }
     }
 
     override fun remove(player: Player) {
