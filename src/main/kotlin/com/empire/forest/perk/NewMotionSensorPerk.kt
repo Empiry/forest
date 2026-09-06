@@ -35,7 +35,7 @@ class NewMotionSensorPerk(
         plugin, onEvict = { _, d -> d.unload() }
     )
     val cooldown: AbilityCooldown = AbilityCooldown(
-        plugin, 5L * 20L, abilityUseListeners = listOf(
+        plugin, 45L * 20L, abilityUseListeners = listOf(
             object : AbilityUseListener {
                 override fun onAbilityCanUse(player: Player) {
                     selector.pokeItemCheck(player)

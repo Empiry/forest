@@ -1,6 +1,7 @@
 package com.empire.forest
 
 import co.aikar.commands.BaseCommand
+import com.empire.forest.bossbar.GameBossBar
 import com.empire.forest.command.*
 import com.empire.forest.config.ACTIVE_SERVER_CONFIG
 import com.empire.forest.config.ForestInteractiveData
@@ -9,13 +10,18 @@ import com.empire.forest.constants.ForestConstants.CONFIG_DATA
 import com.empire.forest.data.ForestUserDatabase
 import com.empire.forest.data.ForestUserDatabaseProvider
 import com.empire.forest.gate.EscapeGateDescription
+import com.empire.forest.generator.ForestGeneratorNameplate
 import com.empire.forest.generator.GeneratorDescription
+import com.empire.forest.generator.NameplateProximityTask
 import com.empire.forest.generic.TeamDamageNullifyFacet
 import com.empire.forest.lobby.LobbyListener
 import com.empire.forest.lobby.QueueSign
+import com.empire.forest.mechanic.SurvivorHealth
 import com.empire.forest.mechanic.phantom.CloakingPerk
 import com.empire.forest.mechanic.werewolf.WerewolfSpeedPerk
 import com.empire.forest.perk.*
+import com.empire.forest.scoreboard.SurvivorScoreboard
+import com.empire.forest.scoreboard.SurvivorScoreboardAgent
 import com.empire.forest.tablist.ForestTablist
 import com.empire.forest.util.ForestMatchStartEvent
 import com.empire.ignite.Ignite
@@ -34,6 +40,7 @@ import com.empire.ignite.util.item.ItemBuilder
 import com.empire.ignite.util.location.RawLocation
 import com.empire.ignite.util.region.CuboidRegion
 import com.empire.ignite.util.region.Region
+import com.empire.ignite.util.scoreboard.SillyScoreboard
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.*
@@ -252,10 +259,12 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
                 RoarPerk(plugin, context),
                 BuckshotPerk(plugin, context),
                 NewMotionSensorPerk(plugin, context),
-                BloodhoundPerk(plugin, context)
+                BloodhoundPerk(plugin, context),
+                JammerPerk(plugin, context)
             )
         )
         dump.add(itemBuilderActiveListener(plugin, context.locateGeneratorsItemBuilder)  { p, b ->
+            context.proximityTask?.overrides[p] = b
             context.locateGeneratorsCallbackRegistration.sink(p to b)
         })
         dump.add(object : UnloadableResource {
@@ -271,7 +280,7 @@ typealias GeneratorSelection = ((List<GeneratorDescription>) -> (List<GeneratorD
 
 class ForestStaticData(
     val mapName: String? = null,
-    val minRequiredGenerators : Int = -1,
+    val minRequiredGeneratorsFn : (ForestContext) -> Int = {-1},
     val generatorSelection: GeneratorSelection? = null,
     val queueCountdownSeconds: Int,
     val survivorReleaseSeconds: Int,
@@ -317,9 +326,15 @@ class ForestContext(
     lateinit var hunterTeam : IgniteTeam
     lateinit var survivorTeam : IgniteTeam
     lateinit var survivorsSpawn: Location
+    lateinit var survivorHealth: SurvivorHealth
     var survivorsRegion: CuboidRegion? = null
     lateinit var huntersSpawn: Location
     var tablist: ForestTablist? = null
+    val nameplates : MutableList<ForestGeneratorNameplate> = mutableListOf()
+    var proximityTask : NameplateProximityTask? = null
+    var jammed: Boolean = false
+    var scoreboard: SillyScoreboard<SurvivorScoreboardAgent>? = null
+    var gameBossBar: GameBossBar? = null
 
     lateinit var survivorTeamChangeSetContract : ChangeSetContract<Player>
     lateinit var hunterTeamChangeSetContract : ChangeSetContract<Player>
@@ -383,6 +398,10 @@ class ForestContext(
             hunterTeamChangeSetContract.removeSink(player)
         }
     }
+
+    fun jamIfNeeded(component: Component, shape: ComponentShape) : Component =
+        if (jammed) JammerUtils.jam(shape)
+        else component
 
     override fun getWorldUnloadDecision(): WorldUnloadDecision {
         return WorldUnloadDecision.createSafeEvictThenAllow(safeEvictLocation)

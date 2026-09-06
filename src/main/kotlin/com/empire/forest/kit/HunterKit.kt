@@ -8,6 +8,7 @@ import com.empire.forest.perk.BearTrapPerk
 import com.empire.forest.perk.BearTrapPlayerData
 import com.empire.forest.perk.BloodhoundPerk
 import com.empire.forest.perk.BuckshotPerk
+import com.empire.forest.perk.JammerPerk
 import com.empire.forest.perk.MotionSensorPerk
 import com.empire.forest.perk.NewMotionSensorPerk
 import com.empire.forest.perk.PerkAbilityAdapter
@@ -81,6 +82,12 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     PerkAbilityAdapter(
                         BloodhoundPerk::class.java,
+                        context, player
+                    ) { }
+                ),
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    PerkAbilityAdapter(
+                        JammerPerk::class.java,
                         context, player
                     ) { }
                 )

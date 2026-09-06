@@ -14,7 +14,7 @@ private val MAIN_SERVER_CONFIG = ServerConfig(
             Vector(592, 22, 343),
             Vector(329, -17, 127)
         ),
-        spawnLocation = RawLocation(400.0, -16.0, 307.0),
+        spawnLocation = RawLocation(400.0, -16.0, 307.0, 180.0f, 0.0f),
         queueSignLoc = RawLocation(400.0, -15.0, 285.0)
     )
 )

@@ -1,6 +1,7 @@
 package com.empire.forest.generator
 
 import com.empire.forest.ForestContext
+import com.empire.forest.perk.ComponentShape
 import com.empire.ignite.Ignite
 import com.empire.ignite.util.IgniteResource
 import com.empire.ignite.util.entity.EntityModelBuilder
@@ -26,7 +27,7 @@ import kotlin.math.floor
 class ForestGenerator(
     private val ignite: Ignite,
     private val forestContext: ForestContext,
-    private val location: Location,
+    val location: Location,
     unlockSeconds: Int,
     private val contributionMultiplier: (Int) -> Double = { n -> n.toDouble() },
     private val onProgress: (Int) -> Unit,
@@ -77,6 +78,7 @@ class ForestGenerator(
     private fun process() {
         if (completed) return
         var activeContributors = 0
+        var activeDetractors = 0
         for (player in forestContext.playerTracker.players) {
             if (player.location.world != this.location.world) continue
 //            val inRegion = player.location.distanceSquared(this.location) <= 4
@@ -87,7 +89,7 @@ class ForestGenerator(
                     if (forestContext.isSurvivor(player))
                         activeContributors++
                     else if (forestContext.isHunter(player))
-                        activeContributors--
+                        activeDetractors++
                 }
             }
         }
@@ -102,23 +104,37 @@ class ForestGenerator(
                 toAdd += 1
             }
         }
+        if (activeDetractors > 0) {
+            toAdd -= activeDetractors
+        }
 
         progressTicks += toAdd
         progressTicks = progressTicks.coerceAtLeast(0)
         val completion = ((progressTicks.toDouble() / (unlockTicks)) * 100).toInt()
         if (activeContributors != 0) onProgress(completion)
-        val message = TextUtils.createProgressText("|", completion, 15)
+        val message =
+            forestContext.jamIfNeeded(
+                TextUtils.createProgressText("|", completion, 15),
+                ComponentShape(20, NamedTextColor.DARK_GRAY)
+            )
+
         workingPlayers.forEach { workingPlayer ->
             if (workingPlayer.isSneaking) workingPlayer.sendActionBar(message)
             else
                 workingPlayer.sendActionBar(
                     if (forestContext.isSurvivor(workingPlayer))
-                        Component.text(
-                        "Sneak to activate generator...", NamedTextColor.GRAY, TextDecoration.ITALIC
+                        forestContext.jamIfNeeded(
+                            Component.text(
+                                "Sneak to activate generator...", NamedTextColor.GRAY, TextDecoration.ITALIC
+                            ),
+                            ComponentShape(30, NamedTextColor.GRAY)
                         )
                     else
+                        forestContext.jamIfNeeded(
                         Component.text(
                         "Sneak to de-activate generator...", NamedTextColor.GRAY, TextDecoration.ITALIC
+                        ),
+                    ComponentShape(30, NamedTextColor.GRAY)
                         )
                 )
         }

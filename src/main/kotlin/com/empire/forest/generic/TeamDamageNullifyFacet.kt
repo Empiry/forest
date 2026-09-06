@@ -6,6 +6,7 @@ import com.empire.ignite.Ignite
 import com.empire.ignite.game.application.GameFacetV2
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
+import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 
@@ -13,7 +14,7 @@ class TeamDamageNullifyFacet(
     plugin: Ignite,
     context: ForestContext,
 ) : GameFacetV2<ForestStaticData, ForestContext>(plugin, context), Listener {
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH)
     private fun onDamage(e: EntityDamageByEntityEvent) {
         val entity = e.entity
         val damager = e.damager

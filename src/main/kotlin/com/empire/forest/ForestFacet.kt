@@ -7,11 +7,13 @@ import com.empire.forest.generator.ForestGenerator
 import com.empire.forest.generator.ForestGeneratorDiscovery
 import com.empire.forest.generator.ForestGeneratorNameplate
 import com.empire.forest.generator.GeneratorDescription
+import com.empire.forest.generator.NameplateProximityTask
 import com.empire.forest.hud.HunterHUD
 import com.empire.forest.kit.ForestKitKey
 import com.empire.forest.kit.ForestKitProvider
 import com.empire.forest.kit.HunterKit
 import com.empire.forest.kit.SurvivorKit
+import com.empire.forest.mechanic.SurvivorHealth
 import com.empire.forest.mechanic.stamina.SurvivorStamina
 import com.empire.forest.scoreboard.SurvivorScoreboard
 import com.empire.forest.util.ForestMessaging
@@ -63,7 +65,7 @@ class ForestFacet(
     private var hunterHUD : HunterHUD? = null
 
     override fun onLoad() {
-        val hunter = context.playerTracker.players.random()
+        val hunter = Bukkit.getPlayer("ThatOneTqnk") ?: context.playerTracker.players.random()
         healStabilizePlayers(context.playerTracker.players)
         context.playerTracker.players.forEach { player ->
             player.gameMode = GameMode.ADVENTURE
@@ -119,6 +121,11 @@ class ForestFacet(
         val stamina = SurvivorStamina(plugin, context, drainSeconds = 15, regainSeconds = 10)
         stamina.load()
         dump.add(stamina)
+
+        val health = SurvivorHealth(plugin, context)
+        health.load()
+        dump.add(health)
+        context.survivorHealth = health
 
         setupHunterKitStage()
         setupSurvivorKitStage()
@@ -390,9 +397,10 @@ class ForestFacet(
     }
 
     private fun setupGeneratorTask(generators: List<GeneratorDescription>, after: () -> Unit) {
+        val minRequired = context.staticData.minRequiredGeneratorsFn(context)
         val generatorCount =
-            if (context.staticData.minRequiredGenerators == -1) generators.size
-            else context.staticData.minRequiredGenerators
+            if (minRequired == -1) generators.size
+            else minRequired
         var generatorsFinished = 0
 
         val generatorBossBar = GameBossBar(
@@ -404,6 +412,7 @@ class ForestFacet(
         )
         generatorBossBar.load()
         dump.add(generatorBossBar)
+        context.gameBossBar = generatorBossBar
 
         val generatorMap = mutableMapOf<GeneratorDescription, ForestGenerator>()
 
@@ -440,6 +449,12 @@ class ForestFacet(
         }
         val generatorsAssociationList = generatorMap.toList()
 
+        val task = NameplateProximityTask(plugin, context, generatorsAssociationList.map { it.second })
+        val action = { task.run() }
+        dump.add(task)
+        dump.add(GlobalResourceTrackers.scheduler.repeatTask(5L, action))
+        context.proximityTask = task
+
         val discovery = ForestGeneratorDiscovery(context, generatorsAssociationList)
         dump.add(discovery)
 
@@ -452,11 +467,12 @@ class ForestFacet(
         )
 
         generatorsAssociationList.forEach { (desc, gen) ->
-            dump.add(
+            val nameplate =
                 ForestGeneratorNameplate(
                     plugin, discovery,  context, desc, gen
                 )
-            )
+            context.nameplates += nameplate
+            dump.add(nameplate)
         }
     }
 

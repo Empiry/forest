@@ -9,18 +9,23 @@ import com.empire.ignite.util.*
 import com.empire.ignite.util.collection.OnlinePlayerData
 import com.empire.ignite.util.collection.OnlinePlayerSet
 import com.empire.ignite.util.item.ItemBuilder
+import io.papermc.paper.datacomponent.DataComponentTypes
+import io.papermc.paper.datacomponent.item.ChargedProjectiles
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.title.Title
 import org.bukkit.*
 import org.bukkit.attribute.Attribute
+import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityShootBowEvent
 import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.inventory.EquipmentSlot
+import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.util.Vector
@@ -41,6 +46,18 @@ class BuckshotPerk(
                         .color(NamedTextColor.RED)
                 )
             )
+        }
+        private val chargedIB : ItemBuilder
+
+        init {
+            val cloned = crossbowIB.clone()
+            cloned.dataComponent(
+            DataComponentTypes.CHARGED_PROJECTILES,
+            ChargedProjectiles.chargedProjectiles(
+                        listOf(ItemStack(Material.ARROW))
+                )
+            )
+            chargedIB = cloned
         }
 
         private val arrowIdentifier = NamespacedKey("chud", "arrow")
@@ -171,7 +188,7 @@ class BuckshotPerk(
         val data = playerData[event.entity] ?: return
         val player = (event.entity as Player)
         data.ammo--
-        if (data.ammo > 0) player.inventory.setItem(17, arrowIB.build())
+        if (data.ammo == 0) player.inventory.setItem(17, arrowIB.build())
         player.playSound(
             player.location, "minecraft:buckshot_fire",
             SoundCategory.MASTER, 1.0f, 1.0f
@@ -181,10 +198,15 @@ class BuckshotPerk(
             val result = ray.cast(player)
             result.entity
         }
+        val dmgMap = mutableMapOf<Entity, Int>()
         hit.forEach {
-            if (it !is Player) return@forEach
-            if (!context.canDamage(player, it)) return@forEach
-            it.damage(9.5, player)
+            val current = dmgMap[it] ?: 0
+            dmgMap[it] = current + 1
+        }
+        dmgMap.entries.forEach { (k, v) ->
+            if (k !is Player) return@forEach
+            if (!context.canDamage(player, k)) return@forEach
+            context.survivorHealth.syntheticDamagePlayer(player, k, 6.0f * v)
         }
         rays.flatMap { it.getLocations() }.forEach {
             it.world.spawnParticle(
@@ -194,6 +216,10 @@ class BuckshotPerk(
             )
         }
         event.isCancelled = true
+        if (data.ammo > 0 && player.inventory.itemInMainHand.type == Material.CROSSBOW) {
+            player.inventory.setItem(EquipmentSlot.HAND, ItemStack(Material.AIR))
+            player.inventory.setItem(EquipmentSlot.HAND, chargedIB.build())
+        }
     }
 
     @EventHandler
@@ -265,15 +291,17 @@ class BuckshotPlayerData(
         titleID = Displays.getSubtitle(player).displayQueueManager.submitTask(
             DisplayUpdater.createTitleUpdater(
                 player,
-                {
+                upd@{
                     if (ammo == 0) null
-                    else Title.title(
-                        Component.empty(),
-                        Component.text(
-                            "\uE001".repeat(ammo)
-                        ),
-                        0, UPDATE_TICKS + 2, 0
-                    )
+                    else {
+                        val ammoText = "\uE001".repeat(ammo) +
+                                "\uE002".repeat(BuckshotPerk.AMMO_INIT - ammo)
+                        return@upd Title.title(
+                            Component.empty(),
+                            Component.text(ammoText),
+                            0, UPDATE_TICKS + 2, 0
+                        )
+                    }
                 },
                 UPDATE_TICKS.toLong()
             )

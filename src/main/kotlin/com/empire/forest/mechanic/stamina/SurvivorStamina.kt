@@ -80,7 +80,7 @@ class SurvivorStamina(
         }
         val playerData = data[event.player] ?: return
         playerData.moving = true
-        if (playerData.staminaLevel > 20 && event.player.foodLevel < 20) {
+        if (playerData.staminaLevel >= 33 && event.player.foodLevel < 20) {
             event.player.foodLevel = 20
         } else if (playerData.staminaLevel <= 0 && event.player.foodLevel > 0) {
             event.player.foodLevel = 3
@@ -89,6 +89,8 @@ class SurvivorStamina(
             playerData.staminaLevel = max(0.0, playerData.staminaLevel - drainPerTick)
         } else if (event.player.isSneaking) {
             playerData.staminaLevel = min(100.0, playerData.staminaLevel + regainPerTick)
+        } else {
+            playerData.staminaLevel = min(100.0, playerData.staminaLevel + (regainPerTick / 2))
         }
     }
 

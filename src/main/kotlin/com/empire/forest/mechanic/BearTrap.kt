@@ -4,6 +4,7 @@ import com.empire.forest.ForestContext
 import com.empire.forest.perk.BuckshotPerk
 import com.empire.forest.resourcepack.ResourcePackConstants
 import com.empire.ignite.util.GlobalResourceTrackers
+import com.empire.ignite.util.HACKS
 import com.empire.ignite.util.IgniteResource
 import com.empire.ignite.util.callback.ForwardCallbackRegistration
 import com.empire.ignite.util.entity.EntityDecorator
@@ -69,9 +70,11 @@ class BearTrap(
         if (event.to.distanceSquared(location) > 0.3) return
         val player = event.player
         player.playSound(player.location.clone(), Sound.ENTITY_WITHER_BREAK_BLOCK, 1.0F, 0.4F)
-        val dmg = 3.5
-        if (planter == null) player.damage(dmg)
-        else player.damage(dmg, planter)
+        val dmg = 15.0
+        if (planter == null || planter !is Player)
+            context.survivorHealth.syntheticDamage(player, dmg.toFloat())
+        else
+            context.survivorHealth.syntheticDamagePlayer(planter, player, dmg.toFloat())
 
         freeze(player)
         player.addPotionEffect(

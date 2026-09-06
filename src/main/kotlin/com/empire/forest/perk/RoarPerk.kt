@@ -37,7 +37,7 @@ class RoarPerk(
             )
         }
         ability = CooldownRightClickAbility(
-            plugin, 20L * 45L,
+            plugin, 20L * 75L,
             CooldownRightClickAbilityOptions(consume = false),
             itemBuilder,
             ::action
@@ -61,7 +61,7 @@ class RoarPerk(
         context.survivorTeam.players.forEach { player ->
             player.addPotionEffect(
                 PotionEffect(
-                    PotionEffectType.GLOWING, 20 * 7, 0,
+                    PotionEffectType.GLOWING, 20 * 5, 0,
                     true, false
                 )
             )

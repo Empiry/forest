@@ -91,13 +91,22 @@ object ForestStaticDataConfig {
         contributionMultiplier = DAMPENED_GENERATOR_CONTRIBUTION_MULTIPLIER
     )
 
+    val mainServerDebug = true
     val MAIN_SERVER_FARM = ForestStaticData(
         mapName = "farm",
-        minRequiredGenerators = 6,
+        minRequiredGeneratorsFn = { ctx ->
+            if (ctx.survivorTeam.players.size >= 9) {
+                5
+            } else if (ctx.survivorTeam.players.size >= 5) {
+                4
+            } else {
+                3
+            }
+        },
         generatorSelection = FARM_SELECTION,
-        queueCountdownSeconds = 20,
-        survivorReleaseSeconds = 20,
-        hunterReleaseSeconds = 30,
+        queueCountdownSeconds = if (mainServerDebug) 5 else 20,
+        survivorReleaseSeconds = if (mainServerDebug) 5 else 20,
+        hunterReleaseSeconds = if (mainServerDebug) 5 else 20,
         yLevelDeath = -40,
         worldPath = "./gamemaps/farm",
         survivorsSpawn = RawLocation(-109.0,-1.0,423.0,0.0F,0.0F),
@@ -111,42 +120,42 @@ object ForestStaticDataConfig {
             GeneratorDescription(
                 name = "Fields",
                 place = RawLocation(-187.0, 1.0, 448.0),
-                unlockSeconds = 12
+                unlockSeconds = 36
             ),
             GeneratorDescription(
                 name = "Mini Barn Thing",
                 place = RawLocation(-219.0, -2.0, 505.0),
-                unlockSeconds = 12
+                unlockSeconds = 36
             ),
             GeneratorDescription(
                 name = "Barn",
                 place = RawLocation(-101.0,-4.0, 551.0),
-                unlockSeconds = 12
+                unlockSeconds = 36
             ),
             GeneratorDescription(
                 name = "Upstairs",
                 place = RawLocation(-134.0,4.0,523.0),
-                unlockSeconds = 12
+                unlockSeconds = 36
             ),
             GeneratorDescription(
                 name = "Foyer",
                 place = RawLocation(-136.0,-2.0,522.0),
-                unlockSeconds = 12
+                unlockSeconds = 36
             ),
             GeneratorDescription(
                 name = "Pit",
                 place = RawLocation(-168.0,-14.0,572.0),
-                unlockSeconds = 12
+                unlockSeconds = 36
             ),
             GeneratorDescription(
                 name = "Cellar",
                 place = RawLocation(-139.0,-7.0,523.0),
-                unlockSeconds = 12
+                unlockSeconds = 36
             ),
             GeneratorDescription(
                 name = "Garage",
                 place = RawLocation(-96.0,-4.0,513.0),
-                unlockSeconds = 12
+                unlockSeconds = 36
             )
         ),
         escape = EscapeGateDescription(
@@ -157,8 +166,8 @@ object ForestStaticDataConfig {
                         Vector(-116,1,420),
                     ),
                     CuboidRegion(
-                        Vector(-100,1,429),
-                        Vector(-99,3,430),
+                        Vector(-100,1,425),
+                        Vector(-99,3,426),
                     )
                 ))
         ),
@@ -175,7 +184,15 @@ object ForestStaticDataConfig {
 
     val TEST_SERVER_FARM = ForestStaticData(
         mapName = "farm",
-        minRequiredGenerators = 1,
+        minRequiredGeneratorsFn = { ctx ->
+            if (ctx.survivorTeam.players.size >= 9) {
+                5
+            } else if (ctx.survivorTeam.players.size >= 5) {
+                4
+            } else {
+                3
+            }
+        },
         generatorSelection = FARM_SELECTION,
         queueCountdownSeconds = 3,
         survivorReleaseSeconds = 4,

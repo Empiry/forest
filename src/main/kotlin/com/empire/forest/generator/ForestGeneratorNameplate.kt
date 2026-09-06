@@ -1,6 +1,7 @@
 package com.empire.forest.generator
 
 import com.empire.forest.ForestContext
+import com.empire.forest.perk.ComponentShape
 import com.empire.hacks.common.builder.ClientEntityMetadataHelpers
 import com.empire.ignite.util.GlobalResourceTrackers
 import com.empire.ignite.util.HACKS
@@ -24,9 +25,9 @@ import kotlin.math.min
 class ForestGeneratorNameplate(
     plugin: JavaPlugin,
     private val generatorDiscovery: ForestGeneratorDiscovery,
-    context: ForestContext,
+    private val context: ForestContext,
     private val description: GeneratorDescription,
-    private val generator: ForestGenerator
+    val generator: ForestGenerator
 ) : UnloadableResource {
     private val clientEntity = ClientEntity.textDisplay(
         description.place.toVector().add(Vector(0.0, 1.0, 0.0))
@@ -48,17 +49,20 @@ class ForestGeneratorNameplate(
         }
     }
 
-    fun onAdd(p: Player) {
+    fun onAdd(p: Player, seeThru: Boolean = true) {
+        if (p in taskMap) return
         val task = ForestGeneratorNameplateUpdateTask(
-            p, generatorDiscovery,
+            p, context,  generatorDiscovery,
             description, generator,
-            clientEntity
+            clientEntity, NameplateOptions(seeThru)
         )
         task.load()
         taskMap[p] = task
     }
 
+
     fun onRemove(p: Player) {
+        if (p !in taskMap) return
         taskMap.remove(p)?.unload()
     }
 
@@ -67,12 +71,15 @@ class ForestGeneratorNameplate(
     }
 }
 
+data class NameplateOptions(val seeThru: Boolean = true)
 class ForestGeneratorNameplateUpdateTask(
     private val p: Player,
+    private val context: ForestContext,
     private val generatorDiscovery: ForestGeneratorDiscovery,
     private val desc: GeneratorDescription,
     private val generator: ForestGenerator,
-    private val clientEntity: ClientEntity
+    private val clientEntity: ClientEntity,
+    private val options: NameplateOptions = NameplateOptions()
 ) : IgniteResource {
     private var task: UnloadableResource? = null
 
@@ -96,7 +103,7 @@ class ForestGeneratorNameplateUpdateTask(
                 ClientEntityMetadataHelpers.displayBillboard(HACKS, Display.Billboard.CENTER),
                 ClientEntityMetadataHelpers.textDisplayOptionsMask(
                     HACKS,
-                    shadow = false, seeThrough = true, defaultBgColor = false,
+                    shadow = false, seeThrough = options.seeThru, defaultBgColor = false,
                     alignment = TextDisplay.TextAlignment.CENTER
                 ),
             )
@@ -104,8 +111,11 @@ class ForestGeneratorNameplateUpdateTask(
 
         val metadata = if (!generatorDiscovery.unlocked(desc)) {
             genMetadata(
-                Component.text("[???]").color(NamedTextColor.DARK_GRAY)
-                    .decorate(TextDecoration.BOLD)
+                context.jamIfNeeded(
+                    Component.text("[???]").color(NamedTextColor.DARK_GRAY)
+                        .decorate(TextDecoration.BOLD),
+                    ComponentShape(5, NamedTextColor.DARK_GRAY)
+                )
             )
         } else {
             val distance = "%.1f".format(rawDistance)
@@ -122,7 +132,12 @@ class ForestGeneratorNameplateUpdateTask(
                     if (progress < 100) NamedTextColor.YELLOW else NamedTextColor.GREEN
                 )
             )
-            genMetadata(displayText)
+            genMetadata(
+                context.jamIfNeeded(
+            displayText,
+                    ComponentShape(20, TextColor.color(222, 16, 26))
+                )
+            )
         }
         clientEntity.metadataUpdate(p, metadata)
     }
@@ -131,5 +146,32 @@ class ForestGeneratorNameplateUpdateTask(
         clientEntity.destroy(p)
         task?.unload()
         task = null
+    }
+}
+
+
+class NameplateProximityTask(
+    plugin: JavaPlugin,
+    private val context: ForestContext,
+    private val generators: List<ForestGenerator>
+) : Runnable, UnloadableResource {
+    val overrides: OnlinePlayerData<Boolean> = OnlinePlayerData(plugin)
+
+    override fun run() {
+        val nameplateMap = context.nameplates.associateBy { it -> it.generator }
+        generators.forEach { generator ->
+            val nameplate = nameplateMap[generator] ?: return@forEach
+            context.playerAccess.alive.filter {
+                it !in overrides || !(overrides[it] ?: false)
+            }.forEach { player ->
+                val dstSq = generator.location.distanceSquared(player.location)
+                if (dstSq <= 64.0) nameplate.onAdd(player, false)
+                else nameplate.onRemove(player)
+            }
+        }
+    }
+
+    override fun unload(external: Boolean) {
+        overrides.unload(external)
     }
 }

@@ -102,7 +102,7 @@ class BearTrapPerk(
             event.isCancelled = true
         } else {
             data.canUse = false
-            val timer = GlobalResourceTrackers.scheduler.afterUntracked(100L) {
+            val timer = GlobalResourceTrackers.scheduler.afterUntracked(60L) {
                 data.canUse = true
                 data.activeTimer = null
             }

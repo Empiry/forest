@@ -5,6 +5,7 @@ import com.empire.forest.constants.ForestConstants
 import com.empire.forest.generator.ForestGenerator
 import com.empire.forest.generator.ForestGeneratorDiscovery
 import com.empire.forest.generator.GeneratorDescription
+import com.empire.forest.perk.ComponentShape
 import com.empire.forest.util.ForestMessaging
 import com.empire.forest.util.ForestMessaging.GENERATOR_NOT_STARTED_COLOR
 import com.empire.ignite.util.*
@@ -53,17 +54,24 @@ object SurvivorScoreboard {
                 varyLine(pushKey = GENERATOR_STATUSES_PUSH_KEY) { agent ->
                     agent.generators.map { (desc, generator) ->
                         if (!agent.discovery.unlocked(desc)) {
-                            return@map Component.text("${desc.name} ???").color(
-                                GENERATOR_NOT_STARTED_COLOR
+                            return@map context.jamIfNeeded(
+                                Component.text("${desc.name} ???").color(
+                                    GENERATOR_NOT_STARTED_COLOR
+                                ),
+                                ComponentShape(desc.name.length + 4, GENERATOR_NOT_STARTED_COLOR)
                             )
                         }
                         val progress = floor(
                             100.0F * (generator.progressTicks.toFloat() / (desc.unlockSeconds * 20))
                         ).toInt()
-                        Component.text(desc.name).color(
-                            ForestMessaging.getGeneratorProgressColor(progress)
-                        ).append(
-                            Component.text(" ${progress}%").color(NamedTextColor.YELLOW)
+                        val color = ForestMessaging.getGeneratorProgressColor(progress)
+                        context.jamIfNeeded(
+                            Component.text(desc.name).color(
+                                color
+                            ).append(
+                                Component.text(" ${progress}%").color(NamedTextColor.YELLOW)
+                            ),
+                            ComponentShape(desc.name.length, color)
                         )
                     }
                 }
@@ -71,13 +79,20 @@ object SurvivorScoreboard {
                     Component.text(" ".repeat(16))
                 }
                 line(pushKey = SURVIVOR_TEAM_COUNT_UPDATE) {
-                    Component.text("Survivors: ").color(ForestConstants.SURVIVORS_COLOR).append(
+                    val c = Component.text("Survivors: ").color(ForestConstants.SURVIVORS_COLOR).append(
                         Component.text(context.survivorTeam.players.size).color(NamedTextColor.GREEN)
+                    )
+                    context.jamIfNeeded(
+                        c,
+                        ComponentShape(15, ForestConstants.SURVIVORS_COLOR)
                     )
                 }
                 line(pushKey = HUNTER_TEAM_COUNT_UPDATE) {
-                    Component.text("Hunters: ").color(ForestConstants.HUNTERS_COLOR).append(
-                        Component.text(context.hunterTeam.players.size).color(NamedTextColor.GREEN)
+                    context.jamIfNeeded(
+                        Component.text("Hunters: ").color(ForestConstants.HUNTERS_COLOR).append(
+                            Component.text(context.hunterTeam.players.size).color(NamedTextColor.GREEN)
+                        ),
+                        ComponentShape(15, ForestConstants.HUNTERS_COLOR)
                     )
                 }
                 line {
@@ -85,6 +100,7 @@ object SurvivorScoreboard {
                 }
             }
         }
+        context.scoreboard = sb
         val csr = object : ChangingSetReceiver<Player> {
             override fun onAdd(item: Player) {
                 sb.trigger(SURVIVOR_TEAM_COUNT_UPDATE)

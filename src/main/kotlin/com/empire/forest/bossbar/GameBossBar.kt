@@ -1,6 +1,7 @@
 package com.empire.forest.bossbar
 
 import com.empire.forest.ForestContext
+import com.empire.forest.perk.ComponentShape
 import com.empire.ignite.Ignite
 import com.empire.ignite.util.ChangingSet
 import com.empire.ignite.util.IgniteResource
@@ -29,19 +30,25 @@ class GameBossBar(
         render()
     }
 
-    private fun render() {
+    fun render() {
         if (generatorsComplete < generatorCount) {
             val ratio = generatorsComplete.toFloat() / generatorCount
             bar.bossbar.name(
-                Component.text("${generatorsComplete}/${generatorCount} generators complete")
-                    .color(NamedTextColor.YELLOW)
+                context.jamIfNeeded(
+                    Component.text("${generatorsComplete}/${generatorCount} generators complete")
+                        .color(NamedTextColor.YELLOW),
+                    ComponentShape(25, NamedTextColor.YELLOW)
+                )
             )
             bar.bossbar.progress(ratio)
             bar.bossbar.color(BossBar.Color.PURPLE)
         } else {
             bar.bossbar.name(
-                Component.text("All generators complete!").color(NamedTextColor.GREEN)
-                    .append(Component.text(" Survivors can escape!").color(NamedTextColor.YELLOW))
+                context.jamIfNeeded(
+                    Component.text("All generators complete!").color(NamedTextColor.GREEN)
+                        .append(Component.text(" Survivors can escape!").color(NamedTextColor.YELLOW)),
+                    ComponentShape(35, NamedTextColor.YELLOW)
+                )
             )
             bar.bossbar.progress(1.0F)
             bar.bossbar.color(BossBar.Color.GREEN)
