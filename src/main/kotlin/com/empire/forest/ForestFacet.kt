@@ -16,9 +16,11 @@ import com.empire.forest.kit.SurvivorKit
 import com.empire.forest.mechanic.SurvivorHealth
 import com.empire.forest.mechanic.stamina.SurvivorStamina
 import com.empire.forest.scoreboard.SurvivorScoreboard
+import com.empire.forest.spectator.SpectatorTracker
 import com.empire.forest.util.ForestMessaging
 import com.empire.forest.util.ForestUtils
 import com.empire.ignite.Ignite
+import com.empire.ignite.display.Displays
 import com.empire.ignite.game.application.GameFacetV2
 import com.empire.ignite.game.facets.DeathEvents
 import com.empire.ignite.game.facets.system.PlayerManagementFacetEvents
@@ -65,7 +67,7 @@ class ForestFacet(
     private var hunterHUD : HunterHUD? = null
 
     override fun onLoad() {
-        val hunter = Bukkit.getPlayer("ThatOneTqnk") ?: context.playerTracker.players.random()
+        val hunter = context.playerTracker.players.random()
         healStabilizePlayers(context.playerTracker.players)
         context.playerTracker.players.forEach { player ->
             player.gameMode = GameMode.ADVENTURE
@@ -84,6 +86,7 @@ class ForestFacet(
                     context.addSurvivor(player)
                 }
             }
+            Displays.getActionBar(player).displayQueueManager.removeAll()
         }
 
         val success = context.loadSpawns()
@@ -109,6 +112,8 @@ class ForestFacet(
             }
         })
 
+        dump.add(SpectatorTracker(plugin, context))
+
 //        val tab = ForestTablist(plugin, context)
 //        tab.load()
 //        dump.add(tab)
@@ -118,14 +123,22 @@ class ForestFacet(
         this.hunterHUD!!.load()
         dump.add(hunterHUD!!)
 
-        val stamina = SurvivorStamina(plugin, context, drainSeconds = 15, regainSeconds = 10)
+        val stamina = SurvivorStamina(plugin, context, drainSeconds = 20, regainSeconds = 10)
         stamina.load()
         dump.add(stamina)
+        context.stamina = stamina
 
         val health = SurvivorHealth(plugin, context)
         health.load()
         dump.add(health)
         context.survivorHealth = health
+
+        dump.add(object : UnloadableResource {
+            override fun unload(external: Boolean) {
+                context.forestPlayerContextData.values.forEach { it.unload(external) }
+                context.forestPlayerContextData.unload(external)
+            }
+        })
 
         setupHunterKitStage()
         setupSurvivorKitStage()
@@ -381,7 +394,7 @@ class ForestFacet(
                         )
                         skipGameOverCheck = true
                         context.playerTracker.removePlayer(escapee, PlayerRemoveReason.SYSTEM)
-                        context.playerTracker.addSpectator(escapee)
+                        context.addSpectator(escapee)
                         skipGameOverCheck = false
                         if (survivorCount <= 1) {
                             finishGame(Winner.SURVIVOR)
@@ -421,7 +434,7 @@ class ForestFacet(
             val forwarder = ForwardingCallback.create<Int>()
             forwarder.register { generatorProgressCallback.sink(Unit) }
             val generator = ForestGenerator(
-                plugin, context, spot, desc.unlockSeconds,
+                plugin, context, desc,  spot, desc.unlockSeconds,
                 context.staticData.contributionMultiplier, forwarder.sink,
             ) {
                 context.survivorTeam.players.forEach { survivor ->
@@ -526,7 +539,7 @@ class ForestFacet(
         kitTracker.removeKitsFromPlayer(player)
         context.playerTracker.removePlayer(player, PlayerRemoveReason.SYSTEM)
         if (gameOver) return
-        val addedAsSpectator = context.playerTracker.addSpectator(player)
+        val addedAsSpectator = context.addSpectator(player)
         if (!addedAsSpectator) {
             IGNITE_LOGGER.warning(
                 "Dead survivor ${player.name} could not be added as spectator"

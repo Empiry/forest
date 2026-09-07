@@ -76,6 +76,7 @@ class BearTrap(
         else
             context.survivorHealth.syntheticDamagePlayer(planter, player, dmg.toFloat())
 
+
         freeze(player)
         player.addPotionEffect(
             PotionEffect(

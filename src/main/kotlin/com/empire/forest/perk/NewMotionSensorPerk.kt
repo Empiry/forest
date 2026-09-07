@@ -10,8 +10,6 @@ import com.empire.ignite.util.UnloadableResource
 import com.empire.ignite.util.UnloadableResourcePostHook
 import com.empire.ignite.util.collection.OnlinePlayerData
 import com.empire.ignite.util.collection.OnlinePlayerSet
-import com.empire.ignite.util.item.ItemBuilder
-import io.papermc.paper.command.brigadier.argument.ArgumentTypes.player
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Material
@@ -46,7 +44,8 @@ class NewMotionSensorPerk(
     private val selector = FakeBlockSelector(
         plugin,
         options = BlockSelectorOptions(
-            itemModel = NamespacedKey("horror", "objects/motion_sensor_on"),
+            selectorItemModel = NamespacedKey("horror", "objects/motion_sensor_on"),
+            shadowItemModel = NamespacedKey("horror", "objects/motion_sensor_blueprint"),
             itemBuilderFn = {
                 name(Component.text("Motion Sensor").color(NamedTextColor.RED))
             },
@@ -131,6 +130,8 @@ private class MotionSensorApparatus(
                 ticks += 5L
                 val inRangePlayers = context.survivorTeam.players.filter { player ->
                     player.location.distanceSquared(idisplay.location) <= 16 * 16 && !player.isSneaking
+                }.filter { player ->
+                    player.hasLineOfSight(idisplay.location)
                 }
                 inRangePlayers.forEach {
                     it.addPotionEffect(

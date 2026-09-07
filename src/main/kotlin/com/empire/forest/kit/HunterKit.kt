@@ -9,7 +9,7 @@ import com.empire.forest.perk.BearTrapPlayerData
 import com.empire.forest.perk.BloodhoundPerk
 import com.empire.forest.perk.BuckshotPerk
 import com.empire.forest.perk.JammerPerk
-import com.empire.forest.perk.MotionSensorPerk
+import com.empire.forest.perk.MachetePerk
 import com.empire.forest.perk.NewMotionSensorPerk
 import com.empire.forest.perk.PerkAbilityAdapter
 import com.empire.forest.perk.RoarPerk
@@ -46,11 +46,6 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
         unbreakable()
     }, GameKit() { player, context ->
         IgniteBundle(
-            ItemKitComponent(
-                listOf(
-                    0 to SWORD
-                ).toMap(),
-            ),
             abilityComponents = listOf(
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     TallGrassInvisibility(player, context)
@@ -88,6 +83,12 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     PerkAbilityAdapter(
                         JammerPerk::class.java,
+                        context, player
+                    ) { }
+                ),
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    PerkAbilityAdapter(
+                        MachetePerk::class.java,
                         context, player
                     ) { }
                 )
@@ -182,12 +183,6 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
             abilityComponents = listOf(
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     TallGrassInvisibility(player, context)
-                ),
-                com.empire.ignite.game.kit.AbilityKitComponent(
-                    PerkAbilityAdapter(
-                        MotionSensorPerk::class.java,
-                        context, player, { }
-                    )
                 )
             )
         )

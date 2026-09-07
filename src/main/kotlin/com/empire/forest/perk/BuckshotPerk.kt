@@ -36,37 +36,25 @@ class BuckshotPerk(
 ) : ForestPerk<Unit>, Listener {
     companion object {
         private val crossbowIdentifier = NamespacedKey("chud", "buckshot")
-        private val crossbowIB = ItemBuilder(Material.CROSSBOW) {
-            name(Component.text("Buckshot Shotgun").color(ForestConstants.HUNTERS_COLOR))
-            pdcBool(crossbowIdentifier, true)
-            itemModel(NamespacedKey("horror", "weapons/buckshot"))
-            lore(
-                listOf(
-                    Component.text("Right-click to shoot")
-                        .color(NamedTextColor.RED)
-                )
-            )
-        }
-        private val chargedIB : ItemBuilder
-
-        init {
-            val cloned = crossbowIB.clone()
-            cloned.dataComponent(
-            DataComponentTypes.CHARGED_PROJECTILES,
-            ChargedProjectiles.chargedProjectiles(
-                        listOf(ItemStack(Material.ARROW))
-                )
-            )
-            chargedIB = cloned
-        }
-
         private val arrowIdentifier = NamespacedKey("chud", "arrow")
-        val arrowIB = ItemBuilder(Material.ARROW) {
-            pdcBool(arrowIdentifier, true)
-        }
-
         val AMMO_INIT = 2
     }
+    private val crossbowIB = ItemBuilder(Material.CROSSBOW) {
+        name(Component.text("Buckshot Shotgun").color(ForestConstants.HUNTERS_COLOR))
+        pdcBool(crossbowIdentifier, true)
+        itemModel(NamespacedKey("horror", "weapons/buckshot"))
+        lore(
+            listOf(
+                Component.text("Right-click to shoot")
+                    .color(NamedTextColor.RED)
+            )
+        )
+    }
+    private val chargedIB : ItemBuilder
+    val arrowIB = ItemBuilder(Material.ARROW) {
+        pdcBool(arrowIdentifier, true)
+    }
+    private val shotgunCompare : (ItemStack) -> Boolean
 
     private val players = OnlinePlayerSet()
     private val playerData = OnlinePlayerData<BuckshotPlayerData>(plugin, onEvict = { _, rel -> rel.unload() })
@@ -77,23 +65,34 @@ class BuckshotPerk(
         registerListener(plugin, this)
         players.load()
         task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 0L, 2L).taskId
+        val cloned = crossbowIB.clone()
+        cloned.dataComponent(
+            DataComponentTypes.CHARGED_PROJECTILES,
+            ChargedProjectiles.chargedProjectiles(
+                listOf(ItemStack(Material.ARROW))
+            )
+        )
+        chargedIB = cloned
+        val normalPredicate = itemCompare(plugin, crossbowIB)
+        val chargedPredicate = itemCompare(plugin, chargedIB)
+        shotgunCompare = { istack -> normalPredicate(istack) || chargedPredicate(istack) }
     }
 
     override fun apply(player: Player) {
         player.give(crossbowIB.build())
-        player.inventory.setItem(17, arrowIB.build())
         val noiseCancelUnloadable = UnloadableResource.fromHacks(
             HACKS.cancelNoiseStrategy(listOf(player), "item.crossbow")
         )
-        val data = BuckshotPlayerData(player, ammo = AMMO_INIT)
+        val data = BuckshotPlayerData(player, shotgunCompare, ammo = AMMO_INIT)
         data.unloadables += noiseCancelUnloadable
         playerData += (player to data)
         players += player
+        context.getForestPlayerContextData(player)?.setupArrowReplenishmentTask()
     }
 
     private fun tick() {
         for (player in players) {
-            if (player.activeItem.type == Material.CROSSBOW) {
+            if (shotgunCompare(player.activeItem)) {
                 if (player.activeItemUsedTime in 1..2) {
                     player.playSound(
                         player.location, "minecraft:buckshot_reload",
@@ -171,7 +170,7 @@ class BuckshotPerk(
         if (event.player !in players) return
         val player = event.player
         val item = player.inventory.getItem(player.activeItemHand)
-        if (item.type != Material.CROSSBOW) return
+        if (!shotgunCompare(item)) return
         val data = playerData[player] ?: return
         if (data.ammo > 0) return
         data.outOfAmmo()
@@ -187,8 +186,8 @@ class BuckshotPerk(
         if (event.entity !in players) return
         val data = playerData[event.entity] ?: return
         val player = (event.entity as Player)
+        if (!shotgunCompare(player.inventory.itemInMainHand)) return
         data.ammo--
-        if (data.ammo == 0) player.inventory.setItem(17, arrowIB.build())
         player.playSound(
             player.location, "minecraft:buckshot_fire",
             SoundCategory.MASTER, 1.0f, 1.0f
@@ -216,7 +215,7 @@ class BuckshotPerk(
             )
         }
         event.isCancelled = true
-        if (data.ammo > 0 && player.inventory.itemInMainHand.type == Material.CROSSBOW) {
+        if (data.ammo > 0 && !context.gameProbablyOver()) {
             player.inventory.setItem(EquipmentSlot.HAND, ItemStack(Material.AIR))
             player.inventory.setItem(EquipmentSlot.HAND, chargedIB.build())
         }
@@ -240,7 +239,7 @@ class BuckshotPerk(
         if (shotgunPDC) {
             event.isCancelled = true
             val data = playerData[event.player] ?: return
-            data.reloadAmmo()
+            data.reloadAmmo(arrowIB)
             return
         }
     }
@@ -253,6 +252,7 @@ class BuckshotPerk(
     override fun unload(external: Boolean) {
         unregisterListener(this)
         players.unload()
+        playerData.values.forEach { it.unload(external) }
         playerData.unload()
         if (task != -1) {
             Bukkit.getScheduler().cancelTask(task)
@@ -263,6 +263,7 @@ class BuckshotPerk(
 
 class BuckshotPlayerData(
     val player: Player,
+    val shotgunCompare: (ItemStack) -> Boolean,
     var ammo: Int,
     val unloadables: MutableList<UnloadableResource> = mutableListOf()
 ) : UnloadableResource {
@@ -277,9 +278,9 @@ class BuckshotPlayerData(
     init {
         itemCheckID = Bukkit.getScheduler().runTaskTimer(GlobalResourceTrackers.plugin!!, Runnable {
             val item = player.inventory.getItem(player.activeItemHand)
-            if (item.type == Material.CROSSBOW && titleID == -1L) {
+            if (shotgunCompare(item) && titleID == -1L) {
                 enableSubtitle()
-            } else if (item.type != Material.CROSSBOW && titleID != -1L) {
+            } else if (!shotgunCompare(item) && titleID != -1L) {
                 disableSubtitle()
             }
         }, 0L , 2L).taskId
@@ -319,7 +320,7 @@ class BuckshotPlayerData(
         }
     }
 
-    fun reloadAmmo() {
+    fun reloadAmmo(arrowIB: ItemBuilder) {
         if (ammo >= BuckshotPerk.AMMO_INIT || reloading) return
         var updateTicks = 0
         freeze()
@@ -335,7 +336,6 @@ class BuckshotPlayerData(
         }
         Bukkit.getScheduler().runTaskLater(GlobalResourceTrackers.plugin!!, Runnable {
             ammo = BuckshotPerk.AMMO_INIT
-            player.inventory.setItem(17, BuckshotPerk.arrowIB.build())
             unfreeze()
             reloading = false
         }, 50L)

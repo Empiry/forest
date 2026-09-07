@@ -18,6 +18,7 @@ import com.empire.forest.lobby.LobbyListener
 import com.empire.forest.lobby.QueueSign
 import com.empire.forest.mechanic.SurvivorHealth
 import com.empire.forest.mechanic.phantom.CloakingPerk
+import com.empire.forest.mechanic.stamina.SurvivorStamina
 import com.empire.forest.mechanic.werewolf.WerewolfSpeedPerk
 import com.empire.forest.perk.*
 import com.empire.forest.scoreboard.SurvivorScoreboard
@@ -35,6 +36,7 @@ import com.empire.ignite.team.IgniteTeam
 import com.empire.ignite.team.IgniteTeamOptions
 import com.empire.ignite.util.*
 import com.empire.ignite.util.callback.ForwardingCallback
+import com.empire.ignite.util.collection.OnlinePlayerData
 import com.empire.ignite.util.config.InteractiveConfigV2
 import com.empire.ignite.util.item.ItemBuilder
 import com.empire.ignite.util.location.RawLocation
@@ -45,6 +47,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.*
 import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
 import org.bukkit.scoreboard.Team
 import org.bukkit.util.Vector
 import java.io.File
@@ -249,18 +252,20 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
             ),
             plugin
         )
+        val machetePerk = MachetePerk(plugin, context)
+        context.messageBus.add(machetePerk)
         context.perks.addAll(
             listOf(
                 BearTrapPerk(plugin, context),
                 HeartbeatPerk(plugin, context),
-                MotionSensorPerk(plugin, context),
                 CloakingPerk(plugin),
                 WerewolfSpeedPerk(plugin),
                 RoarPerk(plugin, context),
                 BuckshotPerk(plugin, context),
                 NewMotionSensorPerk(plugin, context),
                 BloodhoundPerk(plugin, context),
-                JammerPerk(plugin, context)
+                JammerPerk(plugin, context),
+                machetePerk
             )
         )
         dump.add(itemBuilderActiveListener(plugin, context.locateGeneratorsItemBuilder)  { p, b ->
@@ -327,6 +332,7 @@ class ForestContext(
     lateinit var survivorTeam : IgniteTeam
     lateinit var survivorsSpawn: Location
     lateinit var survivorHealth: SurvivorHealth
+    var stamina: SurvivorStamina? = null
     var survivorsRegion: CuboidRegion? = null
     lateinit var huntersSpawn: Location
     var tablist: ForestTablist? = null
@@ -335,9 +341,14 @@ class ForestContext(
     var jammed: Boolean = false
     var scoreboard: SillyScoreboard<SurvivorScoreboardAgent>? = null
     var gameBossBar: GameBossBar? = null
+    val forestPlayerContextData : OnlinePlayerData<ForestContextualPlayerData> = OnlinePlayerData(
+        plugin,
+        onEvict = {_, u -> u.unload() }
+    )
 
     lateinit var survivorTeamChangeSetContract : ChangeSetContract<Player>
     lateinit var hunterTeamChangeSetContract : ChangeSetContract<Player>
+    lateinit var spectatorsChangeSetContract : ChangeSetContract<Player>
 
     val perks : MutableList<ForestPerk<*>> = mutableListOf()
 
@@ -351,6 +362,7 @@ class ForestContext(
     fun setupChangeSetContracts() {
         survivorTeamChangeSetContract = ChangingSetUtils.createChangingSet(survivorTeam.players)
         hunterTeamChangeSetContract = ChangingSetUtils.createChangingSet(hunterTeam.players)
+        spectatorsChangeSetContract = ChangingSetUtils.createChangingSet(playerAccess.spectating)
     }
 
     fun <C> getPerk(perkClass: Class<out ForestPerk<C>>) : ForestPerk<C>? =
@@ -389,6 +401,10 @@ class ForestContext(
         hunterTeamChangeSetContract.addSink(player)
     }
 
+    fun addSpectator(player: Player) : Boolean {
+        return playerTracker.addSpectator(player)
+    }
+
     fun removeFromTeam(player: Player) {
         if (isSurvivor(player)) {
             survivorTeam.removePlayer(player)
@@ -397,6 +413,18 @@ class ForestContext(
             hunterTeam.removePlayer(player)
             hunterTeamChangeSetContract.removeSink(player)
         }
+    }
+
+    fun getForestPlayerContextData(player: Player) : ForestContextualPlayerData? {
+        if (player !in playerAccess.all) return null
+        if (player !in forestPlayerContextData) {
+            forestPlayerContextData[player] = ForestContextualPlayerData(player)
+        }
+        return forestPlayerContextData[player]
+    }
+
+    fun gameProbablyOver() : Boolean {
+        return hunterTeam.players.isEmpty() || survivorTeam.players.isEmpty()
     }
 
     fun jamIfNeeded(component: Component, shape: ComponentShape) : Component =
@@ -413,5 +441,29 @@ class ForestContext(
 
     fun getHunterChangeSet() : ChangingSet<Player> {
         return hunterTeamChangeSetContract.changeSet
+    }
+
+    fun getSpectatorsChangeSet() : ChangingSet<Player> {
+        return spectatorsChangeSetContract.changeSet
+    }
+}
+
+class ForestContextualPlayerData(
+    private val player: Player
+) : UnloadableResource {
+    private var arrowReplenishmentTaskSetup: Boolean = false
+    private val dump = GlobalResourceTrackers.createResourceDump()
+
+    fun setupArrowReplenishmentTask() {
+        if (arrowReplenishmentTaskSetup) return
+        dump.add(GlobalResourceTrackers.scheduler.repeatTask(2L) {
+            if (player.inventory.getItem(17)?.type != Material.ARROW) {
+                player.inventory.setItem(17, ItemStack(Material.ARROW))
+            }
+        })
+    }
+
+    override fun unload(external: Boolean) {
+        dump.destroyAll()
     }
 }

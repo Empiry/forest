@@ -2,13 +2,22 @@ package com.empire.forest.generator
 
 import com.empire.forest.ForestContext
 import com.empire.forest.perk.ComponentShape
+import com.empire.forest.util.ForestMessaging
+import com.empire.hacks.common.builder.ClientEntityMetadataHelpers
 import com.empire.ignite.Ignite
+import com.empire.ignite.util.GlobalResourceTrackers
+import com.empire.ignite.util.HACKS
 import com.empire.ignite.util.IgniteResource
+import com.empire.ignite.util.UnloadableResourcePostHook
+import com.empire.ignite.util.entity.ClientEntity
 import com.empire.ignite.util.entity.EntityModelBuilder
+import com.empire.ignite.util.entity.ManagedEntity
+import com.empire.ignite.util.entity.ManagedEntityOptions
 import com.empire.ignite.util.location.RawLocation
 import com.empire.ignite.util.region.CuboidRegion
 import com.empire.ignite.util.region.Region
 import com.empire.ignite.util.text.TextUtils
+import com.empire.ignite.util.text.TextUtils.flattenComponents
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
@@ -16,8 +25,10 @@ import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
+import org.bukkit.entity.Display
 import org.bukkit.entity.ItemDisplay
 import org.bukkit.entity.Player
+import org.bukkit.entity.TextDisplay
 import org.bukkit.event.Listener
 import org.bukkit.inventory.ItemStack
 import org.bukkit.util.Vector
@@ -27,6 +38,7 @@ import kotlin.math.floor
 class ForestGenerator(
     private val ignite: Ignite,
     private val forestContext: ForestContext,
+    private val description: GeneratorDescription,
     val location: Location,
     unlockSeconds: Int,
     private val contributionMultiplier: (Int) -> Double = { n -> n.toDouble() },
@@ -40,6 +52,8 @@ class ForestGenerator(
     private val random = Random()
     private var modelEntity: ItemDisplay? = null
     private val captureRegion : Region
+    private val halfwayPoint = unlockTicks / 2
+    private var indicator : GeneratorWarningIndicator? = null
 
     init {
         captureRegion = CuboidRegion(
@@ -105,10 +119,36 @@ class ForestGenerator(
             }
         }
         if (activeDetractors > 0) {
-            toAdd -= activeDetractors
+            val multiplier = 1.6
+            val integerPart = floor(multiplier).toInt()
+            val fractionalPart = (multiplier - integerPart)
+            toAdd -= integerPart
+            if (random.nextDouble() < fractionalPart) {
+                toAdd -= 1
+            }
         }
 
         progressTicks += toAdd
+        if (toAdd > 0 && progressTicks == halfwayPoint) {
+            forestContext.sendToHunters(
+                ForestMessaging.withPrefix(
+                    flattenComponents(
+                        Component.text(description.name).color(NamedTextColor.YELLOW),
+                        Component.text(" is now at ").color(NamedTextColor.GRAY),
+                        Component.text("50%").color(NamedTextColor.RED),
+                    )
+                )
+            )
+            if (indicator == null) {
+                indicator = GeneratorWarningIndicator(
+                    forestContext, location.clone().add(0.0, 0.4, 0.0)
+                )
+            }
+        }
+        if (progressTicks < halfwayPoint && indicator != null) {
+            indicator?.unloadWithPostHook()
+            indicator = null
+        }
         progressTicks = progressTicks.coerceAtLeast(0)
         val completion = ((progressTicks.toDouble() / (unlockTicks)) * 100).toInt()
         if (activeContributors != 0) onProgress(completion)
@@ -144,6 +184,10 @@ class ForestGenerator(
             unload()
             turnOnGenerator()
             onComplete()
+            if (indicator != null) {
+                indicator?.unloadWithPostHook()
+                indicator = null
+            }
         }
     }
 
@@ -166,3 +210,47 @@ class GeneratorDescription(
     val place: RawLocation,
     val unlockSeconds: Int
 )
+
+class GeneratorWarningIndicator(
+    context: ForestContext,
+    location: Location
+) : UnloadableResourcePostHook {
+    private val hooks : MutableList<() -> Unit> = mutableListOf()
+    private val dump = GlobalResourceTrackers.createResourceDump()
+
+    init {
+        val me = ManagedEntity.textDisplay(
+            location.toVector(),
+            ClientEntity.textDisplay(location.toVector()),
+            options = setOf(ManagedEntityOptions.DYNAMIC_SCALING)
+        )
+        context.hunterTeam.players.forEach { chud ->
+            me.apply(chud)
+            me.metadataUpdate(
+                chud,
+                listOf(
+                    ClientEntityMetadataHelpers.textDisplayText(Component.text("\uE009")),
+                    ClientEntityMetadataHelpers.textDisplayOpacity(0x7F),
+                    ClientEntityMetadataHelpers.textDisplayBackground(0),
+                    ClientEntityMetadataHelpers.displayViewRange(10f),
+                    ClientEntityMetadataHelpers.displayBillboard(HACKS, Display.Billboard.CENTER),
+                    ClientEntityMetadataHelpers.textDisplayOptionsMask(
+                        HACKS,
+                        shadow = false, seeThrough = true, defaultBgColor = false,
+                        alignment = TextDisplay.TextAlignment.CENTER
+                    )
+                )
+            )
+        }
+        dump.add(me)
+    }
+
+    override fun unloadWithPostHook() {
+        dump.destroyAll()
+        hooks.forEach { it() }
+    }
+
+    override fun addPostHook(hook: () -> Unit) {
+        hooks += hook
+    }
+}

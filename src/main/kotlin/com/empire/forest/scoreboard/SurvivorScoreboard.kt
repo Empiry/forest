@@ -125,6 +125,9 @@ object SurvivorScoreboard {
         dump.add(
             ChangingSetUtils.bindToScoreboard(context.getSurvivorChangeSet(), sb)
         )
+        dump.add(
+            ChangingSetUtils.bindToScoreboard(context.getSpectatorsChangeSet(), sb)
+        )
         generatorProgressCallback.register(
             PassthroughFilterCallback.createActiveUsingTicks(plugin, 7L, dump) {
                 sb.trigger(SurvivorScoreboard.GENERATOR_STATUSES_PUSH_KEY)

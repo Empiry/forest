@@ -71,6 +71,7 @@ class LobbyListener(
     @EventHandler
     private fun onDamage(event: EntityDamageEvent) {
         if (event.entity !is Player) return
+        if (event.entity.world != spawnLocation.world) return
         if (event.entity.location.toVector() !in spawnEncompassingRegion) return
         event.isCancelled = true
     }
@@ -78,6 +79,7 @@ class LobbyListener(
     @EventHandler
     private fun onBlockBreak(event: BlockBreakEvent) {
         if (DO_NOT_MESS_WITH_ME(event.player)) return
+        if (event.player.world != spawnLocation.world) return
         if (event.player.location.toVector() !in spawnEncompassingRegion) return
         event.isCancelled = true
     }
@@ -85,6 +87,7 @@ class LobbyListener(
     @EventHandler
     private fun onBlockPlace(event: BlockPlaceEvent) {
         if (DO_NOT_MESS_WITH_ME(event.player)) return
+        if (event.player.world != spawnLocation.world) return
         if (event.player.location.toVector() !in spawnEncompassingRegion) return
         event.isCancelled = true
     }
@@ -92,6 +95,7 @@ class LobbyListener(
     @EventHandler
     private fun onItemDrop(event: PlayerDropItemEvent) {
         if (DO_NOT_MESS_WITH_ME(event.player)) return
+        if (event.player.world != spawnLocation.world) return
         if (event.player.location.toVector() !in spawnEncompassingRegion) return
         event.isCancelled = true
     }
@@ -100,6 +104,7 @@ class LobbyListener(
     private fun onInventoryOpen(event: InventoryOpenEvent) {
         if (event.player !is Player) return
         if (DO_NOT_MESS_WITH_ME(event.player as Player)) return
+        if (event.player.world != spawnLocation.world) return
         if (event.player.location.toVector() !in spawnEncompassingRegion) return
         if (event.inventory.type == InventoryType.PLAYER || event.inventory.type == InventoryType.CREATIVE) return
         event.isCancelled = true
@@ -109,6 +114,7 @@ class LobbyListener(
     private fun onInventoryManipulate(event: InventoryClickEvent) {
         if (event.whoClicked !is Player) return
         if (DO_NOT_MESS_WITH_ME(event.whoClicked as Player)) return
+        if (event.whoClicked.world != spawnLocation.world) return
         if (event.whoClicked.location.toVector() !in spawnEncompassingRegion) return
         if (event.inventory.type != InventoryType.PLAYER) return
         event.isCancelled = true
@@ -117,6 +123,7 @@ class LobbyListener(
     @EventHandler
     private fun onItemFrameChange(event: PlayerItemFrameChangeEvent) {
         if (DO_NOT_MESS_WITH_ME(event.player)) return
+        if (event.player.world != spawnLocation.world) return
         if (event.player.location.toVector() !in spawnEncompassingRegion) return
         event.isCancelled = true
     }
@@ -126,6 +133,7 @@ class LobbyListener(
         if (event.entity !is Player) return
         val player = event.entity as Player
         if (DO_NOT_MESS_WITH_ME(player)) return
+        if (player.world != spawnLocation.world) return
         if (player.location.toVector() !in spawnEncompassingRegion) return
         event.isCancelled = true
         player.foodLevel = 20
@@ -165,6 +173,7 @@ class LobbyListener(
         this.queueItemListener = itemBuilderRightClickListener(
             plugin, this.lobbyQueueItem
         ) ugh@{ player: Player, item: ItemStack ->
+            if (player.world != spawnLocation.world) return@ugh
             if (player.location.toVector() !in this.spawnEncompassingRegion) return@ugh
             player.performCommand("queue")
         }

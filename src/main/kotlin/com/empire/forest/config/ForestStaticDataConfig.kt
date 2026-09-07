@@ -9,7 +9,7 @@ import com.empire.ignite.util.region.AggregateRegion
 import com.empire.ignite.util.region.CuboidRegion
 import org.bukkit.util.Vector
 
-private val DAMPENED_GENERATOR_CONTRIBUTION_MULTIPLIER: (Int) -> Double = { n -> (0.4 * (n - 1)) + 1 }
+private val DAMPENED_GENERATOR_CONTRIBUTION_MULTIPLIER: (Int) -> Double = { n -> (0.05 * (n - 1)) + 1 }
 private val TEST_CONTRIBUTION_MULTIPLIER: (Int) -> Double = { n -> 1.8 }
 private val FARM_SELECTION : GeneratorSelection = { allGenerators ->
     val shuffled = allGenerators.toMutableList().shuffled()
@@ -95,18 +95,18 @@ object ForestStaticDataConfig {
     val MAIN_SERVER_FARM = ForestStaticData(
         mapName = "farm",
         minRequiredGeneratorsFn = { ctx ->
-            if (ctx.survivorTeam.players.size >= 9) {
+            if (ctx.survivorTeam.players.size >= 8) {
                 5
-            } else if (ctx.survivorTeam.players.size >= 5) {
+            } else if (ctx.survivorTeam.players.size >= 4) {
                 4
             } else {
                 3
             }
         },
         generatorSelection = FARM_SELECTION,
-        queueCountdownSeconds = if (mainServerDebug) 5 else 20,
-        survivorReleaseSeconds = if (mainServerDebug) 5 else 20,
-        hunterReleaseSeconds = if (mainServerDebug) 5 else 20,
+        queueCountdownSeconds = if (mainServerDebug) 15 else 20,
+        survivorReleaseSeconds = if (mainServerDebug) 15 else 20,
+        hunterReleaseSeconds = if (mainServerDebug) 10 else 15,
         yLevelDeath = -40,
         worldPath = "./gamemaps/farm",
         survivorsSpawn = RawLocation(-109.0,-1.0,423.0,0.0F,0.0F),
@@ -120,42 +120,42 @@ object ForestStaticDataConfig {
             GeneratorDescription(
                 name = "Fields",
                 place = RawLocation(-187.0, 1.0, 448.0),
-                unlockSeconds = 36
+                unlockSeconds = 45
             ),
             GeneratorDescription(
                 name = "Mini Barn Thing",
                 place = RawLocation(-219.0, -2.0, 505.0),
-                unlockSeconds = 36
+                unlockSeconds = 45
             ),
             GeneratorDescription(
                 name = "Barn",
                 place = RawLocation(-101.0,-4.0, 551.0),
-                unlockSeconds = 36
+                unlockSeconds = 45
             ),
             GeneratorDescription(
                 name = "Upstairs",
                 place = RawLocation(-134.0,4.0,523.0),
-                unlockSeconds = 36
+                unlockSeconds = 45
             ),
             GeneratorDescription(
                 name = "Foyer",
                 place = RawLocation(-136.0,-2.0,522.0),
-                unlockSeconds = 36
+                unlockSeconds = 45
             ),
             GeneratorDescription(
                 name = "Pit",
                 place = RawLocation(-168.0,-14.0,572.0),
-                unlockSeconds = 36
+                unlockSeconds = 45
             ),
             GeneratorDescription(
                 name = "Cellar",
                 place = RawLocation(-139.0,-7.0,523.0),
-                unlockSeconds = 36
+                unlockSeconds = 45
             ),
             GeneratorDescription(
                 name = "Garage",
                 place = RawLocation(-96.0,-4.0,513.0),
-                unlockSeconds = 36
+                unlockSeconds = 45
             )
         ),
         escape = EscapeGateDescription(

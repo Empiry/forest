@@ -24,6 +24,8 @@ dependencies {
     compileOnly("net.kyori:adventure-platform-bukkit:4.4.1")
     // commands
     compileOnly("co.aikar:acf-paper:0.5.1-SNAPSHOT")
+    // lin alg
+    compileOnly("org.joml:joml:1.10.8")
 }
 
 // Java 21

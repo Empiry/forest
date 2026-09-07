@@ -72,6 +72,8 @@ class SurvivorStamina(
         }
     }
 
+    fun getStaminaData(player: Player) : PlayerStaminaData? = data[player]
+
     @EventHandler
     private fun onMove(event: PlayerMoveEvent) {
         if (event.player !in context.survivorTeam.players) return
@@ -80,7 +82,7 @@ class SurvivorStamina(
         }
         val playerData = data[event.player] ?: return
         playerData.moving = true
-        if (playerData.staminaLevel >= 33 && event.player.foodLevel < 20) {
+        if ((playerData.overrideExhaustionTicks > 0L || playerData.staminaLevel >= 33) && event.player.foodLevel < 20) {
             event.player.foodLevel = 20
         } else if (playerData.staminaLevel <= 0 && event.player.foodLevel > 0) {
             event.player.foodLevel = 3
@@ -92,6 +94,13 @@ class SurvivorStamina(
         } else {
             playerData.staminaLevel = min(100.0, playerData.staminaLevel + (regainPerTick / 2))
         }
+        if (playerData.overrideExhaustionTicks > 0L) playerData.overrideExhaustionTicks--
+    }
+
+    fun rewardStamina(player: Player, dmgAmt: Double) {
+        val playerData = data[player] ?: return
+        playerData.staminaLevel = min(100.0, (playerData.staminaLevel + (dmgAmt*0.4)))
+        playerData.overrideExhaustionTicks = 100L
     }
 
     override fun unload(external: Boolean) {
@@ -102,7 +111,8 @@ class SurvivorStamina(
     }
 }
 
-private data class PlayerStaminaData(
+data class PlayerStaminaData(
     var staminaLevel : Double = 100.0,
-    var moving : Boolean = false
+    var moving : Boolean = false,
+    var overrideExhaustionTicks: Long = 0L
 )

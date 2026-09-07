@@ -16,6 +16,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
+import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDamageEvent
@@ -72,10 +73,11 @@ class SurvivorHealth(
     }
 
     override fun unload(external: Boolean) {
+        targets.values.forEach { hpd -> hpd.unload(external) }
         targets.unload()
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     private fun onDamage(event: EntityDamageEvent) {
         if (event.entity !is Player) return
         if (event.entity !in targets) return
@@ -106,12 +108,20 @@ class SurvivorHealth(
         val dstData = targets[destination] ?: return
         dstData.dmgOverride = amount
         HACKS.organicPlayerDamage(source, destination, 0.5f)
+        context.stamina?.rewardStamina(destination, amount.toDouble())
     }
 
     fun syntheticDamage(destination: Player, amount: Float) {
         val dstData = targets[destination] ?: return
         dstData.dmgOverride = amount
         HACKS.organicGenericDamage(destination, 0.5f)
+        context.stamina?.rewardStamina(destination, amount.toDouble())
+    }
+
+    fun overrideOrganicDamage(destination: Player, ev: EntityDamageEvent, amount: Float) {
+        val dstData = targets[destination] ?: return
+        dstData.dmgOverride = amount
+        ev.damage = 0.5
     }
 }
 
