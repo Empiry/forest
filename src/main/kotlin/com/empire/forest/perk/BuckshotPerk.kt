@@ -83,7 +83,7 @@ class BuckshotPerk(
         val noiseCancelUnloadable = UnloadableResource.fromHacks(
             HACKS.cancelNoiseStrategy(listOf(player), "item.crossbow")
         )
-        val data = BuckshotPlayerData(player, shotgunCompare, ammo = AMMO_INIT)
+        val data = BuckshotPlayerData(context, player, shotgunCompare, ammo = AMMO_INIT)
         data.unloadables += noiseCancelUnloadable
         playerData += (player to data)
         players += player
@@ -262,6 +262,7 @@ class BuckshotPerk(
 }
 
 class BuckshotPlayerData(
+    private val context: ForestContext,
     val player: Player,
     val shotgunCompare: (ItemStack) -> Boolean,
     var ammo: Int,
@@ -352,7 +353,7 @@ class BuckshotPlayerData(
     }
 
     fun unfreeze() {
-        player.getAttribute(Attribute.MOVEMENT_SPEED)?.let { it.baseValue = 0.10000000149011612 }
+        player.getAttribute(Attribute.MOVEMENT_SPEED)?.let { it.baseValue = context.getNormalMovementSpeed(player) }
         player.getAttribute(Attribute.JUMP_STRENGTH)?.let { it.baseValue = it.defaultValue }
     }
 

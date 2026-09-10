@@ -136,7 +136,7 @@ private class MotionSensorApparatus(
                 inRangePlayers.forEach {
                     it.addPotionEffect(
                         PotionEffect(
-                            PotionEffectType.GLOWING, 40, 0,
+                            PotionEffectType.GLOWING, 20, 0,
                             true, false
                         )
                     )

@@ -1,5 +1,6 @@
 package com.empire.forest.util
 
+import com.empire.forest.ForestContext
 import com.empire.hacks.common.builder.UpdateEntityMetadataConverter
 import com.empire.hacks.common.builder.UpdateEntityMetadataPacketBuilder
 import com.empire.ignite.util.GlobalResourceTrackers
@@ -9,13 +10,14 @@ import com.empire.ignite.util.region.RegionUtils
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.attribute.Attribute
+import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.util.Vector
 import kotlin.collections.forEach
 import kotlin.experimental.or
 
 object ForestUtils {
-    fun fakeGlow(recipients: List<Player>, targets: List<Player>, duration: Long) {
+    fun <E: Entity> fakeGlow(recipients: List<Player>, targets: List<Entity>, duration: Long) {
         val glowByte : Byte = 0x40
         val overridePackets = targets.associateWith {
             target ->
@@ -32,7 +34,7 @@ object ForestUtils {
         }
 
         val unloadables = overridePackets.map { (k, v) ->
-            HACKS.overrideEntityMetadata(recipients, k, v)
+            HACKS.overrideEntityMetadata(recipients, v)
         }
 
         // force-update before data-watcher kicks in
@@ -75,8 +77,8 @@ object ForestUtils {
         player.getAttribute(Attribute.JUMP_STRENGTH)?.let { it.baseValue = 0.0 }
     }
 
-    fun unfreezePlayer(player: Player) {
-        player.getAttribute(Attribute.MOVEMENT_SPEED)?.let { it.baseValue = 0.10000000149011612 }
+    fun resetPlayer(context: ForestContext, player: Player) {
+        player.getAttribute(Attribute.MOVEMENT_SPEED)?.let { it.baseValue = context.getNormalMovementSpeed(player) }
         player.getAttribute(Attribute.JUMP_STRENGTH)?.let { it.baseValue = it.defaultValue }
     }
 }

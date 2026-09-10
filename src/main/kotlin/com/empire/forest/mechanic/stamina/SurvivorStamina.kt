@@ -2,12 +2,9 @@ package com.empire.forest.mechanic.stamina
 
 import com.empire.forest.ForestContext
 import com.empire.ignite.display.Displays
-import com.empire.ignite.util.ChangingSetReceiver
-import com.empire.ignite.util.GlobalResourceTrackers
-import com.empire.ignite.util.IgniteResource
+import com.empire.ignite.util.*
 import com.empire.ignite.util.collection.OnlinePlayerData
-import com.empire.ignite.util.registerListener
-import com.empire.ignite.util.unregisterListener
+import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -85,6 +82,9 @@ class SurvivorStamina(
         if ((playerData.overrideExhaustionTicks > 0L || playerData.staminaLevel >= 33) && event.player.foodLevel < 20) {
             event.player.foodLevel = 20
         } else if (playerData.staminaLevel <= 0 && event.player.foodLevel > 0) {
+            event.player.playSound(
+                event.player.location, Sound.ENTITY_GENERIC_EXTINGUISH_FIRE, 1.0F, 1.0F
+            )
             event.player.foodLevel = 3
         }
         if (event.player.isSprinting) {

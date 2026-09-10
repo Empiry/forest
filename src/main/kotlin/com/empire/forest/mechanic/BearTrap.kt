@@ -98,7 +98,9 @@ class BearTrap(
     }
 
     private fun unfreeze(player: Player) {
-        player.getAttribute(Attribute.MOVEMENT_SPEED)?.let { it.baseValue = 0.10000000149011612 }
+        player.getAttribute(Attribute.MOVEMENT_SPEED)?.let {
+            it.baseValue = context.getNormalMovementSpeed(player)
+        }
         player.getAttribute(Attribute.JUMP_STRENGTH)?.let { it.baseValue = it.defaultValue }
     }
 

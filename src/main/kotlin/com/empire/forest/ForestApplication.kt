@@ -17,11 +17,11 @@ import com.empire.forest.generic.TeamDamageNullifyFacet
 import com.empire.forest.lobby.LobbyListener
 import com.empire.forest.lobby.QueueSign
 import com.empire.forest.mechanic.SurvivorHealth
-import com.empire.forest.mechanic.phantom.CloakingPerk
 import com.empire.forest.mechanic.stamina.SurvivorStamina
-import com.empire.forest.mechanic.werewolf.WerewolfSpeedPerk
-import com.empire.forest.perk.*
-import com.empire.forest.scoreboard.SurvivorScoreboard
+import com.empire.forest.perk.ComponentShape
+import com.empire.forest.perk.ForestPerk
+import com.empire.forest.perk.JammerUtils
+import com.empire.forest.perk.StaredownPerk
 import com.empire.forest.scoreboard.SurvivorScoreboardAgent
 import com.empire.forest.tablist.ForestTablist
 import com.empire.forest.util.ForestMatchStartEvent
@@ -49,7 +49,6 @@ import org.bukkit.*
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.scoreboard.Team
-import org.bukkit.util.Vector
 import java.io.File
 import java.util.*
 
@@ -252,30 +251,32 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
             ),
             plugin
         )
-        val machetePerk = MachetePerk(plugin, context)
-        context.messageBus.add(machetePerk)
-        context.perks.addAll(
-            listOf(
-                BearTrapPerk(plugin, context),
-                HeartbeatPerk(plugin, context),
-                CloakingPerk(plugin),
-                WerewolfSpeedPerk(plugin),
-                RoarPerk(plugin, context),
-                BuckshotPerk(plugin, context),
-                NewMotionSensorPerk(plugin, context),
-                BloodhoundPerk(plugin, context),
-                JammerPerk(plugin, context),
-                machetePerk
-            )
-        )
+//        val machetePerk = MachetePerk(plugin, context)
+//        context.messageBus.add(machetePerk)
+//        context.perks.addAll(
+//            listOf(
+//                BearTrapPerk(plugin, context),
+//                HeartbeatPerk(plugin, context),
+//                CloakingPerk(plugin),
+//                WerewolfSpeedPerk(plugin),
+//                RoarPerk(plugin, context),
+//                BuckshotPerk(plugin, context),
+//                NewMotionSensorPerk(plugin, context),
+//                BloodhoundPerk(plugin, context),
+//                JammerPerk(plugin, context),
+//                machetePerk,
+//                StaredownPerk(plugin, context),
+//                ShadowPerk(plugin, context)
+//            )
+//        )
+//        dump.add(object : UnloadableResource {
+//            override fun unload(external: Boolean) {
+//                context.perks.forEach { it.unload(external) }
+//            }
+//        })
         dump.add(itemBuilderActiveListener(plugin, context.locateGeneratorsItemBuilder)  { p, b ->
             context.proximityTask?.overrides[p] = b
             context.locateGeneratorsCallbackRegistration.sink(p to b)
-        })
-        dump.add(object : UnloadableResource {
-            override fun unload(external: Boolean) {
-                context.perks.forEach { it.unload(external) }
-            }
         })
         return context
     }
@@ -445,6 +446,21 @@ class ForestContext(
 
     fun getSpectatorsChangeSet() : ChangingSet<Player> {
         return spectatorsChangeSetContract.changeSet
+    }
+
+    fun getNormalMovementSpeed(player: Player) : Double {
+        val base = 0.10000000149011612
+        val forestPerk = getPerk(StaredownPerk::class.java) ?: return base
+        val staredown = forestPerk as StaredownPerk
+        return if (staredown.using(player)) base * 1.15 else base
+    }
+
+    fun shouldReplenishHunger(player: Player): Boolean {
+        if (player !in playerAccess.alive) return false
+        if (player in survivorTeam.players) return false
+        val forestPerk = getPerk(StaredownPerk::class.java) ?: return true
+        val staredown = forestPerk as StaredownPerk
+        return !staredown.isSeen(player)
     }
 }
 

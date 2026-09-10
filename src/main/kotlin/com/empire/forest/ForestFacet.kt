@@ -14,7 +14,20 @@ import com.empire.forest.kit.ForestKitProvider
 import com.empire.forest.kit.HunterKit
 import com.empire.forest.kit.SurvivorKit
 import com.empire.forest.mechanic.SurvivorHealth
+import com.empire.forest.mechanic.downed.DownedMechanic
+import com.empire.forest.mechanic.phantom.CloakingPerk
 import com.empire.forest.mechanic.stamina.SurvivorStamina
+import com.empire.forest.mechanic.werewolf.WerewolfSpeedPerk
+import com.empire.forest.perk.BearTrapPerk
+import com.empire.forest.perk.BloodhoundPerk
+import com.empire.forest.perk.BuckshotPerk
+import com.empire.forest.perk.HeartbeatPerk
+import com.empire.forest.perk.JammerPerk
+import com.empire.forest.perk.MachetePerk
+import com.empire.forest.perk.NewMotionSensorPerk
+import com.empire.forest.perk.RoarPerk
+import com.empire.forest.perk.ShadowPerk
+import com.empire.forest.perk.StaredownPerk
 import com.empire.forest.scoreboard.SurvivorScoreboard
 import com.empire.forest.spectator.SpectatorTracker
 import com.empire.forest.util.ForestMessaging
@@ -37,6 +50,7 @@ import com.empire.ignite.util.text.TextUtils.flattenComponents
 import com.empire.ignite.util.timer.Timer
 import com.empire.ignite.util.timer.TimerCallback
 import com.empire.ignite.util.ui.ManagedBossBar
+import com.empire.ignite.util.worldborder.WorldBorderTint
 import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -67,6 +81,7 @@ class ForestFacet(
     private var hunterHUD : HunterHUD? = null
 
     override fun onLoad() {
+        setupPerks()
         val hunter = context.playerTracker.players.random()
         healStabilizePlayers(context.playerTracker.players)
         context.playerTracker.players.forEach { player ->
@@ -132,6 +147,10 @@ class ForestFacet(
         health.load()
         dump.add(health)
         context.survivorHealth = health
+
+        val downed = DownedMechanic(plugin, context)
+        context.messageBus.add(downed)
+        dump.add(downed)
 
         dump.add(object : UnloadableResource {
             override fun unload(external: Boolean) {
@@ -529,12 +548,14 @@ class ForestFacet(
 
     override fun onPlayerRemove(player: Player, reason: PlayerRemoveReason) {
         context.removeFromTeam(player)
-        if ((context.hunterTeam.players.isEmpty() || context.survivorTeam.players.isEmpty())) {
+//        if ((context.hunterTeam.players.isEmpty() || context.survivorTeam.players.isEmpty())) {
+        if ((context.hunterTeam.players.isEmpty())) {
             finishGame()
         }
     }
 
     override fun onPlayerDeath(player: Player, damageInfo: EntityDamageEvent) {
+        val currentLoc = player.location
         if (gameOver) return
         kitTracker.removeKitsFromPlayer(player)
         context.playerTracker.removePlayer(player, PlayerRemoveReason.SYSTEM)
@@ -562,26 +583,27 @@ class ForestFacet(
                 )
                 .append(Component.newline())
         )
-        player.addPotionEffect(PotionEffect(
-            PotionEffectType.DARKNESS, 80, 1, true, false
-        ))
-        player.addPotionEffect(
-            PotionEffect(
-                PotionEffectType.BLINDNESS, 60, 1, true, false
-            )
-        )
-//        WorldBorderTint.add(player)
-//        val timer = Timer(plugin, 100L)
-//            .then { WorldBorderTint.remove(player) }
-//            .whenCancelled { WorldBorderTint.remove(player) }
-//        timer.start()
-//        dump.add(timer)
+        player.teleport(currentLoc)
+//        player.addPotionEffect(PotionEffect(
+//            PotionEffectType.DARKNESS, 80, 1, true, false
+//        ))
+//        player.addPotionEffect(
+//            PotionEffect(
+//                PotionEffectType.BLINDNESS, 60, 1, true, false
+//            )
+//        )
+        WorldBorderTint.add(player)
+        val timer = Timer(plugin, 100L)
+            .then { WorldBorderTint.remove(player) }
+            .whenCancelled { WorldBorderTint.remove(player) }
+        timer.start()
+        dump.add(timer)
     }
 
     @EventHandler
     private fun onHunger(event: FoodLevelChangeEvent) {
-//        if (event.entity !in context.playerAccess.alive) return
-        if (event.entity !in context.hunterTeam.players) return
+        val e = event.entity
+        if (e !is Player || !context.shouldReplenishHunger(e)) return
         event.isCancelled = true
         event.entity.foodLevel = 20
     }
@@ -605,6 +627,32 @@ class ForestFacet(
                 PotionEffectType.SLOWNESS, 10, 0, true, false
             )
         )
+    }
+
+    private fun setupPerks() {
+        val machetePerk = MachetePerk(plugin, context)
+        context.messageBus.add(machetePerk)
+        context.perks.addAll(
+            listOf(
+                BearTrapPerk(plugin, context),
+                HeartbeatPerk(plugin, context),
+                CloakingPerk(plugin),
+                WerewolfSpeedPerk(plugin),
+                RoarPerk(plugin, context),
+                BuckshotPerk(plugin, context),
+                NewMotionSensorPerk(plugin, context),
+                BloodhoundPerk(plugin, context),
+                JammerPerk(plugin, context),
+                machetePerk,
+                StaredownPerk(plugin, context),
+                ShadowPerk(plugin, context)
+            )
+        )
+        dump.add(object : UnloadableResource {
+            override fun unload(external: Boolean) {
+                context.perks.forEach { it.unload(external) }
+            }
+        })
     }
 
     private fun getBodyBlocks(source: Location) : List<Location> =

@@ -13,6 +13,8 @@ import com.empire.forest.perk.MachetePerk
 import com.empire.forest.perk.NewMotionSensorPerk
 import com.empire.forest.perk.PerkAbilityAdapter
 import com.empire.forest.perk.RoarPerk
+import com.empire.forest.perk.ShadowPerk
+import com.empire.forest.perk.StaredownPerk
 import com.empire.ignite.game.kit.GameKit
 import com.empire.ignite.game.kit.IgniteBundle
 import com.empire.ignite.game.kit.ItemKitComponent
@@ -89,6 +91,18 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     PerkAbilityAdapter(
                         MachetePerk::class.java,
+                        context, player
+                    ) { }
+                ),
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    PerkAbilityAdapter(
+                        StaredownPerk::class.java,
+                        context, player
+                    ) { }
+                ),
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    PerkAbilityAdapter(
+                        ShadowPerk::class.java,
                         context, player
                     ) { }
                 )
