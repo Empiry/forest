@@ -12,6 +12,7 @@ import com.empire.ignite.util.item.ItemBuilder
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Material
+import org.bukkit.NamespacedKey
 import org.bukkit.Particle
 import org.bukkit.Sound
 import org.bukkit.attribute.Attribute
@@ -29,10 +30,11 @@ class ShadowPerk(
     override val contextManager: PlayerDataAccess<Unit> = PlayerDataAccess.noop()
     private val shadowIMB = ItemBuilder(Material.FEATHER) {
         name(Component.text("The Shadows").color(NamedTextColor.LIGHT_PURPLE))
+        itemModel(NamespacedKey("horror", "perks/stealthy"))
         unbreakable()
     }
     private val dump = GlobalResourceTrackers.createResourceDump()
-    private val cooldown = CooldownRightClickAbility(
+    val cooldown = CooldownRightClickAbility(
         plugin, 20L * 45L,
         options = CooldownRightClickAbilityOptions(consume = false),
         itemBuilder = shadowIMB,

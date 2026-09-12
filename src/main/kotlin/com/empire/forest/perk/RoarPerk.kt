@@ -11,6 +11,7 @@ import com.empire.ignite.util.playSoundToPlayers
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Material
+import org.bukkit.NamespacedKey
 import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
@@ -28,7 +29,8 @@ class RoarPerk(
 
     init {
         val itemBuilder = ItemBuilder(Material.BELL) {
-            name(Component.text("RAWR XD").color(ForestConstants.HUNTERS_COLOR))
+            name(Component.text("Bellow").color(ForestConstants.HUNTERS_COLOR))
+            itemModel(NamespacedKey("horror", "ability/bellow"))
             lore(
                 listOf(
                     Component.text("Right-click to YELL VIOLENTLY")
@@ -52,10 +54,10 @@ class RoarPerk(
     }
 
     private fun action(player: Player) {
-        playSoundToPlayers(
-            context.playerAccess.all,
+        player.location.world.playSound(
+            player.location,
             Sound.ENTITY_WARDEN_ROAR,
-            2.0F,
+            20.0F,
             0.0F
         )
         context.survivorTeam.players.forEach { player ->

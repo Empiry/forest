@@ -83,7 +83,11 @@ class BuckshotPerk(
         val noiseCancelUnloadable = UnloadableResource.fromHacks(
             HACKS.cancelNoiseStrategy(listOf(player), "item.crossbow")
         )
-        val data = BuckshotPlayerData(context, player, shotgunCompare, ammo = AMMO_INIT)
+        val data = BuckshotPlayerData(
+            context, player, shotgunCompare,
+            crossbowIB.build(), chargedIB.build(),
+            ammo = AMMO_INIT
+        )
         data.unloadables += noiseCancelUnloadable
         playerData += (player to data)
         players += player
@@ -265,6 +269,7 @@ class BuckshotPlayerData(
     private val context: ForestContext,
     val player: Player,
     val shotgunCompare: (ItemStack) -> Boolean,
+    val shotgunItem: ItemStack, val chargedShotgunItem: ItemStack,
     var ammo: Int,
     val unloadables: MutableList<UnloadableResource> = mutableListOf()
 ) : UnloadableResource {
@@ -336,6 +341,9 @@ class BuckshotPlayerData(
             )
         }
         Bukkit.getScheduler().runTaskLater(GlobalResourceTrackers.plugin!!, Runnable {
+            player.inventory.all(chargedShotgunItem).keys.forEach {
+                player.inventory.setItem(it, shotgunItem)
+            }
             ammo = BuckshotPerk.AMMO_INIT
             unfreeze()
             reloading = false

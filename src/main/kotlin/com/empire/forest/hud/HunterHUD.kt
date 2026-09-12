@@ -3,7 +3,6 @@ package com.empire.forest.hud
 import com.empire.forest.ForestContext
 import com.empire.forest.kit.ForestKitKey
 import com.empire.forest.kit.HunterKit
-import com.empire.forest.mechanic.BearTrap
 import com.empire.forest.perk.BearTrapPerk
 import com.empire.forest.perk.ForestPerk
 import com.empire.forest.perk.NewMotionSensorPerk
@@ -17,7 +16,6 @@ import com.empire.ignite.util.text.TextUtils.flattenComponents
 import com.empire.ignite.util.withSeperatingElement
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 import kotlin.collections.flatten
@@ -58,7 +56,7 @@ class HunterHUD(
     private fun isUsingHunterClass(player: Player) : Boolean {
         if (player !in context.hunterTeam.players) return false
         val kit = kitTracker.getAppliedKitForPlayer(player) ?: return false
-        return kit.gameKit == HunterKit.SLASHER.gameKit
+        return kit.gameKit == HunterKit.HUNTER.gameKit
     }
 
     private fun setupActionBar(player: Player) {
@@ -117,6 +115,7 @@ class HunterHUD(
 
     private fun formatTime(ticks: Long) : Component {
         val timeComponent = Component.text(
+            if (ticks == 0L) "Ready" else
             "%.2f".format((ticks * 50) / 1000.0)
         ).color(
             when (ticks) {

@@ -105,7 +105,8 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
             LeaveCommand(),
             SpectateCommand(plugin),
             TestIcvCommand(plugin),
-            CoinsCommand(userDatabase!!)
+            CoinsCommand(userDatabase!!),
+            ForestDebugCommand()
         )
     }
 

@@ -45,6 +45,10 @@ class FakeBlockSelector(
 
     private var item : ItemStack? = null
 
+    init {
+        options.itemBuilderFn(itemBuilder)
+    }
+
     override fun load() {
         activeListener = itemBuilderActiveListenerPokeable(plugin, itemBuilder, ::onItemActive)
         rightClickListener = itemBuilderRightClickListener(plugin, itemBuilder, ::onItemRightClick)

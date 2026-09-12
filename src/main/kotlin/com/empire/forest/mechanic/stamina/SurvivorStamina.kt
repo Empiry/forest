@@ -103,6 +103,11 @@ class SurvivorStamina(
         playerData.overrideExhaustionTicks = 100L
     }
 
+    fun addStamina(player: Player, amount: Double) {
+        val playerData = data[player] ?: return
+        playerData.staminaLevel = max(0.0, min(100.0, playerData.staminaLevel + amount))
+    }
+
     override fun unload(external: Boolean) {
         unregisterListener(this)
         data.unload(external)

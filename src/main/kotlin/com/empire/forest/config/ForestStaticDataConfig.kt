@@ -13,8 +13,8 @@ private val DAMPENED_GENERATOR_CONTRIBUTION_MULTIPLIER: (Int) -> Double = { n ->
 private val TEST_CONTRIBUTION_MULTIPLIER: (Int) -> Double = { n -> 1.8 }
 private val FARM_SELECTION : GeneratorSelection = { allGenerators ->
     val shuffled = allGenerators.toMutableList().shuffled()
-    val spillover = shuffled.drop(6)
-    val generators = shuffled.take(6).toMutableList()
+    val spillover = shuffled.drop(7)
+    val generators = shuffled.take(7).toMutableList()
     // near the house area ish
     val houseGenerators = generators.filter { it.place.z in 521.0..524.0 }
     if (houseGenerators.size >= 2 && houseGenerators.any { gen -> gen.name == "Foyer" }) {
@@ -95,8 +95,8 @@ object ForestStaticDataConfig {
     val MAIN_SERVER_FARM = ForestStaticData(
         mapName = "farm",
         minRequiredGeneratorsFn = { ctx ->
-            if (ctx.survivorTeam.players.size >= 8) {
-                5
+            if (ctx.survivorTeam.players.size >= 6) {
+                6
             } else if (ctx.survivorTeam.players.size >= 4) {
                 4
             } else {
@@ -104,7 +104,7 @@ object ForestStaticDataConfig {
             }
         },
         generatorSelection = FARM_SELECTION,
-        queueCountdownSeconds = if (mainServerDebug) 15 else 20,
+        queueCountdownSeconds = if (mainServerDebug) 30 else 30,
         survivorReleaseSeconds = if (mainServerDebug) 15 else 20,
         hunterReleaseSeconds = if (mainServerDebug) 10 else 15,
         yLevelDeath = -40,

@@ -32,7 +32,7 @@ private val TEST_SERVER_CONFIG = ServerConfig(
     )
 )
 
-val ACTIVE_SERVER_CONFIG : ServerConfig = TEST_SERVER_CONFIG
+val ACTIVE_SERVER_CONFIG : ServerConfig = MAIN_SERVER_CONFIG
 
 data class ServerConfig(
     val forest: ForestStaticData,

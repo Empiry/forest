@@ -57,7 +57,7 @@ class SurvivorHealth(
                 Component.text("\uE003"),
                 context.jamIfNeeded(
                     flattenComponents(
-                        Component.text("${data.health}"),
+                        Component.text(" ${data.health}"),
                         Component.text("/₁₀₀").color(NamedTextColor.DARK_GRAY)
                     ),
                     ComponentShape(8, NamedTextColor.RED)

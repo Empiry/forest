@@ -9,18 +9,20 @@ import com.empire.forest.generator.ForestGeneratorNameplate
 import com.empire.forest.generator.GeneratorDescription
 import com.empire.forest.generator.NameplateProximityTask
 import com.empire.forest.hud.HunterHUD
+import com.empire.forest.hud.SlasherHUD
 import com.empire.forest.kit.ForestKitKey
 import com.empire.forest.kit.ForestKitProvider
 import com.empire.forest.kit.HunterKit
 import com.empire.forest.kit.SurvivorKit
 import com.empire.forest.mechanic.SurvivorHealth
-import com.empire.forest.mechanic.downed.DownedMechanic
 import com.empire.forest.mechanic.phantom.CloakingPerk
 import com.empire.forest.mechanic.stamina.SurvivorStamina
 import com.empire.forest.mechanic.werewolf.WerewolfSpeedPerk
 import com.empire.forest.perk.BearTrapPerk
 import com.empire.forest.perk.BloodhoundPerk
+import com.empire.forest.perk.BloodlustPerk
 import com.empire.forest.perk.BuckshotPerk
+import com.empire.forest.perk.FearPerk
 import com.empire.forest.perk.HeartbeatPerk
 import com.empire.forest.perk.JammerPerk
 import com.empire.forest.perk.MachetePerk
@@ -79,6 +81,7 @@ class ForestFacet(
     private val kitTracker: KitTracker<ForestKitKey, ForestContext> = KitTracker(plugin, ForestKitProvider)
     private val debug = (context.interactiveData?.isDebug ?: false)
     private var hunterHUD : HunterHUD? = null
+    private var slasherHUD : SlasherHUD? = null
 
     override fun onLoad() {
         setupPerks()
@@ -137,6 +140,9 @@ class ForestFacet(
         this.hunterHUD = HunterHUD(plugin, context, kitTracker)
         this.hunterHUD!!.load()
         dump.add(hunterHUD!!)
+        this.slasherHUD = SlasherHUD(plugin, context, kitTracker)
+        this.slasherHUD!!.load()
+        dump.add(slasherHUD!!)
 
         val stamina = SurvivorStamina(plugin, context, drainSeconds = 20, regainSeconds = 10)
         stamina.load()
@@ -148,9 +154,9 @@ class ForestFacet(
         dump.add(health)
         context.survivorHealth = health
 
-        val downed = DownedMechanic(plugin, context)
-        context.messageBus.add(downed)
-        dump.add(downed)
+//        val downed = DownedMechanic(plugin, context)
+//        context.messageBus.add(downed)
+//        dump.add(downed)
 
         dump.add(object : UnloadableResource {
             override fun unload(external: Boolean) {
@@ -178,7 +184,7 @@ class ForestFacet(
         }
 
         val hunterTimeDump = GlobalResourceTrackers.createResourceDumpWithParent(dump)
-        val defaultHunterKit = HunterKit.SLASHER
+        val defaultHunterKit = HunterKit.HUNTER
         val hunterKitSelection = mutableMapOf<UUID, HunterKit>()
         val itemModderHunter = PlayerItemModder(plugin, hunterKitSelectionItem, PlayerItemMods(
             allowDrop = false,
@@ -248,6 +254,7 @@ class ForestFacet(
                     kitTracker.addKitToPlayer(player, ForestKitKey(selectedKit), context)
                 }
                 hunterHUD!!.onKitSelection()
+                slasherHUD!!.onKitSelection()
                 if (context.staticData.mapName == "farm") {
                     RegionUtils.fillRegion(
                         context.staticData.hunterSpawnBarrierRegion,
@@ -548,8 +555,8 @@ class ForestFacet(
 
     override fun onPlayerRemove(player: Player, reason: PlayerRemoveReason) {
         context.removeFromTeam(player)
-//        if ((context.hunterTeam.players.isEmpty() || context.survivorTeam.players.isEmpty())) {
-        if ((context.hunterTeam.players.isEmpty())) {
+        if ((context.hunterTeam.players.isEmpty() || context.survivorTeam.players.isEmpty())) {
+//        if ((context.hunterTeam.players.isEmpty())) {
             finishGame()
         }
     }
@@ -645,7 +652,9 @@ class ForestFacet(
                 JammerPerk(plugin, context),
                 machetePerk,
                 StaredownPerk(plugin, context),
-                ShadowPerk(plugin, context)
+                ShadowPerk(plugin, context),
+                BloodlustPerk(plugin, context),
+                FearPerk(plugin, context)
             )
         )
         dump.add(object : UnloadableResource {

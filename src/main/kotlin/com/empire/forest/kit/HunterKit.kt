@@ -7,7 +7,9 @@ import com.empire.forest.mechanic.werewolf.WerewolfSpeedPerk
 import com.empire.forest.perk.BearTrapPerk
 import com.empire.forest.perk.BearTrapPlayerData
 import com.empire.forest.perk.BloodhoundPerk
+import com.empire.forest.perk.BloodlustPerk
 import com.empire.forest.perk.BuckshotPerk
+import com.empire.forest.perk.FearPerk
 import com.empire.forest.perk.JammerPerk
 import com.empire.forest.perk.MachetePerk
 import com.empire.forest.perk.NewMotionSensorPerk
@@ -24,23 +26,18 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.Material
+import org.bukkit.NamespacedKey
 
 private val SWORD = ItemBuilder(Material.IRON_SWORD) {}.build()
 enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContext>) {
-    SLASHER(ItemBuilder(Material.SHEARS) {
-        name(Component.text("Slasher").color(NamedTextColor.DARK_RED))
+    HUNTER(ItemBuilder(Material.SHEARS) {
+        name(Component.text("Hunter").color(NamedTextColor.DARK_RED))
+        itemModel(NamespacedKey("horror", "weapons/buckshot"))
 
         lore(
             InventoryUtils.postprocessLore(
                 listOf(
                     Component.text("The default kit!").color(NamedTextColor.GRAY),
-                    Component.text("Includes 5 bear traps").color(NamedTextColor.RED),
-                    Component.text(
-                        "Drop them to use, survivors who walk into them may experience pain"
-                    ).color(NamedTextColor.YELLOW),
-                    Component.text(
-                        "Careful! Stepping in them will self-inflict pain"
-                    ).color(NamedTextColor.RED)
                 )
             )
         )
@@ -51,12 +48,6 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
             abilityComponents = listOf(
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     TallGrassInvisibility(player, context)
-                ),
-                com.empire.ignite.game.kit.AbilityKitComponent(
-                    PerkAbilityAdapter(
-                        RoarPerk::class.java,
-                        context, player, { }
-                    )
                 ),
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     PerkAbilityAdapter(
@@ -78,6 +69,12 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
                 ),
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     PerkAbilityAdapter(
+                        RoarPerk::class.java,
+                        context, player, { }
+                    )
+                ),
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    PerkAbilityAdapter(
                         BloodhoundPerk::class.java,
                         context, player
                     ) { }
@@ -88,9 +85,70 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
                         context, player
                     ) { }
                 ),
+//                com.empire.ignite.game.kit.AbilityKitComponent(
+//                    PerkAbilityAdapter(
+//                        MachetePerk::class.java,
+//                        context, player
+//                    ) { }
+//                ),
+//                com.empire.ignite.game.kit.AbilityKitComponent(
+//                    PerkAbilityAdapter(
+//                        StaredownPerk::class.java,
+//                        context, player
+//                    ) { }
+//                ),
+//                com.empire.ignite.game.kit.AbilityKitComponent(
+//                    PerkAbilityAdapter(
+//                        ShadowPerk::class.java,
+//                        context, player
+//                    ) { }
+//                ),
+//                com.empire.ignite.game.kit.AbilityKitComponent(
+//                    PerkAbilityAdapter(
+//                        BloodlustPerk::class.java,
+//                        context, player
+//                    ) { }
+//                )
+            )
+        )
+    }),
+    SLASHER(ItemBuilder(Material.STICK) {
+        name(Component.text("Slasher").color(NamedTextColor.RED))
+        itemModel(NamespacedKey("horror", "weapons/machete_bloody"))
+
+        lore(
+            InventoryUtils.postprocessLore(
+                listOf(
+                    Component.text("he be slashing").color(NamedTextColor.YELLOW)
+                )
+            )
+        )
+
+        unbreakable()
+    }, GameKit() { player, context ->
+        IgniteBundle(
+            abilityComponents = listOf(
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     PerkAbilityAdapter(
                         MachetePerk::class.java,
+                        context, player
+                    ) { }
+                ),
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    PerkAbilityAdapter(
+                        FearPerk::class.java,
+                        context, player
+                    ) { }
+                ),
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    PerkAbilityAdapter(
+                        BloodlustPerk::class.java,
+                        context, player
+                    ) { }
+                ),
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    PerkAbilityAdapter(
+                        ShadowPerk::class.java,
                         context, player
                     ) { }
                 ),
@@ -100,105 +158,100 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
                         context, player
                     ) { }
                 ),
-                com.empire.ignite.game.kit.AbilityKitComponent(
-                    PerkAbilityAdapter(
-                        ShadowPerk::class.java,
-                        context, player
-                    ) { }
-                )
             )
         )
-    }),
-    PHANTOM(ItemBuilder(Material.WIND_CHARGE) {
-        name(Component.text("Phantom").color(NamedTextColor.LIGHT_PURPLE))
-
-        lore(
-            InventoryUtils.postprocessLore(
-                listOf(
-                    Component.text("4 cloaking potions that").color(NamedTextColor.YELLOW),
-                    Component.text("help you sneak up on survivors").color(NamedTextColor.YELLOW),
-                )
-            )
-        )
-
-        unbreakable()
-    }, GameKit() { player, context ->
-        IgniteBundle(
-            ItemKitComponent(
-                listOf(
-                    0 to SWORD
-                ).toMap(),
-            ),
-            abilityComponents = listOf(
-                com.empire.ignite.game.kit.AbilityKitComponent(
-                    TallGrassInvisibility(player, context)
-                ),
-                com.empire.ignite.game.kit.AbilityKitComponent(
-                    PerkAbilityAdapter(
-                        CloakingPerk::class.java,
-                        context, player, { }
-                    )
-                )
-            )
-        )
-    }),
-    WEREWOLF(ItemBuilder(Material.BONE) {
-        name(Component.text("Werewolf").color(TextColor.color(128, 66, 4)))
-
-        lore(
-            InventoryUtils.postprocessLore(
-                listOf(
-                    Component.text("3 speed boosts!").color(NamedTextColor.YELLOW)
-                )
-            )
-        )
-
-        unbreakable()
-    }, GameKit() { player, context ->
-        IgniteBundle(
-            ItemKitComponent(
-                listOf(
-                    0 to SWORD
-                ).toMap(),
-            ),
-            abilityComponents = listOf(
-                com.empire.ignite.game.kit.AbilityKitComponent(
-                    TallGrassInvisibility(player, context)
-                ),
-                com.empire.ignite.game.kit.AbilityKitComponent(
-                    PerkAbilityAdapter(
-                        WerewolfSpeedPerk::class.java,
-                        context, player, { }
-                    )
-                )
-            )
-        )
-    }),
-    SCARECROW(ItemBuilder(Material.HAY_BLOCK) {
-        name(Component.text("Scarecrow").color(NamedTextColor.GOLD))
-
-        lore(
-            InventoryUtils.postprocessLore(
-                listOf(
-                    Component.text("Place down a scarecrow to alert you").color(NamedTextColor.YELLOW),
-                    Component.text("of nearby survivors").color(NamedTextColor.YELLOW),
-                )
-            )
-        )
-
-        unbreakable()
-    }, GameKit() { player, context ->
-        IgniteBundle(
-            ItemKitComponent(
-                listOf(
-                    0 to SWORD
-                ).toMap(),
-            ),
-            abilityComponents = listOf(
-                com.empire.ignite.game.kit.AbilityKitComponent(
-                    TallGrassInvisibility(player, context)
-                )
-            )
-        )
-    });
+    })
+//    PHANTOM(ItemBuilder(Material.WIND_CHARGE) {
+//        name(Component.text("Phantom").color(NamedTextColor.LIGHT_PURPLE))
+//        itemModel(NamespacedKey("horror", "weapons/machete_bloody"))
+//
+//        lore(
+//            InventoryUtils.postprocessLore(
+//                listOf(
+//                    Component.text("4 cloaking potions that").color(NamedTextColor.YELLOW),
+//                    Component.text("help you sneak up on survivors").color(NamedTextColor.YELLOW),
+//                )
+//            )
+//        )
+//
+//        unbreakable()
+//    }, GameKit() { player, context ->
+//        IgniteBundle(
+//            ItemKitComponent(
+//                listOf(
+//                    0 to SWORD
+//                ).toMap(),
+//            ),
+//            abilityComponents = listOf(
+//                com.empire.ignite.game.kit.AbilityKitComponent(
+//                    TallGrassInvisibility(player, context)
+//                ),
+//                com.empire.ignite.game.kit.AbilityKitComponent(
+//                    PerkAbilityAdapter(
+//                        CloakingPerk::class.java,
+//                        context, player, { }
+//                    )
+//                )
+//            )
+//        )
+//    }),
+//    WEREWOLF(ItemBuilder(Material.BONE) {
+//        name(Component.text("Werewolf").color(TextColor.color(128, 66, 4)))
+//
+//        lore(
+//            InventoryUtils.postprocessLore(
+//                listOf(
+//                    Component.text("3 speed boosts!").color(NamedTextColor.YELLOW)
+//                )
+//            )
+//        )
+//
+//        unbreakable()
+//    }, GameKit() { player, context ->
+//        IgniteBundle(
+//            ItemKitComponent(
+//                listOf(
+//                    0 to SWORD
+//                ).toMap(),
+//            ),
+//            abilityComponents = listOf(
+//                com.empire.ignite.game.kit.AbilityKitComponent(
+//                    TallGrassInvisibility(player, context)
+//                ),
+//                com.empire.ignite.game.kit.AbilityKitComponent(
+//                    PerkAbilityAdapter(
+//                        WerewolfSpeedPerk::class.java,
+//                        context, player, { }
+//                    )
+//                )
+//            )
+//        )
+//    }),
+//    SCARECROW(ItemBuilder(Material.HAY_BLOCK) {
+//        name(Component.text("Scarecrow").color(NamedTextColor.GOLD))
+//
+//        lore(
+//            InventoryUtils.postprocessLore(
+//                listOf(
+//                    Component.text("Place down a scarecrow to alert you").color(NamedTextColor.YELLOW),
+//                    Component.text("of nearby survivors").color(NamedTextColor.YELLOW),
+//                )
+//            )
+//        )
+//
+//        unbreakable()
+//    }, GameKit() { player, context ->
+//        IgniteBundle(
+//            ItemKitComponent(
+//                listOf(
+//                    0 to SWORD
+//                ).toMap(),
+//            ),
+//            abilityComponents = listOf(
+//                com.empire.ignite.game.kit.AbilityKitComponent(
+//                    TallGrassInvisibility(player, context)
+//                )
+//            )
+//        )
+//    });
 }

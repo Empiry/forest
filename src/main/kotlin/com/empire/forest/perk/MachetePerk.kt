@@ -13,6 +13,8 @@ import com.empire.ignite.util.entity.ManagedEntity
 import com.empire.ignite.util.entity.ManagedEntityOptions
 import com.empire.ignite.util.item.ItemBuilder
 import com.empire.ignite.util.projectile.*
+import io.papermc.paper.datacomponent.DataComponentTypes
+import io.papermc.paper.datacomponent.item.UseCooldown
 import io.papermc.paper.event.player.PlayerArmSwingEvent
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -27,6 +29,8 @@ import org.bukkit.event.player.PlayerMoveEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 
 class MachetePerk(
     private val plugin: JavaPlugin,
@@ -35,12 +39,18 @@ class MachetePerk(
     override val contextManager: PlayerDataAccess<Unit> = PlayerDataAccess.noop()
     private val macheteIb = ItemBuilder(Material.CARROT_ON_A_STICK) {
         name(Component.text("Machete").color(NamedTextColor.YELLOW))
+        dataComponent(
+            DataComponentTypes.USE_COOLDOWN, UseCooldown.useCooldown(4.0f).build()
+        )
         itemModel(NamespacedKey("horror", "weapons/machete"))
         unbreakable(true)
     }
     private val bloodyMacheteIb = ItemBuilder(Material.TRIDENT) {
         name(Component.text("Bloody Machete").color(NamedTextColor.RED))
         itemModel(NamespacedKey("horror", "weapons/machete_bloody"))
+        dataComponent(
+            DataComponentTypes.USE_COOLDOWN, UseCooldown.useCooldown(4.0f).build()
+        )
 //        dataComponent(
 //            DataComponentTypes.CHARGED_PROJECTILES,
 //            ChargedProjectiles.chargedProjectiles(
@@ -229,6 +239,11 @@ class MachetePerk(
                 victim, event,  if (isBloody) 35f else 18f
             )
             replaceWithBloody(damager)
+            damager.addPotionEffect(
+                PotionEffect(
+                    PotionEffectType.SLOWNESS, 20 * 3, 2, true, false
+                )
+            )
             dmgLock = false
             data.lastHit = System.currentTimeMillis()
         }
@@ -266,7 +281,7 @@ class MachetePlayerData(
 ) {
     fun canHit() : Boolean {
         if (lastHit == null) return true
-        return System.currentTimeMillis() - lastHit!! > 1500
+        return System.currentTimeMillis() - lastHit!! > 4000
     }
 }
 
