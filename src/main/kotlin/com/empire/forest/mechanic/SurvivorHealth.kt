@@ -78,10 +78,22 @@ class SurvivorHealth(
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+//    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     private fun onDamage(event: EntityDamageEvent) {
+//        println(
+//            "DAMAGE EVENT: ${event.entity.name} " +
+//                    "cancelled=${event.isCancelled} " +
+//                    "damage=${event.damage} " +
+//                    "type=${event::class.simpleName}"
+//        )
         if (event.entity !is Player) return
         if (event.entity !in targets) return
         if (event is EntityDamageByEntityEvent) {
+//            println(
+//                "COMBAT: ${event.damager} -> ${event.entity}, " +
+//                        "attackerTeam=${context.findPlayerTeam(event.damager as Player)}, " +
+//                        "victimTeam=${context.findPlayerTeam(event.entity as Player)}"
+//            )
             if (event.damager is Player && event.entity is Player) {
                 if (context.findPlayerTeam(event.damager as Player) ==
                     context.findPlayerTeam(event.entity as Player)) {

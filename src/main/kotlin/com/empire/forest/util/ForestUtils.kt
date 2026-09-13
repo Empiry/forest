@@ -5,6 +5,7 @@ import com.empire.hacks.common.builder.UpdateEntityMetadataConverter
 import com.empire.hacks.common.builder.UpdateEntityMetadataPacketBuilder
 import com.empire.ignite.util.GlobalResourceTrackers
 import com.empire.ignite.util.HACKS
+import com.empire.ignite.util.UnloadableResource
 import com.empire.ignite.util.region.CuboidRegion
 import com.empire.ignite.util.region.RegionUtils
 import org.bukkit.Location
@@ -51,6 +52,46 @@ object ForestUtils {
                     HACKS.sendDeltaUpdateEntityMetadataPacket(r, rp)
                 }
             }
+        }
+    }
+
+    fun fakeGlowPersistent(recipients: List<Player>, targets: List<Entity>) : UnloadableResource {
+        val glowByte : Byte = 0x40
+        val overridePackets = targets.associateWith {
+                target ->
+            UpdateEntityMetadataPacketBuilder(target, listOf(
+                UpdateEntityMetadataConverter.MainEntityByteMask { mask ->
+                    mask or glowByte
+                }
+            ))
+        }
+        val resetPackets = targets.map { target ->
+            UpdateEntityMetadataPacketBuilder(target, listOf(
+                UpdateEntityMetadataConverter.MainEntityByteMask { mask -> mask }
+            ))
+        }
+
+        val unloadables = overridePackets.map { (k, v) ->
+            HACKS.overrideEntityMetadata(recipients, v)
+        }
+
+        // force-update before data-watcher kicks in
+        recipients.forEach { r ->
+            overridePackets.values.forEach {
+                HACKS.sendDeltaUpdateEntityMetadataPacket(r, it)
+            }
+        }
+
+        return object : UnloadableResource {
+            override fun unload(external: Boolean) {
+                unloadables.forEach { it.release() }
+                recipients.forEach { r ->
+                    resetPackets.forEach { rp ->
+                        HACKS.sendDeltaUpdateEntityMetadataPacket(r, rp)
+                    }
+                }
+            }
+
         }
     }
 

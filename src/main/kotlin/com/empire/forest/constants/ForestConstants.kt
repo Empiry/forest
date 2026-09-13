@@ -16,6 +16,7 @@ object ForestConstants {
     val FOREST_COLOR = TextColor.color(59, 179, 91)
     val SURVIVORS_COLOR = TextColor.color(207, 103, 19)
     val HUNTERS_COLOR = TextColor.color(194, 21, 21)
+    val SPECTATORS_COLOR = TextColor.color(66, 135, 245)
     val GENERIC_QUEUE_END_TAG = "queue_end"
 
     private val MAP_CONFIGURATION_SCHEMA = InteractiveConfigV2Schema.NamedStructure(mutableMapOf(

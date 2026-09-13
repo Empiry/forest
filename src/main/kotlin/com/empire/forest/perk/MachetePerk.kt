@@ -25,6 +25,7 @@ import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDamageEvent
+import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerMoveEvent
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.inventory.ItemStack
@@ -94,12 +95,26 @@ class MachetePerk(
     }
 
     @EventHandler
+    private fun onItemInteract(event: PlayerInteractEvent) {
+        if (event.player !in playerData) return
+        if (!bloodyMacheteCompare(event.player.inventory.itemInMainHand)) return
+        val data = playerData[event.player] ?: return
+        if (!data.canHit()) {
+            event.isCancelled = true
+            return
+        }
+    }
+
+    @EventHandler
     private fun onTridentLaunch(event: PlayerLaunchProjectileEvent) {
         if (event.player !in playerData) return
         if (event.projectile !is Trident) return
         if (!bloodyMacheteCompare(event.itemStack)) return
         val data = playerData[event.player] ?: return
         event.isCancelled = true
+        if (!data.canHit()) {
+            return
+        }
         event.player.inventory.remove(event.itemStack)
         val loc = event.player.location.clone()
         val snapLoc = loc.clone()
@@ -173,7 +188,15 @@ class MachetePerk(
                     }
                     is ProjectileCollisionResult.EntityResult -> {
                         idisp?.remove()
+//                        Bukkit.broadcast(Component.text("hit detected"))
+//                        Bukkit.broadcast(Component.text("pcr.entity ${pcr.entity}"))
                         if (pcr.entity is Player) {
+//                            Bukkit.broadcast(Component.text("pcr.entity ${pcr.entity} trigger damage"))
+//                            Bukkit.broadcast(
+//                                Component.text(
+//                                    "pcr.entity ${(pcr.entity as Player).noDamageTicks} noDmgTicks"
+//                                )
+//                            )
                             context.survivorHealth.syntheticDamagePlayer(
                                 event.player, pcr.entity as Player, 65f
                             )
@@ -236,7 +259,7 @@ class MachetePerk(
 //                damager.yaw
 //            )
             context.survivorHealth.overrideOrganicDamage(
-                victim, event,  if (isBloody) 35f else 18f
+                victim, event,  18f
             )
             replaceWithBloody(damager)
             damager.addPotionEffect(

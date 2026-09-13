@@ -107,7 +107,7 @@ object ForestStaticDataConfig {
         queueCountdownSeconds = if (mainServerDebug) 30 else 30,
         survivorReleaseSeconds = if (mainServerDebug) 15 else 20,
         hunterReleaseSeconds = if (mainServerDebug) 10 else 15,
-        yLevelDeath = -40,
+        yLevelDeath = -26,
         worldPath = "./gamemaps/farm",
         survivorsSpawn = RawLocation(-109.0,-1.0,423.0,0.0F,0.0F),
         survivorsRegion = CuboidRegion(
@@ -194,10 +194,10 @@ object ForestStaticDataConfig {
             }
         },
         generatorSelection = FARM_SELECTION,
-        queueCountdownSeconds = 20,
+        queueCountdownSeconds = 5,
         survivorReleaseSeconds = 4,
         hunterReleaseSeconds = 5,
-        yLevelDeath = -40,
+        yLevelDeath = -26,
         worldPath = "./gamemaps/farm",
         survivorsSpawn = RawLocation(-109.0,-1.0,423.0,0.0F,0.0F),
         survivorsRegion = CuboidRegion(

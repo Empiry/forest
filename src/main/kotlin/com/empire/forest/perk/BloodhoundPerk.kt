@@ -4,6 +4,7 @@ import com.empire.forest.ForestContext
 import com.empire.forest.mechanic.CooldownRightClickAbility
 import com.empire.forest.mechanic.CooldownRightClickAbilityOptions
 import com.empire.forest.util.PlayerDataAccess
+import com.empire.ignite.util.GlobalResourceTrackers
 import com.empire.ignite.util.entity.EntityModelBuilder
 import com.empire.ignite.util.item.ItemBuilder
 import com.empire.ignite.util.scoreboard.ScoreboardAllocator
@@ -42,6 +43,7 @@ class BloodhoundPerk(
     }
     private val cooldownAbility : CooldownRightClickAbility
     private val item : ItemStack
+    private val dump = GlobalResourceTrackers.createResourceDump()
 
     init {
         cooldownAbility = CooldownRightClickAbility(
@@ -67,7 +69,7 @@ class BloodhoundPerk(
     private fun spawnWolvesForTargets(
         sourceLocation: Location, players: List<Player>
     ) {
-        players.forEach {
+        val wolves = players.map {
             val wolf = WOLF_EMB.spawn(sourceLocation)
             ScoreboardAllocator.addEntityToTeam("wolf_reddish", wolf.uniqueId)
             wolf.target = it
@@ -77,7 +79,11 @@ class BloodhoundPerk(
                     true, false
                 )
             )
+            wolf
         }
+        dump.addSelfTracking(GlobalResourceTrackers.scheduler.afterUntracked(30L * 20L) {
+            wolves.forEach { it.remove() }
+        })
     }
 
     override fun remove(player: Player) {
@@ -86,6 +92,7 @@ class BloodhoundPerk(
 
     override fun unload(external: Boolean) {
         cooldownAbility.unload(external)
+        dump.destroyAll()
     }
 
     private fun createFakeRedTeam() {

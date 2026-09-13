@@ -415,6 +415,13 @@ class ForestContext(
         hunterTeamChangeSetContract.addSink(player)
     }
 
+    fun getDisplayName(player: Player) : Component {
+        val color = if (isHunter(player)) ForestConstants.HUNTERS_COLOR
+        else if (isSurvivor(player)) ForestConstants.SURVIVORS_COLOR
+        else ForestConstants.SURVIVORS_COLOR
+        return Component.text(player.name).color(color)
+    }
+
     fun addSpectator(player: Player) : Boolean {
         return playerTracker.addSpectator(player)
     }
