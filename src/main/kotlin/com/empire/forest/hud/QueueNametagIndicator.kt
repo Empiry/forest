@@ -5,23 +5,26 @@ import com.empire.ignite.game.facets.QueueEvent
 import com.empire.ignite.game.facets.QueueSubscriber
 import com.empire.ignite.util.UnloadableResource
 import com.empire.ignite.util.collection.OnlinePlayerData
+import com.empire.ignite.util.scoreboard.ScoreboardAllocator
+import java.util.UUID
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
+import org.bukkit.scoreboard.Team
 
 class QueueNametagIndicator(plugin: JavaPlugin) : QueueSubscriber {
     private val tagData : OnlinePlayerData<UnloadableResource> = OnlinePlayerData(
         plugin, onEvict = {_, d -> d.unload()}
     )
-//    private val fakeTeamName : String = "g_${UUID.randomUUID()}"
-//    private val team : Team
+    private val fakeTeamName : String = "g_${UUID.randomUUID()}"
+    private val team : Team
 
     init {
-//        val sbTeam = ScoreboardAllocator.registerMainScoreboardTeam(fakeTeamName)
-//        sbTeam.color(NamedTextColor.GREEN)
-//        ScoreboardAllocator.propagateUpdatedTeamProperties(sbTeam)
-//        team = sbTeam
+        val sbTeam = ScoreboardAllocator.registerMainScoreboardTeam(fakeTeamName)
+        sbTeam.color(NamedTextColor.GREEN)
+        ScoreboardAllocator.propagateUpdatedTeamProperties(sbTeam)
+        team = sbTeam
     }
 
     override fun onQueue(player: Player) {
@@ -30,19 +33,19 @@ class QueueNametagIndicator(plugin: JavaPlugin) : QueueSubscriber {
         }
         tagTask.load()
         tagData[player] = tagTask
-//        ScoreboardAllocator.addPlayerToTeam(fakeTeamName, player)
+        ScoreboardAllocator.addPlayerToTeam(fakeTeamName, player)
     }
 
     override fun onDequeue(player: Player) {
         tagData.remove(player)?.unload()
-//        ScoreboardAllocator.removePlayerFromTeam(fakeTeamName, player)
+        ScoreboardAllocator.removePlayerFromTeam(fakeTeamName, player)
     }
 
     override fun onQueueEvent(event: QueueEvent) {
         if (event == QueueEvent.COMPLETE) {
             tagData.values.forEach { it.unload() }
             tagData.unload()
-//            ScoreboardAllocator.unregisterMainScoreboardTeam(team)
+            ScoreboardAllocator.unregisterMainScoreboardTeam(team)
         }
     }
 }

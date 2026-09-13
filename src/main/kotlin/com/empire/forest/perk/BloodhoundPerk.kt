@@ -31,6 +31,7 @@ class BloodhoundPerk(
                 getAttribute(Attribute.MOVEMENT_SPEED)?.let {
                     it.baseValue = 0.6
                 }
+                health = 2.0
             }
         }
     }

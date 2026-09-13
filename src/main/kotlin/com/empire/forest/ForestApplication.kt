@@ -169,7 +169,8 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
                             WorldLoaderFacet(
                                 plugin, context,
                                 File(staticData.worldPath),
-                                workspace
+                                workspace,
+                                spawnLocation = staticData.spectatorsSpawn
                             )
                         }
 
