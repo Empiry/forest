@@ -7,6 +7,7 @@ import com.empire.forest.config.ACTIVE_SERVER_CONFIG
 import com.empire.forest.config.ForestInteractiveData
 import com.empire.forest.constants.ForestConstants
 import com.empire.forest.constants.ForestConstants.CONFIG_DATA
+import com.empire.forest.constants.ForestConstants.GENERIC_QUEUE_END_TAG
 import com.empire.forest.data.ForestUserDatabase
 import com.empire.forest.data.ForestUserDatabaseProvider
 import com.empire.forest.gate.EscapeGateDescription
@@ -14,6 +15,7 @@ import com.empire.forest.generator.ForestGeneratorNameplate
 import com.empire.forest.generator.GeneratorDescription
 import com.empire.forest.generator.NameplateProximityTask
 import com.empire.forest.generic.TeamDamageNullifyFacet
+import com.empire.forest.hud.QueueNametagIndicator
 import com.empire.forest.lobby.LobbyListener
 import com.empire.forest.lobby.QueueSign
 import com.empire.forest.mechanic.SurvivorHealth
@@ -32,6 +34,7 @@ import com.empire.ignite.game.application.component.IDeathTrackerComponent
 import com.empire.ignite.game.application.component.IPlayerAccessComponent
 import com.empire.ignite.game.application.component.PlayerAccessContextComponent
 import com.empire.ignite.game.facets.*
+import com.empire.ignite.match.event.MatchGenericEvent
 import com.empire.ignite.team.IgniteTeam
 import com.empire.ignite.team.IgniteTeamOptions
 import com.empire.ignite.util.*
@@ -137,6 +140,7 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
                         }
                         // queue!
                         node {
+                            val countdownTicks = 20L * staticData.queueCountdownSeconds
                             ApplicationHelpers.produceQueueTimeline(
                                 plugin,
                                 context,
@@ -149,7 +153,13 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
 
                                     override fun onDequeue(player: Player) {}
                                 },
-                                options = QueueOptions(countdownLength = 20L * staticData.queueCountdownSeconds),
+                                options = QueueOptions(
+                                    countdownLength = countdownTicks,
+                                    chatMessageFormatter = ForestConstants.getQueueMessageFormatter(
+                                        countdownTicks
+                                    ),
+                                    additionalSubscribers = listOf(QueueNametagIndicator(plugin))
+                                ),
                                 messagingTargets = { Bukkit.getOnlinePlayers().toSet() }
                             )
                         }
@@ -203,6 +213,7 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
                             context.hunterTeam = huntersTeam
                             context.survivorTeam = survivorsTeam
                             context.setupChangeSetContracts()
+                            MatchGenericEvent(id, tag = GENERIC_QUEUE_END_TAG).callEvent()
                         }
                     }
                 }.child {

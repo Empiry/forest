@@ -194,7 +194,7 @@ object ForestStaticDataConfig {
             }
         },
         generatorSelection = FARM_SELECTION,
-        queueCountdownSeconds = 3,
+        queueCountdownSeconds = 20,
         survivorReleaseSeconds = 4,
         hunterReleaseSeconds = 5,
         yLevelDeath = -40,
