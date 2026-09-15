@@ -4,6 +4,7 @@ import com.empire.forest.ForestContext
 import com.empire.forest.mechanic.survivalist.TallGrassInvisibility
 import com.empire.forest.perk.BearTrapPerk
 import com.empire.forest.perk.BearTrapPlayerData
+import com.empire.forest.perk.MedicPerk
 import com.empire.forest.perk.PerkAbilityAdapter
 import com.empire.ignite.game.kit.GameKit
 import com.empire.ignite.game.kit.ItemKitComponent
@@ -40,7 +41,15 @@ enum class SurvivorKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestCont
                 mapOf(
                     0 to context.locateGeneratorsItemBuilder.build()
                 )
-            )
+            ),
+//            abilityComponents = listOf(
+//                com.empire.ignite.game.kit.AbilityKitComponent(
+//                    PerkAbilityAdapter(
+//                        MedicPerk::class.java,
+//                        context, player
+//                    ) { }
+//                )
+//            )
         )
     }),
     SURVIVALIST(ItemBuilder(Material.TALL_GRASS) {

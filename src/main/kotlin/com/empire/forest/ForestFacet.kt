@@ -2,6 +2,8 @@ package com.empire.forest
 
 import com.empire.forest.bossbar.GameBossBar
 import com.empire.forest.constants.ForestConstants
+import com.empire.forest.data.ForestUserData
+import com.empire.forest.data.ForestUserDatabase
 import com.empire.forest.gate.EscapeGate
 import com.empire.forest.generator.ForestGenerator
 import com.empire.forest.generator.ForestGeneratorDiscovery
@@ -15,6 +17,7 @@ import com.empire.forest.kit.ForestKitProvider
 import com.empire.forest.kit.HunterKit
 import com.empire.forest.kit.SurvivorKit
 import com.empire.forest.mechanic.SurvivorHealth
+import com.empire.forest.mechanic.downed.DownedMechanic
 import com.empire.forest.mechanic.phantom.CloakingPerk
 import com.empire.forest.mechanic.stamina.SurvivorStamina
 import com.empire.forest.mechanic.werewolf.WerewolfSpeedPerk
@@ -26,6 +29,7 @@ import com.empire.forest.perk.FearPerk
 import com.empire.forest.perk.HeartbeatPerk
 import com.empire.forest.perk.JammerPerk
 import com.empire.forest.perk.MachetePerk
+import com.empire.forest.perk.MedicPerk
 import com.empire.forest.perk.NewMotionSensorPerk
 import com.empire.forest.perk.RoarPerk
 import com.empire.forest.perk.ShadowPerk
@@ -74,6 +78,7 @@ import java.util.*
 class ForestFacet(
     plugin: Ignite,
     context: ForestContext,
+    private val userDatabase: ForestUserDatabase,
     private val dump: ManagedResourceDump
 ) : GameFacetV2<ForestStaticData, ForestContext>(plugin, context), DeathEvents, PlayerManagementFacetEvents, Listener {
     private val escapees : MutableSet<UUID> = mutableSetOf()
@@ -154,9 +159,9 @@ class ForestFacet(
         dump.add(health)
         context.survivorHealth = health
 
-//        val downed = DownedMechanic(plugin, context)
-//        context.messageBus.add(downed)
-//        dump.add(downed)
+        val downed = DownedMechanic(plugin, context)
+        context.messageBus.add(downed)
+        dump.add(downed)
 
         dump.add(object : UnloadableResource {
             override fun unload(external: Boolean) {
@@ -195,7 +200,7 @@ class ForestFacet(
                     HunterKit.entries.map { v ->
                         v.guiItem to v
                     },
-                    hunterKitSelection[player.uniqueId] ?: defaultHunterKit,
+                    hunterKitSelection[player.uniqueId] ?: getHunterKitPref(player) ?: defaultHunterKit,
                     true
                 ) { hunterKitSelection[player.uniqueId] = it }
                 gui.show(player)
@@ -249,10 +254,19 @@ class ForestFacet(
                 healAndClearInventoryOfPlayers(context.hunterTeam.players)
                 context.hunterTeam.players.forEach { player ->
                     player.closeInventory()
-                    val selectedKit = hunterKitSelection[player.uniqueId] ?: defaultHunterKit
+                    val selectedKit = hunterKitSelection[player.uniqueId] ?:
+                        getHunterKitPref(player) ?: defaultHunterKit
 //                    selectedKit.gameKit.apply(player, context)
                     kitTracker.addKitToPlayer(player, ForestKitKey(selectedKit), context)
                 }
+                userDatabase.setDataBatch(
+                    context.hunterTeam.players.mapNotNull { player ->
+                        val kitSel = hunterKitSelection[player.uniqueId] ?: return@mapNotNull null
+                        val userData = getUserData(player) ?: return@mapNotNull null
+                        userData.lastSelectedHunterKit = kitSel.name
+                        player to userData
+                    }.associate { (p, u) -> p.uniqueId to u }.map { it.toPair() }
+                )
                 hunterHUD!!.onKitSelection()
                 slasherHUD!!.onKitSelection()
                 if (context.staticData.mapName == "farm") {
@@ -303,7 +317,8 @@ class ForestFacet(
                     SurvivorKit.entries.map { v ->
                         v.guiItem to v
                     },
-                    survivorKitSelection[player.uniqueId] ?: defaultSurvivorKit,
+                    survivorKitSelection[player.uniqueId] ?: getSurvivorKitPref(player)
+                    ?: defaultSurvivorKit,
                     true
                 ) { survivorKitSelection[player.uniqueId] = it }
                 gui.show(player)
@@ -358,10 +373,20 @@ class ForestFacet(
                 survivorTimeDump.destroyAll()
                 healAndClearInventoryOfPlayers(context.survivorTeam.players)
                 context.survivorTeam.players.forEach { player ->
-                    val selectedKit = survivorKitSelection[player.uniqueId] ?: defaultSurvivorKit
+                    val selectedKit = survivorKitSelection[player.uniqueId] ?:
+                        getSurvivorKitPref(player) ?: defaultSurvivorKit
                     player.closeInventory()
                     kitTracker.addKitToPlayer(player, ForestKitKey(selectedKit), context)
                 }
+
+                userDatabase.setDataBatch(
+                    context.survivorTeam.players.mapNotNull { player ->
+                        val kitSel = survivorKitSelection[player.uniqueId] ?: return@mapNotNull null
+                        val userData = getUserData(player) ?: return@mapNotNull null
+                        userData.lastSelectedSurvivorKit = kitSel.name
+                        player to userData
+                    }.associate { (p, u) -> p.uniqueId to u }.map { it.toPair() }
+                )
                 RegionUtils.fillRegion(
                     context.staticData.survivorSpawnBarrierRegion,
                     context.world!!,
@@ -654,7 +679,8 @@ class ForestFacet(
                 StaredownPerk(plugin, context),
                 ShadowPerk(plugin, context),
                 BloodlustPerk(plugin, context),
-                FearPerk(plugin, context)
+                FearPerk(plugin, context),
+                MedicPerk(plugin, context)
             )
         )
         dump.add(object : UnloadableResource {
@@ -670,6 +696,26 @@ class ForestFacet(
             source.clone().add(0.0, 1.0, 0.0),
             source.clone().add(0.0, 2.0, 0.0)
         )
+
+    private fun getSurvivorKitPref(player: Player) : SurvivorKit? {
+        val userDataMap = context.playerDataFetchFuture?.get() ?: return null
+        val forestPlayerData = userDataMap.get(player.uniqueId) ?: return null
+        val survivorKitName = forestPlayerData.lastSelectedSurvivorKit ?: return null
+        return SurvivorKit.valueOf(survivorKitName)
+    }
+
+    private fun getHunterKitPref(player: Player) : HunterKit? {
+        val userDataMap = context.playerDataFetchFuture?.get() ?: return null
+        val forestPlayerData = userDataMap.get(player.uniqueId) ?: return null
+        val survivorKitName = forestPlayerData.lastSelectedHunterKit ?: return null
+        return HunterKit.valueOf(survivorKitName)
+    }
+
+    private fun getUserData(player: Player) : ForestUserData? {
+        val userDataMap = context.playerDataFetchFuture?.get() ?: return null
+        val forestPlayerData = userDataMap.get(player.uniqueId) ?: return null
+        return forestPlayerData
+    }
 
     override fun onUnload() {
         dump.destroyAll()

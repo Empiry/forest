@@ -1,6 +1,7 @@
 package com.empire.forest.spectator
 
 import com.empire.forest.ForestContext
+import com.empire.forest.resourcepack.ResourcePackConstants
 import com.empire.forest.util.ForestUtils.fakeGlowPersistent
 import com.empire.ignite.display.DisplayUpdater
 import com.empire.ignite.display.Displays
@@ -94,7 +95,9 @@ class ForestSpectatorCompass(
                     val target = accessor.getPlayer(data.playerSelIndex) ?: return Component.empty()
                     debounceTicks++
                     if (debounceTicks % 3L == 0L || cachedDistance == null) {
-                        cachedDistance = target.location.distance(player.location)
+                        if (target.location.world == player.location.world) {
+                            cachedDistance = target.location.distance(player.location)
+                        }
                     }
                     return flattenComponents(
                         context.getDisplayName(target),
@@ -103,9 +106,13 @@ class ForestSpectatorCompass(
                             .color(NamedTextColor.YELLOW),
                         Component.text("m").color(NamedTextColor.GRAY),
                         Component.text(" | ").color(NamedTextColor.DARK_GRAY),
-                        Component.text("Left click to teleport")
-                            .color(NamedTextColor.YELLOW)
-                            .decorate(TextDecoration.ITALIC)
+                        Component.text(ResourcePackConstants.LMB_ICON),
+                        Component.text(" Teleport")
+                            .color(NamedTextColor.RED),
+                        Component.text(" | ").color(NamedTextColor.DARK_GRAY),
+                        Component.text(ResourcePackConstants.RMB_ICON),
+                        Component.text(" Cycle")
+                            .color(NamedTextColor.BLUE)
                     )
                 }
             }

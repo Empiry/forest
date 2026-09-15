@@ -25,4 +25,7 @@ object ResourcePackConstants {
     val BEAR_TRAP_CLOSED_ITEM = ItemBuilder(Material.STONE) {
         itemModel(NamespacedKey("horror", "objects/closed_beartrap"))
     }
+
+    val LMB_ICON = "\uE011"
+    val RMB_ICON = "\uE012"
 }

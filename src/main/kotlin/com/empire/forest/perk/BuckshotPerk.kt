@@ -162,7 +162,12 @@ class BuckshotPerk(
         val rays = directions.map { direction ->
             val raySpot = spot.clone()
             raySpot.direction = direction.clone()
-            val ray = Ray(raySpot, distance = 12.0, stepSize = 0.25)
+            val ray = Ray(
+                raySpot, distance = 12.0, stepSize = 0.25,
+                collisionDetector = Ray.getSimpleEntityBlockDetector {
+                    it is Player && it in context.playerAccess.alive
+                }
+            )
             ray
         }
         return rays

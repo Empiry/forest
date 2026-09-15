@@ -1,6 +1,7 @@
 package com.empire.forest.perk
 
 import com.empire.forest.ForestContext
+import com.empire.forest.util.ForestUtils
 import com.empire.forest.util.ForestUtils.fakeGlow
 import com.empire.forest.util.PlayerDataAccess
 import com.empire.ignite.util.GlobalResourceTrackers
@@ -70,14 +71,17 @@ class StaredownPerk(
             if (data.isSeen && seeingSurvivors.isEmpty()) {
                 data.isSeen = false
                 hunter.foodLevel = 20
+                ForestUtils.resetPlayer(context, hunter)
             } else if (!data.isSeen && seeingSurvivors.isNotEmpty() && canImpair(hunter)) {
                 data.isSeen = true
                 hunter.foodLevel = 3
                 fakeGlow<Player>(
                     seeingSurvivors, listOf(hunter), 25L
                 )
+                hunter.getAttribute(Attribute.MOVEMENT_SPEED)?.let { it.baseValue = 0.10000000149011612 * (1-0.15) }
             } else if (!canImpair(hunter) && hunter.foodLevel < 20) {
                 hunter.foodLevel = 20
+                ForestUtils.resetPlayer(context, hunter)
             }
         }
     }

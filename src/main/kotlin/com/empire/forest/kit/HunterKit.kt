@@ -12,6 +12,7 @@ import com.empire.forest.perk.BuckshotPerk
 import com.empire.forest.perk.FearPerk
 import com.empire.forest.perk.JammerPerk
 import com.empire.forest.perk.MachetePerk
+import com.empire.forest.perk.MedicPerk
 import com.empire.forest.perk.NewMotionSensorPerk
 import com.empire.forest.perk.PerkAbilityAdapter
 import com.empire.forest.perk.RoarPerk
@@ -85,6 +86,12 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
                         context, player
                     ) { }
                 ),
+//                com.empire.ignite.game.kit.AbilityKitComponent(
+//                    PerkAbilityAdapter(
+//                        MedicPerk::class.java,
+//                        context, player
+//                    ) { }
+//                )
 //                com.empire.ignite.game.kit.AbilityKitComponent(
 //                    PerkAbilityAdapter(
 //                        MachetePerk::class.java,

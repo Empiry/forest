@@ -8,6 +8,7 @@ import com.empire.forest.config.ForestInteractiveData
 import com.empire.forest.constants.ForestConstants
 import com.empire.forest.constants.ForestConstants.CONFIG_DATA
 import com.empire.forest.constants.ForestConstants.GENERIC_QUEUE_END_TAG
+import com.empire.forest.data.ForestUserData
 import com.empire.forest.data.ForestUserDatabase
 import com.empire.forest.data.ForestUserDatabaseProvider
 import com.empire.forest.gate.EscapeGateDescription
@@ -54,6 +55,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.scoreboard.Team
 import java.io.File
 import java.util.*
+import java.util.concurrent.Future
 
 class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>() {
     companion object {
@@ -164,6 +166,13 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
                             )
                         }
 
+                        // async fetch user match prefs
+                        inline {
+                            context.playerDataFetchFuture = userDatabase!!.getDataBatch(
+                                context.playerAccess.all.map { it.uniqueId }
+                            )
+                        }
+
                         // load the world
                         node {
                             WorldLoaderFacet(
@@ -240,7 +249,7 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
                 }
 
                 parent {
-                    ForestFacet(plugin, context, dump)
+                    ForestFacet(plugin, context, userDatabase!!, dump)
                 }.child {
                     FacetTimelines.async {
                         node {
@@ -359,6 +368,7 @@ class ForestContext(
         plugin,
         onEvict = {_, u -> u.unload() }
     )
+    var playerDataFetchFuture : Future<Map<UUID, ForestUserData>>? = null
 
     lateinit var survivorTeamChangeSetContract : ChangeSetContract<Player>
     lateinit var hunterTeamChangeSetContract : ChangeSetContract<Player>
@@ -472,7 +482,7 @@ class ForestContext(
         val base = 0.10000000149011612
         val forestPerk = getPerk(StaredownPerk::class.java) ?: return base
         val staredown = forestPerk as StaredownPerk
-        return if (staredown.using(player)) base * 1.15 else base
+        return if (staredown.using(player)) base * 1.25 else base
     }
 
     fun shouldReplenishHunger(player: Player): Boolean {

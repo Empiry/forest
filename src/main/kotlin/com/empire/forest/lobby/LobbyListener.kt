@@ -2,6 +2,7 @@ package com.empire.forest.lobby
 
 import com.empire.forest.ForestContext
 import com.empire.ignite.game.application.UnspectateMatchEvent
+import com.empire.ignite.game.facets.system.PlayerRemoveReason
 import com.empire.ignite.match.event.PlayerQuitMatchEvent
 import com.empire.ignite.util.*
 import com.empire.ignite.util.item.ItemBuilder
@@ -15,11 +16,14 @@ import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.attribute.Attribute
+import org.bukkit.block.BlockFace
+import org.bukkit.block.data.type.Tripwire
 import org.bukkit.entity.Player
 import org.bukkit.event.Cancellable
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.block.BlockBreakEvent
+import org.bukkit.event.block.BlockPhysicsEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.FoodLevelChangeEvent
@@ -55,6 +59,25 @@ class LobbyListener(
     }
 
     @EventHandler
+    private fun onStringPhysicsChange(event: BlockPhysicsEvent) {
+        if (event.block.type != Material.TRIPWIRE) return
+        event.isCancelled = true
+        val block = event.block
+        val blockData = block.blockData
+        if (blockData is Tripwire) {
+            blockData.setFace(BlockFace.NORTH, false)
+            blockData.setFace(BlockFace.SOUTH, false)
+            blockData.setFace(BlockFace.EAST, false)
+            blockData.setFace(BlockFace.WEST, false)
+            blockData.isAttached = false
+            blockData.isDisarmed = false
+            blockData.isPowered = false
+            block.setBlockData(blockData, false)
+            block.getState().update(true, false)
+        }
+    }
+
+    @EventHandler
     private fun onPlayerQuitMatch(event: PlayerQuitMatchEvent) {
         if (event.match.context !is ForestContext) return
         healAndClearInventoryOfPlayers(listOf(event.player))
@@ -64,6 +87,7 @@ class LobbyListener(
     @EventHandler
     private fun onPlayerUnspectate(event: UnspectateMatchEvent) {
         if (event.match.context !is ForestContext) return
+        if (event.reason != PlayerRemoveReason.BY_WILL) return
         healAndClearInventoryOfPlayers(listOf(event.player))
         event.player.teleport(spawnLocation)
     }
