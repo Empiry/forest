@@ -113,8 +113,9 @@ class FakeBlockSelector(
                 player.location.direction.normalize().multiply(-0.5)
             ).toLocation(player.world)
             if (targetSpot.block.type == Material.AIR) {
-                val solidGround = targetSpot.clone().subtract(0.0, 1.0, 0.0).block.isSolid
-                if (solidGround) {
+                val targetSpotBlock = targetSpot.clone().subtract(0.0, 1.0, 0.0).block
+                val solidGround = targetSpotBlock.isSolid
+                if (solidGround && targetSpotBlock.type != Material.BARRIER) {
                     val targetBlock = targetSpot.block
                     if (state.itemDisplay == null || targetBlock != state.block) {
                         state.itemDisplay?.destroy(player)

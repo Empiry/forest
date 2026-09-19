@@ -7,7 +7,7 @@ import net.kyori.adventure.text.format.TextColor
 
 object ForestMessaging {
     fun withPrefix(component: Component) : Component {
-        return Component.text("TheForest").color(ForestConstants.FOREST_COLOR)
+        return Component.text("Hunting Grounds").color(ForestConstants.FOREST_COLOR)
             .append(Component.text(" » ").color(NamedTextColor.DARK_GRAY))
             .append(component)
     }

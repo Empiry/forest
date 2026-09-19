@@ -13,7 +13,7 @@ import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
 
 object ForestConstants {
-    val FOREST_COLOR = TextColor.color(59, 179, 91)
+    val FOREST_COLOR = TextColor.color(158, 26, 11)
     val SURVIVORS_COLOR = TextColor.color(207, 103, 19)
     val HUNTERS_COLOR = TextColor.color(194, 21, 21)
     val SPECTATORS_COLOR = TextColor.color(66, 135, 245)

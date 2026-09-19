@@ -44,7 +44,7 @@ object SurvivorScoreboard {
                 player -> SurvivorScoreboardAgent(player, context, generators, discovery)
             }
         ) {
-            title { Component.text("The Forest").color(ForestConstants.SURVIVORS_COLOR) }
+            title { Component.text("Hunting Grounds").color(ForestConstants.FOREST_COLOR) }
             numbering(30)
 
             lines {

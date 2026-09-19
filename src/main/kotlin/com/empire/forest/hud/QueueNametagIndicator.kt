@@ -1,17 +1,15 @@
 package com.empire.forest.hud
 
-import com.empire.ignite.display.PlayerNametags
 import com.empire.ignite.game.facets.QueueEvent
 import com.empire.ignite.game.facets.QueueSubscriber
 import com.empire.ignite.util.UnloadableResource
 import com.empire.ignite.util.collection.OnlinePlayerData
 import com.empire.ignite.util.scoreboard.ScoreboardAllocator
-import java.util.UUID
-import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scoreboard.Team
+import java.util.*
 
 class QueueNametagIndicator(plugin: JavaPlugin) : QueueSubscriber {
     private val tagData : OnlinePlayerData<UnloadableResource> = OnlinePlayerData(
@@ -28,11 +26,11 @@ class QueueNametagIndicator(plugin: JavaPlugin) : QueueSubscriber {
     }
 
     override fun onQueue(player: Player) {
-        val tagTask = PlayerNametags.getTagTask(player) {
-            Component.text("Queued").color(NamedTextColor.GREEN)
-        }
-        tagTask.load()
-        tagData[player] = tagTask
+//        val tagTask = PlayerNametags.getTagTask(player) {
+//            Component.text("Queued").color(NamedTextColor.GREEN)
+//        }
+//        tagTask.load()
+//        tagData[player] = tagTask
         ScoreboardAllocator.addPlayerToTeam(fakeTeamName, player)
     }
 

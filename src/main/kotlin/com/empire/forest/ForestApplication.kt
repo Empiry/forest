@@ -59,7 +59,7 @@ import java.util.concurrent.Future
 
 class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>() {
     companion object {
-        private val GAME_NAME = "The Forest"
+        private val GAME_NAME = "Hunting Grounds"
     }
     private val appLevelDump = GlobalResourceTrackers.createResourceDump()
     private var userDatabase: ForestUserDatabase? = null
@@ -97,7 +97,7 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
 
 
     override fun getDisplayName(): Component =
-        Component.text("The Forest").color(ForestConstants.FOREST_COLOR)
+        Component.text("Hunting Grounds").color(ForestConstants.FOREST_COLOR)
 
     override fun getName(): String = GAME_NAME
 
@@ -323,7 +323,8 @@ class ForestStaticData(
     val escape: EscapeGateDescription,
     val survivorSpawnBarrierRegion: Region,
     val hunterSpawnBarrierRegion: Region,
-    val contributionMultiplier: (Int) -> Double
+    val contributionMultiplier: (Int) -> Double,
+    val overwriteRegions: List<Region> = listOf()
 )
 class ForestContext(
     application: IgniteApplicationV2<ForestStaticData, *>,

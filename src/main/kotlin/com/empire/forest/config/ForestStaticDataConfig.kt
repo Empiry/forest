@@ -123,7 +123,7 @@ object ForestStaticDataConfig {
                 unlockSeconds = 45
             ),
             GeneratorDescription(
-                name = "Mini Barn Thing",
+                name = "Storehouse",
                 place = RawLocation(-219.0, -2.0, 505.0),
                 unlockSeconds = 45
             ),
@@ -179,7 +179,25 @@ object ForestStaticDataConfig {
             Vector(-213,-1,448),
             Vector( -214,-3,444)
         ),
-        contributionMultiplier = DAMPENED_GENERATOR_CONTRIBUTION_MULTIPLIER
+        contributionMultiplier = DAMPENED_GENERATOR_CONTRIBUTION_MULTIPLIER,
+        overwriteRegions = listOf(
+            // Garage
+            CuboidRegion(Vector(-95, -3, 512), Vector(-96, -5, 514)),
+            // Barn
+            CuboidRegion(Vector(-100, -4, 550), Vector(-102, -5, 551)),
+            // Cellar
+            CuboidRegion(Vector(-140, -8, 522), Vector(-139, -7, 524)),
+            // Foyer
+            CuboidRegion(Vector(-137, -2, 523), Vector(-135, -3, 522)),
+            // Upstairs
+            CuboidRegion(Vector(-134, 3, 522), Vector(-135, 3, 524)),
+            // Pit
+            CuboidRegion(Vector(-167, -13, 573), Vector(-169, -15, 572)),
+            // Storehouse
+            CuboidRegion(Vector(-220, -2, 504), Vector(-218, -3, 505)),
+            // Fields
+            CuboidRegion(Vector(-188, 1, 449), Vector(-187, 0, 447)),
+        )
     )
 
     val TEST_SERVER_FARM = ForestStaticData(
@@ -213,7 +231,7 @@ object ForestStaticDataConfig {
                 unlockSeconds = 12
             ),
             GeneratorDescription(
-                name = "Mini Barn Thing",
+                name = "Storehouse",
                 place = RawLocation(-219.0, -2.0, 505.0),
                 unlockSeconds = 12
             ),
@@ -384,3 +402,9 @@ object ForestStaticDataConfig {
 data class ForestInteractiveData(val isDebug: Boolean) {
 
 }
+
+data class ForestConfigurableData(
+    val queueCountdownSeconds: Int,
+    val survivorReleaseSeconds: Int,
+    val hunterReleaseSeconds: Int
+)

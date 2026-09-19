@@ -392,6 +392,13 @@ class ForestFacet(
                     context.world!!,
                     Material.AIR
                 )
+                for (overwriteRegion in context.staticData.overwriteRegions) {
+                    RegionUtils.fillRegion(
+                        overwriteRegion,
+                        context.world!!,
+                        Material.BARRIER
+                    )
+                }
                 context.sendToAll(ForestMessaging.createForestMessage("Survivors have been released!"))
 
                 val selectedGenerators = if (context.staticData.generatorSelection == null)
