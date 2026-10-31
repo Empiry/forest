@@ -31,7 +31,7 @@ class BloodlustPerk(
 
     init {
         cooldownAbility = CooldownRightClickAbility(
-            plugin, 20L * 60L,
+            plugin, 20L * 45L,
             CooldownRightClickAbilityOptions(consume = false), itemBuilder,
             this::use
         )

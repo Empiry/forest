@@ -104,7 +104,7 @@ object ForestStaticDataConfig {
             }
         },
         generatorSelection = FARM_SELECTION,
-        queueCountdownSeconds = if (mainServerDebug) 30 else 30,
+        queueCountdownSeconds = if (mainServerDebug) 10 else 30,
         survivorReleaseSeconds = if (mainServerDebug) 15 else 20,
         hunterReleaseSeconds = if (mainServerDebug) 10 else 15,
         yLevelDeath = -26,
@@ -114,48 +114,51 @@ object ForestStaticDataConfig {
             Vector(-106.0,-1.0,421.0),
             Vector(-111.0,-1.0,427.0)
         ),
-        huntersSpawn = RawLocation(-216.0,-3.0,446.0, -90f, 0f),
+        huntersSpawn = RawLocation(-216.0,-12.0,581.0,-134.7f,-34.4f),
         spectatorsSpawn = RawLocation(-188.0,10.0,464.0,-31.9f,33.4f),
         generators = listOf(
             GeneratorDescription(
                 name = "Fields",
-                place = RawLocation(-187.0, 1.0, 448.0),
-                unlockSeconds = 45
+                place = RawLocation( -187.5, 1.5, 448.5),
+                unlockSeconds = 60,
+                rotation = 90.0
             ),
             GeneratorDescription(
                 name = "Storehouse",
-                place = RawLocation(-219.0, -2.0, 505.0),
-                unlockSeconds = 45
+                place = RawLocation(-218.5,-1.5,505.5),
+                unlockSeconds = 60
             ),
             GeneratorDescription(
                 name = "Barn",
-                place = RawLocation(-101.0,-4.0, 551.0),
-                unlockSeconds = 45
+                place = RawLocation(-100.5,-3.5,551.5),
+                unlockSeconds = 60
             ),
             GeneratorDescription(
                 name = "Upstairs",
-                place = RawLocation(-134.0,4.0,523.0),
-                unlockSeconds = 45
+                place = RawLocation(-134.5,4.5,523.5),
+                unlockSeconds = 60,
+                rotation = 90.0
             ),
             GeneratorDescription(
                 name = "Foyer",
-                place = RawLocation(-136.0,-2.0,522.0),
-                unlockSeconds = 45
+                place = RawLocation(-135.5,-2.0,522.5),
+                unlockSeconds = 60
             ),
             GeneratorDescription(
                 name = "Pit",
-                place = RawLocation(-168.0,-14.0,572.0),
-                unlockSeconds = 45
+                place = RawLocation(-167.5,-14.0,572.5),
+                unlockSeconds = 60
             ),
             GeneratorDescription(
                 name = "Cellar",
-                place = RawLocation(-139.0,-7.0,523.0),
-                unlockSeconds = 45
+                place = RawLocation(-139.5,-6.5,523.5),
+                unlockSeconds = 60,
+                rotation = 90.0
             ),
             GeneratorDescription(
                 name = "Garage",
-                place = RawLocation(-96.0,-4.0,513.0),
-                unlockSeconds = 45
+                place = RawLocation(-95.5,-4.0,513.5),
+                unlockSeconds = 60
             )
         ),
         escape = EscapeGateDescription(
@@ -186,11 +189,11 @@ object ForestStaticDataConfig {
             // Barn
             CuboidRegion(Vector(-100, -4, 550), Vector(-102, -5, 551)),
             // Cellar
-            CuboidRegion(Vector(-140, -8, 522), Vector(-139, -7, 524)),
+            CuboidRegion(Vector(-139,-8,524), Vector(-140,-7,522)),
             // Foyer
             CuboidRegion(Vector(-137, -2, 523), Vector(-135, -3, 522)),
             // Upstairs
-            CuboidRegion(Vector(-134, 3, 522), Vector(-135, 3, 524)),
+            CuboidRegion(Vector(-135,3,522), Vector(-134,4,524)),
             // Pit
             CuboidRegion(Vector(-167, -13, 573), Vector(-169, -15, 572)),
             // Storehouse
@@ -199,6 +202,121 @@ object ForestStaticDataConfig {
             CuboidRegion(Vector(-188, 1, 449), Vector(-187, 0, 447)),
         )
     )
+
+    fun getProdStaticData(debug: Boolean) : ForestStaticData {
+        return ForestStaticData(
+            debugLever = debug,
+            mapName = "farm",
+            minRequiredQueue = if (debug) 1 else 2,
+            minRequiredGeneratorsFn = { ctx ->
+                if (ctx.survivorTeam.players.size >= 6) {
+                    6
+                } else if (ctx.survivorTeam.players.size >= 4) {
+                    4
+                } else {
+                    3
+                }
+            },
+            generatorSelection = FARM_SELECTION,
+            queueCountdownSeconds = if (debug) 5 else 30,
+            survivorReleaseSeconds = if (debug) 5 else 20,
+            hunterReleaseSeconds = if (debug) 4 else 15,
+            yLevelDeath = -26,
+            worldPath = "./gamemaps/farm",
+            survivorsSpawn = RawLocation(-109.0,-1.0,423.0,0.0F,0.0F),
+            survivorsRegion = CuboidRegion(
+                Vector(-106.0,-1.0,421.0),
+                Vector(-111.0,-1.0,427.0)
+            ),
+            huntersSpawn = RawLocation(-216.0,-12.0,581.0,-134.7f,-34.4f),
+            spectatorsSpawn = RawLocation(-188.0,10.0,464.0,-31.9f,33.4f),
+            generators = listOf(
+                GeneratorDescription(
+                    name = "Fields",
+                    place = RawLocation( -187.5, 1.5, 448.5),
+                    unlockSeconds = 60,
+                    rotation = 90.0
+                ),
+                GeneratorDescription(
+                    name = "Storehouse",
+                    place = RawLocation(-218.5,-1.5,505.5),
+                    unlockSeconds = 60
+                ),
+                GeneratorDescription(
+                    name = "Barn",
+                    place = RawLocation(-100.5,-3.5,551.5),
+                    unlockSeconds = 60
+                ),
+                GeneratorDescription(
+                    name = "Upstairs",
+                    place = RawLocation(-134.5,4.5,523.5),
+                    unlockSeconds = 60,
+                    rotation = 90.0
+                ),
+                GeneratorDescription(
+                    name = "Foyer",
+                    place = RawLocation(-135.5,-2.0,522.5),
+                    unlockSeconds = 60
+                ),
+                GeneratorDescription(
+                    name = "Pit",
+                    place = RawLocation(-167.5,-14.0,572.5),
+                    unlockSeconds = 60
+                ),
+                GeneratorDescription(
+                    name = "Cellar",
+                    place = RawLocation(-139.5,-6.5,523.5),
+                    unlockSeconds = 60,
+                    rotation = 90.0
+                ),
+                GeneratorDescription(
+                    name = "Garage",
+                    place = RawLocation(-95.5,-4.0,513.5),
+                    unlockSeconds = 60
+                )
+            ),
+            escape = EscapeGateDescription(
+                region =
+                    AggregateRegion(listOf(
+                        CuboidRegion(
+                            Vector(-117,-1,419),
+                            Vector(-116,1,420),
+                        ),
+                        CuboidRegion(
+                            Vector(-100,1,425),
+                            Vector(-99,3,426),
+                        )
+                    ))
+            ),
+            survivorSpawnBarrierRegion = CuboidRegion(
+                Vector(-107,-1,421),
+                Vector(-111,2,425)
+            ),
+            hunterSpawnBarrierRegion = CuboidRegion(
+                Vector(-213,-1,448),
+                Vector( -214,-3,444)
+            ),
+            contributionMultiplier = DAMPENED_GENERATOR_CONTRIBUTION_MULTIPLIER,
+            overwriteRegions = listOf(
+                // Garage
+                CuboidRegion(Vector(-95, -3, 512), Vector(-96, -5, 514)),
+                // Barn
+                CuboidRegion(Vector(-100, -4, 550), Vector(-102, -5, 551)),
+                // Cellar
+                CuboidRegion(Vector(-139,-8,524), Vector(-140,-7,522)),
+                // Foyer
+                CuboidRegion(Vector(-137, -2, 523), Vector(-135, -3, 522)),
+                // Upstairs
+                CuboidRegion(Vector(-135,3,522), Vector(-134,4,524)),
+                // Pit
+                CuboidRegion(Vector(-167, -13, 573), Vector(-169, -15, 572)),
+                // Storehouse
+                CuboidRegion(Vector(-220, -2, 504), Vector(-218, -3, 505)),
+                // Fields
+                CuboidRegion(Vector(-188, 1, 449), Vector(-187, 0, 447)),
+            )
+        )
+    }
 
     val TEST_SERVER_FARM = ForestStaticData(
         mapName = "farm",
@@ -242,7 +360,7 @@ object ForestStaticDataConfig {
             ),
             GeneratorDescription(
                 name = "Upstairs",
-                place = RawLocation(-134.0,4.0,523.0),
+                place = RawLocation( -134.0,4.0,523.0),
                 unlockSeconds = 12
             ),
             GeneratorDescription(

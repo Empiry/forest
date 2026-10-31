@@ -4,6 +4,7 @@ import com.empire.forest.ForestContext
 import com.empire.forest.kit.ForestKitKey
 import com.empire.forest.kit.HunterKit
 import com.empire.forest.perk.BearTrapPerk
+import com.empire.forest.perk.BloodhoundPerk
 import com.empire.forest.perk.ForestPerk
 import com.empire.forest.perk.NewMotionSensorPerk
 import com.empire.forest.perk.RoarPerk
@@ -92,11 +93,13 @@ class HunterHUD(
                 Component.text(String(Character.toChars(sensorBaseChar)))
             val sensorTicksComponent = formatTime(sensorPerk.cooldown.getRemainingCooldownTicks(player))
 
-            val roarPerk : ForestPerk<*>? = context.getPerk(RoarPerk::class.java)
-            if (roarPerk == null || roarPerk !is RoarPerk) return@submitTask Component.empty()
-            val playerCanUse = roarPerk.ability.cooldown.canUse(player)
-            val roarComponent = Component.text(if (playerCanUse) "\uE113" else "\uE112")
-            val roarTicksComponent = formatTime(roarPerk.ability.cooldown.getRemainingCooldownTicks(player))
+            val bloodhoundPerk : ForestPerk<*>? = context.getPerk(BloodhoundPerk::class.java)
+            if (bloodhoundPerk == null || bloodhoundPerk !is BloodhoundPerk) return@submitTask Component.empty()
+            val playerCanUse = bloodhoundPerk.cooldownAbility.cooldown.canUse(player)
+            val bloodhoundComponent = Component.text(if (playerCanUse) "\uE121" else "\uE120")
+            val bloodhoundTicksComponent = formatTime(
+            bloodhoundPerk.cooldownAbility.cooldown.getRemainingCooldownTicks(player)
+            )
 
             flattenComponents(
                 *(
@@ -105,7 +108,7 @@ class HunterHUD(
                             .withSeperatingElement(Component.text(" ")),
                         listOf(sensorCharComponent, sensorTicksComponent)
                             .withSeperatingElement(Component.text(" ")),
-                        listOf(roarComponent, roarTicksComponent)
+                        listOf(bloodhoundComponent, bloodhoundTicksComponent)
                             .withSeperatingElement(Component.text(" ")),
                     ).withSeperatingElement(listOf(Component.text(" ".repeat(3)))).flatten()
                 ).toTypedArray()

@@ -56,7 +56,7 @@ class FearPerk(
                     true, false
                 )
             )
-            context.stamina?.addStamina(survivor, -50.0)
+            context.stamina?.addStamina(survivor, -75.0)
         }
     }
 

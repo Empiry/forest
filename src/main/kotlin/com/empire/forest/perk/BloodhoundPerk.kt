@@ -12,6 +12,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.Location
 import org.bukkit.Material
+import org.bukkit.NamespacedKey
 import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Player
 import org.bukkit.entity.Wolf
@@ -32,22 +33,23 @@ class BloodhoundPerk(
                 getAttribute(Attribute.MOVEMENT_SPEED)?.let {
                     it.baseValue = 0.6
                 }
-                health = 2.0
+                health = 1.0
             }
         }
     }
 
     private val itemBuilder = ItemBuilder(Material.BONE) {
+        itemModel(NamespacedKey("horror", "ability/bloodhound"))
         name(Component.text("Bloodhound Ability").color(NamedTextColor.RED))
         unbreakable()
     }
-    private val cooldownAbility : CooldownRightClickAbility
+    val cooldownAbility : CooldownRightClickAbility
     private val item : ItemStack
     private val dump = GlobalResourceTrackers.createResourceDump()
 
     init {
         cooldownAbility = CooldownRightClickAbility(
-            plugin, 20L * 45L,
+            plugin, 20L * 75L,
             CooldownRightClickAbilityOptions(consume = false), itemBuilder,
             this::use
         )
@@ -81,7 +83,7 @@ class BloodhoundPerk(
             )
             wolf
         }
-        dump.addSelfTracking(GlobalResourceTrackers.scheduler.afterUntracked(30L * 20L) {
+        dump.addSelfTracking(GlobalResourceTrackers.scheduler.afterUntracked(20L * 20L) {
             wolves.forEach { it.remove() }
         })
     }

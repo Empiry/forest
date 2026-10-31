@@ -1,23 +1,9 @@
 package com.empire.forest.kit
 
 import com.empire.forest.ForestContext
-import com.empire.forest.mechanic.phantom.CloakingPerk
+import com.empire.forest.constants.ForestConstants
 import com.empire.forest.mechanic.survivalist.TallGrassInvisibility
-import com.empire.forest.mechanic.werewolf.WerewolfSpeedPerk
-import com.empire.forest.perk.BearTrapPerk
-import com.empire.forest.perk.BearTrapPlayerData
-import com.empire.forest.perk.BloodhoundPerk
-import com.empire.forest.perk.BloodlustPerk
-import com.empire.forest.perk.BuckshotPerk
-import com.empire.forest.perk.FearPerk
-import com.empire.forest.perk.JammerPerk
-import com.empire.forest.perk.MachetePerk
-import com.empire.forest.perk.MedicPerk
-import com.empire.forest.perk.NewMotionSensorPerk
-import com.empire.forest.perk.PerkAbilityAdapter
-import com.empire.forest.perk.RoarPerk
-import com.empire.forest.perk.ShadowPerk
-import com.empire.forest.perk.StaredownPerk
+import com.empire.forest.perk.*
 import com.empire.ignite.game.kit.GameKit
 import com.empire.ignite.game.kit.IgniteBundle
 import com.empire.ignite.game.kit.ItemKitComponent
@@ -25,7 +11,6 @@ import com.empire.ignite.util.InventoryUtils
 import com.empire.ignite.util.item.ItemBuilder
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.TextColor
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 
@@ -46,6 +31,11 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
         unbreakable()
     }, GameKit() { player, context ->
         IgniteBundle(
+            itemComponent = ItemKitComponent(
+                mapOf(
+                    39 to ForestConstants.HUNTER_MASK.build()
+                )
+            ),
             abilityComponents = listOf(
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     TallGrassInvisibility(player, context)
@@ -70,22 +60,16 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
                 ),
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     PerkAbilityAdapter(
-                        RoarPerk::class.java,
-                        context, player, { }
-                    )
-                ),
-                com.empire.ignite.game.kit.AbilityKitComponent(
-                    PerkAbilityAdapter(
                         BloodhoundPerk::class.java,
                         context, player
                     ) { }
                 ),
-                com.empire.ignite.game.kit.AbilityKitComponent(
-                    PerkAbilityAdapter(
-                        JammerPerk::class.java,
-                        context, player
-                    ) { }
-                ),
+//                com.empire.ignite.game.kit.AbilityKitComponent(
+//                    PerkAbilityAdapter(
+//                        JammerPerk::class.java,
+//                        context, player
+//                    ) { }
+//                ),
 //                com.empire.ignite.game.kit.AbilityKitComponent(
 //                    PerkAbilityAdapter(
 //                        MedicPerk::class.java,
@@ -135,6 +119,12 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
     }, GameKit() { player, context ->
         IgniteBundle(
             abilityComponents = listOf(
+//                com.empire.ignite.game.kit.AbilityKitComponent(
+//                    PerkAbilityAdapter(
+//                        BaldiPerk::class.java,
+//                        context, player
+//                    ) { }
+//                ),
                 com.empire.ignite.game.kit.AbilityKitComponent(
                     PerkAbilityAdapter(
                         MachetePerk::class.java,
@@ -159,12 +149,12 @@ enum class HunterKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContex
                         context, player
                     ) { }
                 ),
-                com.empire.ignite.game.kit.AbilityKitComponent(
-                    PerkAbilityAdapter(
-                        StaredownPerk::class.java,
-                        context, player
-                    ) { }
-                ),
+//                com.empire.ignite.game.kit.AbilityKitComponent(
+//                    PerkAbilityAdapter(
+//                        StaredownPerk::class.java,
+//                        context, player
+//                    ) { }
+//                ),
             )
         )
     })

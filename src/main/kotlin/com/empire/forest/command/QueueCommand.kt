@@ -5,8 +5,7 @@ import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Default
 import com.empire.forest.ForestApplication
 import com.empire.forest.ForestContext
-import com.empire.forest.config.ACTIVE_SERVER_CONFIG
-import com.empire.forest.config.ForestStaticDataConfig
+import com.empire.forest.config.ServerConfig
 import com.empire.ignite.Ignite
 import com.empire.ignite.match.MatchConfiguration
 import com.empire.ignite.player.IgnitePlayerTracker
@@ -17,7 +16,8 @@ import org.bukkit.entity.Player
 @CommandAlias("q|queue")
 class QueueCommand(
     private val app: ForestApplication,
-    private val plugin: Ignite
+    private val plugin: Ignite,
+    private val serverConfig: ServerConfig
 ) : BaseCommand() {
     @Default
     fun createQueueMenu(player: Player) {
@@ -30,7 +30,7 @@ class QueueCommand(
             )
             return
         }
-        val maxMatches = 1
+        val maxMatches = 2
         val forestMatches = plugin.matchManager.matches.filter {
             match -> match.context is ForestContext
         }
@@ -45,7 +45,7 @@ class QueueCommand(
                     val newMatch = plugin.matchManager.scheduleMatch(
                         MatchConfiguration(
                             "main", app,
-                            ACTIVE_SERVER_CONFIG.forest
+                            serverConfig.forest
                         )
                     )
                     newMatch.start()

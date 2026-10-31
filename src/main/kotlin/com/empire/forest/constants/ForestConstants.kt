@@ -6,11 +6,17 @@ import com.empire.ignite.util.PluginResources
 import com.empire.ignite.util.amountSuffix
 import com.empire.ignite.util.config.InteractiveConfigV2
 import com.empire.ignite.util.config.InteractiveConfigV2Schema
+import com.empire.ignite.util.item.ItemBuilder
 import com.empire.ignite.util.text.TextUtils.flattenComponents
+import io.papermc.paper.datacomponent.DataComponentTypes
+import io.papermc.paper.datacomponent.item.TooltipDisplay
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
+import org.bukkit.Material
+import org.bukkit.NamespacedKey
+import org.bukkit.enchantments.Enchantment
 
 object ForestConstants {
     val FOREST_COLOR = TextColor.color(158, 26, 11)
@@ -48,6 +54,14 @@ InteractiveConfigV2Schema.NamedStructure(
             )
         )
     )
+
+    val HUNTER_MASK = ItemBuilder(Material.ACACIA_BUTTON) {
+        name(Component.text("Wendigo Mask").color(HUNTERS_COLOR))
+        enchantments(listOf(Enchantment.BINDING_CURSE to 1))
+        itemModel(NamespacedKey("horror", "hats/hunter_mask"))
+        dataComponent(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, false)
+        hideStuff()
+    }
 
 
     fun getQueueMessageFormatter(countdownTicks: Long) : (Long) -> Component {

@@ -109,7 +109,8 @@ class FakeBlockSelector(
             rayTraceResult.hitBlock != null &&
             rayTraceResult.hitBlock!!.isSolid
         ) {
-            val targetSpot = rayTraceResult.hitPosition.add(
+            val rayTraceSpot = rayTraceResult.hitPosition.clone()
+            val targetSpot = rayTraceSpot.clone().add(
                 player.location.direction.normalize().multiply(-0.5)
             ).toLocation(player.world)
             if (targetSpot.block.type == Material.AIR) {
@@ -117,10 +118,10 @@ class FakeBlockSelector(
                 val solidGround = targetSpotBlock.isSolid
                 if (solidGround && targetSpotBlock.type != Material.BARRIER) {
                     val targetBlock = targetSpot.block
-                    if (state.itemDisplay == null || targetBlock != state.block) {
+                    if (System.currentTimeMillis() - state.lastUsed > 75) {
                         state.itemDisplay?.destroy(player)
                         val clientEntity = ClientEntity.itemDisplay(
-                            targetBlock.location.toVector().add(options.offset ?: Vector())
+                            rayTraceSpot.clone().add(options.offset ?: Vector())
                         )
                         clientEntity.spawn(player)
                         clientEntity.metadataUpdate(player, listOf(
@@ -128,6 +129,8 @@ class FakeBlockSelector(
                         ))
                         state.itemDisplay = clientEntity
                         state.block = targetBlock
+                        state.spot = rayTraceSpot.clone()
+                        state.lastUsed = System.currentTimeMillis()
                     }
                 }
             }
@@ -138,9 +141,9 @@ class FakeBlockSelector(
         if (player !in playerData.keys) return
         val state = playerData[player] ?: return
         if (!listener.onTryUseRightClick(player)) return
-        if (state.block == null) return
+        if (state.block == null || state.spot == null) return
         val idisplay = state.block!!.world.spawn(
-            state.block!!.location.add(options.offset ?: Vector()),
+            state.spot!!.toLocation(state.block!!.world).add(options.offset ?: Vector()),
             ItemDisplay::class.java
         )
         idisplay.setItemStack(state.emplaceIStack)
@@ -185,7 +188,9 @@ private class FakePlayerBlockSelectorState(
     val emplaceIStack : ItemStack,
     var itemDisplay: ClientEntity? = null,
     var task: UnloadableResource? = null,
-    var block: Block? = null
+    var block: Block? = null,
+    var lastUsed : Long = 0L,
+    var spot: Vector? = null
 ) : UnloadableResource {
     override fun unload(external: Boolean) {
         itemDisplay?.destroy(player)

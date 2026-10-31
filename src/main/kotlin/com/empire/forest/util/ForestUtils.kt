@@ -1,8 +1,13 @@
 package com.empire.forest.util
 
 import com.empire.forest.ForestContext
+import com.empire.forest.config.BUILD_SERVER_CONFIG
+import com.empire.forest.config.ServerConfig
+import com.empire.forest.config.getProdServerConfig
+import com.empire.forest.generator.GeneratorDescription
 import com.empire.hacks.common.builder.UpdateEntityMetadataConverter
 import com.empire.hacks.common.builder.UpdateEntityMetadataPacketBuilder
+import com.empire.ignite.Ignite
 import com.empire.ignite.util.GlobalResourceTrackers
 import com.empire.ignite.util.HACKS
 import com.empire.ignite.util.UnloadableResource
@@ -11,10 +16,11 @@ import com.empire.ignite.util.region.RegionUtils
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.attribute.Attribute
+import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.util.Vector
-import kotlin.collections.forEach
+import java.io.File
 import kotlin.experimental.or
 
 object ForestUtils {
@@ -95,7 +101,7 @@ object ForestUtils {
         }
     }
 
-    fun replacePlaceholderBlocks(generatorSource: Location) {
+    fun replacePlaceholderBlocks(desc: GeneratorDescription, generatorSource: Location) {
         val broadRegion = CuboidRegion(
             Vector(generatorSource.x + 3, generatorSource.y + 3, generatorSource.z + 3),
             Vector(generatorSource.x - 3, generatorSource.y - 3, generatorSource.z - 3)
@@ -104,8 +110,12 @@ object ForestUtils {
             broadRegion, generatorSource.world, Material.AIR, { it.type == Material.RED_TERRACOTTA }
         )
 //        val innerRegion = CuboidRegion(
-//            Vector(generatorSource.x + 1, generatorSource.y - 1, generatorSource.z),
-//            Vector(generatorSource.x - 1, generatorSource.y, generatorSource.z - 1)
+//            generatorSource.clone()
+//                .add(desc.getLengthDir().clone().multiply(-1.0))
+//                .add(Vector(0, -1, 0)).toVector(),
+//            generatorSource.clone()
+//                .add(desc.getLengthDir().clone().multiply(1.0))
+//                .add(desc.getWidthDir().clone().multiply(1.0)).toVector(),
 //        )
 //        RegionUtils.fillRegion(
 //            innerRegion, generatorSource.world, Material.BARRIER
@@ -122,4 +132,25 @@ object ForestUtils {
         player.getAttribute(Attribute.MOVEMENT_SPEED)?.let { it.baseValue = context.getNormalMovementSpeed(player) }
         player.getAttribute(Attribute.JUMP_STRENGTH)?.let { it.baseValue = it.defaultValue }
     }
+
+    fun loadBasicConfig(plugin: Ignite, baseDirectory: File) : ServerConfig {
+        val config = File(baseDirectory, "forest.yml")
+
+        if (!config.exists()) {
+            config.parentFile.mkdirs()
+        }
+        val yamlConfig = YamlConfiguration.loadConfiguration(config);
+        val staticConfigName = yamlConfig.getString("static-config-name", "prod")
+        if (staticConfigName == "prod") {
+            return getProdServerConfig(false)
+        } else if (staticConfigName == "prod-debug") {
+            return getProdServerConfig(true)
+        } else {
+            return BUILD_SERVER_CONFIG
+        }
+    }
 }
+
+data class ForestAppConfig(
+    val staticConfigName: String
+)

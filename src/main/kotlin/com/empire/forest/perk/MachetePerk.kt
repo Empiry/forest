@@ -41,7 +41,7 @@ class MachetePerk(
     private val macheteIb = ItemBuilder(Material.CARROT_ON_A_STICK) {
         name(Component.text("Machete").color(NamedTextColor.YELLOW))
         dataComponent(
-            DataComponentTypes.USE_COOLDOWN, UseCooldown.useCooldown(4.0f).build()
+            DataComponentTypes.USE_COOLDOWN, UseCooldown.useCooldown(1.0f).build()
         )
         itemModel(NamespacedKey("horror", "weapons/machete"))
         unbreakable(true)
@@ -50,7 +50,7 @@ class MachetePerk(
         name(Component.text("Bloody Machete").color(NamedTextColor.RED))
         itemModel(NamespacedKey("horror", "weapons/machete_bloody"))
         dataComponent(
-            DataComponentTypes.USE_COOLDOWN, UseCooldown.useCooldown(4.0f).build()
+            DataComponentTypes.USE_COOLDOWN, UseCooldown.useCooldown(1.0f).build()
         )
 //        dataComponent(
 //            DataComponentTypes.CHARGED_PROJECTILES,
@@ -198,7 +198,7 @@ class MachetePerk(
 //                                )
 //                            )
                             context.survivorHealth.syntheticDamagePlayer(
-                                event.player, pcr.entity as Player, 65f
+                                event.player, pcr.entity as Player, 80f
                             )
                         }
                         if (!context.gameProbablyOver()) event.player.give(macheteIb.build())
@@ -264,7 +264,14 @@ class MachetePerk(
             replaceWithBloody(damager)
             damager.addPotionEffect(
                 PotionEffect(
-                    PotionEffectType.SLOWNESS, 20 * 3, 2, true, false
+                    PotionEffectType.SLOWNESS, 20 * 2, 2,
+                    true, false
+                )
+            )
+            damager.addPotionEffect(
+                PotionEffect(
+                    PotionEffectType.MINING_FATIGUE, 20 * 2, 255,
+                    true, false
                 )
             )
             dmgLock = false
@@ -304,7 +311,7 @@ class MachetePlayerData(
 ) {
     fun canHit() : Boolean {
         if (lastHit == null) return true
-        return System.currentTimeMillis() - lastHit!! > 4000
+        return System.currentTimeMillis() - lastHit!! > 1000
     }
 }
 

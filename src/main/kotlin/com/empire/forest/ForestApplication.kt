@@ -3,8 +3,8 @@ package com.empire.forest
 import co.aikar.commands.BaseCommand
 import com.empire.forest.bossbar.GameBossBar
 import com.empire.forest.command.*
-import com.empire.forest.config.ACTIVE_SERVER_CONFIG
 import com.empire.forest.config.ForestInteractiveData
+import com.empire.forest.config.ServerConfig
 import com.empire.forest.constants.ForestConstants
 import com.empire.forest.constants.ForestConstants.CONFIG_DATA
 import com.empire.forest.constants.ForestConstants.GENERIC_QUEUE_END_TAG
@@ -28,6 +28,7 @@ import com.empire.forest.perk.StaredownPerk
 import com.empire.forest.scoreboard.SurvivorScoreboardAgent
 import com.empire.forest.tablist.ForestTablist
 import com.empire.forest.util.ForestMatchStartEvent
+import com.empire.forest.util.ForestUtils
 import com.empire.ignite.Ignite
 import com.empire.ignite.game.application.*
 import com.empire.ignite.game.application.component.DeathTrackerContextComponent
@@ -63,24 +64,27 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
     }
     private val appLevelDump = GlobalResourceTrackers.createResourceDump()
     private var userDatabase: ForestUserDatabase? = null
+    private var serverConfig: ServerConfig? = null
 
     override fun load(plugin: Ignite) {
-        val lobbyWorld = Bukkit.getWorld(ACTIVE_SERVER_CONFIG.lobby.lobbyWorld)!!
-        val sign = QueueSign(
-            plugin,
-            Location(
-                lobbyWorld,
-                ACTIVE_SERVER_CONFIG.lobby.queueSignLoc.x,
-                ACTIVE_SERVER_CONFIG.lobby.queueSignLoc.y,
-                ACTIVE_SERVER_CONFIG.lobby.queueSignLoc.z
+        val serverConfig = ForestUtils.loadBasicConfig(plugin, getDirectory(plugin))
+        val lobbyWorld = Bukkit.getWorld(serverConfig.lobby.lobbyWorld)!!
+        for (queueSignLocation in serverConfig.lobby.queueSignLocations) {
+            val sign = QueueSign(
+                plugin,
+                Location(
+                    lobbyWorld,
+                    queueSignLocation.x, queueSignLocation.y, queueSignLocation.z
+                )
             )
-        )
-        sign.load()
-        appLevelDump.add(sign)
+            sign.load()
+            appLevelDump.add(sign)
+        }
         val lobbyListener = LobbyListener(
             plugin,
-            ACTIVE_SERVER_CONFIG.lobby.spawnLocation.toLocationNonNull(lobbyWorld),
-            ACTIVE_SERVER_CONFIG.lobby.spawnRegion
+            serverConfig,
+            serverConfig.lobby.spawnLocation.toLocationNonNull(lobbyWorld),
+            serverConfig.lobby.spawnRegion
         )
         lobbyListener.load()
         appLevelDump.add(lobbyListener)
@@ -89,6 +93,7 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
             File(getDirectory(plugin), "forest-data.db").absolutePath
         )
         appLevelDump.add(userDatabase!!)
+        this.serverConfig = serverConfig
     }
 
     override fun unload() {
@@ -106,12 +111,13 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
 
     override fun getCommands(plugin: Ignite): List<BaseCommand> {
         return listOf(
-            QueueCommand(this, plugin),
+            QueueCommand(this, plugin, serverConfig!!),
             LeaveCommand(),
             SpectateCommand(plugin),
             TestIcvCommand(plugin),
             CoinsCommand(userDatabase!!),
-            ForestDebugCommand()
+            ForestDebugCommand(),
+            MenuDebugCommand()
         )
     }
 
@@ -156,6 +162,7 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
                                     override fun onDequeue(player: Player) {}
                                 },
                                 options = QueueOptions(
+                                    min = this@ForestApplication.serverConfig!!.forest.minRequiredQueue,
                                     countdownLength = countdownTicks,
                                     chatMessageFormatter = ForestConstants.getQueueMessageFormatter(
                                         countdownTicks
@@ -268,8 +275,8 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
     private fun setupContext(plugin: Ignite, forestData: ForestStaticData, dump: ManagedResourceDump) : ForestContext {
         val context = ForestContext(
             this, forestData, interactiveData(),
-            ACTIVE_SERVER_CONFIG.lobby.spawnLocation.toLocationNonNull(
-                Bukkit.getWorld(ACTIVE_SERVER_CONFIG.lobby.lobbyWorld)!!
+            this@ForestApplication.serverConfig!!.lobby.spawnLocation.toLocationNonNull(
+                Bukkit.getWorld(this@ForestApplication.serverConfig!!.lobby.lobbyWorld)!!
             ),
             plugin
         )
@@ -324,7 +331,9 @@ class ForestStaticData(
     val survivorSpawnBarrierRegion: Region,
     val hunterSpawnBarrierRegion: Region,
     val contributionMultiplier: (Int) -> Double,
-    val overwriteRegions: List<Region> = listOf()
+    val overwriteRegions: List<Region> = listOf(),
+    val minRequiredQueue : Int = 1,
+    val debugLever: Boolean = false
 )
 class ForestContext(
     application: IgniteApplicationV2<ForestStaticData, *>,

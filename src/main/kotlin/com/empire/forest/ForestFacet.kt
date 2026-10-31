@@ -21,6 +21,8 @@ import com.empire.forest.mechanic.downed.DownedMechanic
 import com.empire.forest.mechanic.phantom.CloakingPerk
 import com.empire.forest.mechanic.stamina.SurvivorStamina
 import com.empire.forest.mechanic.werewolf.WerewolfSpeedPerk
+import com.empire.forest.mode.ForestSurvivalMode
+import com.empire.forest.perk.BaldiPerk
 import com.empire.forest.perk.BearTrapPerk
 import com.empire.forest.perk.BloodhoundPerk
 import com.empire.forest.perk.BloodlustPerk
@@ -51,6 +53,7 @@ import com.empire.ignite.util.gui.GuiPrototypes
 import com.empire.ignite.util.item.ItemBuilder
 import com.empire.ignite.util.item.PlayerItemModder
 import com.empire.ignite.util.item.PlayerItemMods
+import com.empire.ignite.util.region.CuboidRegion
 import com.empire.ignite.util.region.RegionUtils
 import com.empire.ignite.util.text.TextUtils.flattenComponents
 import com.empire.ignite.util.timer.Timer
@@ -73,6 +76,7 @@ import org.bukkit.event.entity.FoodLevelChangeEvent
 import org.bukkit.event.player.PlayerMoveEvent
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
+import org.bukkit.util.Vector
 import java.util.*
 
 class ForestFacet(
@@ -87,10 +91,12 @@ class ForestFacet(
     private val debug = (context.interactiveData?.isDebug ?: false)
     private var hunterHUD : HunterHUD? = null
     private var slasherHUD : SlasherHUD? = null
+    private var survivalMode: ForestSurvivalMode? = null
 
     override fun onLoad() {
         setupPerks()
         val hunter = context.playerTracker.players.random()
+//        val hunter = context.playerTracker.players.random()
         healStabilizePlayers(context.playerTracker.players)
         context.playerTracker.players.forEach { player ->
             player.gameMode = GameMode.ADVENTURE
@@ -172,6 +178,23 @@ class ForestFacet(
 
         setupHunterKitStage()
         setupSurvivorKitStage()
+
+//        if (true) {
+//            survivalMode = ForestSurvivalMode(plugin, context)
+//        }
+
+        val chosenMode = if (survivalMode == null) Component.text("Hunted").color(ForestConstants.FOREST_COLOR)
+        else Component.text("Survival").color(NamedTextColor.YELLOW)
+        context.sendToAll(ForestMessaging.withPrefix(
+            flattenComponents(
+                Component.text("Selected mode: ").color(NamedTextColor.GRAY),
+                chosenMode
+            )
+        ))
+        survivalMode?.onEnd {
+            finishGame()
+        }
+        survivalMode?.load()
     }
 
     private fun setupHunterKitStage() {
@@ -215,6 +238,7 @@ class ForestFacet(
                 Component.text("Choose your kit!").color(NamedTextColor.DARK_RED),
                 Component.text("Right-click the kit selector item to choose").color(NamedTextColor.RED)
             ))
+            ForestUtils.freezePlayer(hunter)
         }
         itemModderHunter.load()
         hunterTimeDump.add(itemModderHunter)
@@ -392,6 +416,9 @@ class ForestFacet(
                     context.world!!,
                     Material.AIR
                 )
+                val testBlocks = RegionUtils.asBlocks(
+                    context.world!!, CuboidRegion(Vector(-188, 1, 449), Vector(-187, 0, 447))
+                )
                 for (overwriteRegion in context.staticData.overwriteRegions) {
                     RegionUtils.fillRegion(
                         overwriteRegion,
@@ -474,16 +501,18 @@ class ForestFacet(
             else minRequired
         var generatorsFinished = 0
 
-        val generatorBossBar = GameBossBar(
-            plugin, context, generatorCount,
-            ChangingSetUtils.unionContractsToView(
-                context.getHunterChangeSet(),
-                context.getSurvivorChangeSet()
+        if (survivalMode == null) {
+            val generatorBossBar = GameBossBar(
+                plugin, context, generatorCount,
+                ChangingSetUtils.unionContractsToView(
+                    context.getHunterChangeSet(),
+                    context.getSurvivorChangeSet()
+                )
             )
-        )
-        generatorBossBar.load()
-        dump.add(generatorBossBar)
-        context.gameBossBar = generatorBossBar
+            generatorBossBar.load()
+            dump.add(generatorBossBar)
+            context.gameBossBar = generatorBossBar
+        }
 
         val generatorMap = mutableMapOf<GeneratorDescription, ForestGenerator>()
 
@@ -507,15 +536,19 @@ class ForestFacet(
                         survivor.location, Sound.UI_BUTTON_CLICK, SoundCategory.MASTER, 1.0F, 1.0F
                     )
                 }
-                generatorsFinished++
-                generatorBossBar.setGeneratorsComplete(generatorsFinished)
-                if (generatorsFinished >= generatorCount) {
-                    after()
+                if (survivalMode == null) {
+                    generatorsFinished++
+                    context.gameBossBar?.setGeneratorsComplete(generatorsFinished)
+                    if (generatorsFinished >= generatorCount) {
+                        after()
+                    }
+                } else {
+                   survivalMode!!.onGeneratorComplete(desc)
                 }
             }
             dump.add(generator)
             generator.load()
-            ForestUtils.replacePlaceholderBlocks(spot)
+            ForestUtils.replacePlaceholderBlocks(desc, spot)
             generatorMap += desc to generator
         }
         val generatorsAssociationList = generatorMap.toList()
@@ -648,6 +681,14 @@ class ForestFacet(
     }
 
     @EventHandler
+    private fun onDamage(event: EntityDamageEvent) {
+        if (event.entity !is Player) return
+        if (event.entity !in context.hunterTeam.players) return
+        val player = event.entity as Player
+        player.health = 20.0
+    }
+
+    @EventHandler
     private fun onBlockFade(event: BlockFadeEvent) {
         if (event.block.world != context.world) return
         if (event.block.type.name.contains("CORAL_FAN")) {
@@ -687,7 +728,8 @@ class ForestFacet(
                 ShadowPerk(plugin, context),
                 BloodlustPerk(plugin, context),
                 FearPerk(plugin, context),
-                MedicPerk(plugin, context)
+                MedicPerk(plugin, context),
+                BaldiPerk(plugin)
             )
         )
         dump.add(object : UnloadableResource {
@@ -727,5 +769,6 @@ class ForestFacet(
     override fun onUnload() {
         dump.destroyAll()
         kitTracker.unload()
+        survivalMode?.unload()
     }
 }

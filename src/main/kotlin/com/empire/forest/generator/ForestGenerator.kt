@@ -57,9 +57,53 @@ class ForestGenerator(
 
     init {
         captureRegion = CuboidRegion(
-            Vector(location.x + 2.5, location.y - 1, location.z + 1.5),
-            Vector(location.x - 2.5, location.y, location.z - 2.5)
+            location.clone()
+                .add(description.getLengthDir().clone().multiply(-3.5))
+                .add(Vector(0, -3, 0))
+                .add(description.getWidthDir().clone().multiply(-2.5)).toVector(),
+            location.clone()
+                .add(description.getLengthDir().clone().multiply(3.5))
+                .add(description.getWidthDir().clone().multiply(2.5)).toVector()
+//            Vector(location.x + 2.5, location.y - 3, location.z + 1.5),
+//            Vector(location.x - 2.5, location.y, location.z - 2.5)
         )
+
+        if (forestContext.staticData.debugLever && false) {
+            if (description.name.lowercase() == "cellar") {
+                Bukkit.broadcast(Component.text(
+                    "---"
+                ))
+                Bukkit.broadcast(Component.text(
+                    "setting debug blocks at generator location ${description.name}", NamedTextColor.YELLOW
+                ))
+                Bukkit.broadcast(Component.text(
+                    "base location ${location}", NamedTextColor.YELLOW
+                ))
+                Bukkit.broadcast(Component.text(
+                    "length vector ${description.getLengthDir()}", NamedTextColor.YELLOW
+                ))
+                Bukkit.broadcast(Component.text(
+                    "width vector ${description.getWidthDir()}", NamedTextColor.YELLOW
+                ))
+                Bukkit.broadcast(Component.text(
+                    "captureRegion ${captureRegion}"
+                ))
+                Bukkit.broadcast(Component.text(
+                    "---"
+                ))
+            }
+            val a =
+                location.clone()
+                    .add(description.getLengthDir().clone().multiply(-3.5))
+                    .add(Vector(0, -3, 0))
+                    .add(description.getWidthDir().clone().multiply(-2.5))
+            val b = location.clone()
+                .add(description.getLengthDir().clone().multiply(3.5))
+                .add(description.getWidthDir().clone().multiply(2.5))
+            location.block.type = Material.SPONGE
+            a.block.type = Material.DIAMOND_BLOCK
+            b.block.type = Material.EMERALD_BLOCK
+        }
     }
 
     companion object {
@@ -85,6 +129,7 @@ class ForestGenerator(
         tickerTask = Bukkit.getScheduler().runTaskTimer(ignite, this::process, 0L, 1L).taskId
         if (modelEntity == null) {
             modelEntity = GENERATOR_DISPLAY.spawn(location)
+            modelEntity?.setRotation(description.rotation.toFloat(), 0.0f)
         }
     }
 
@@ -208,8 +253,20 @@ class ForestGenerator(
 class GeneratorDescription(
     val name: String,
     val place: RawLocation,
-    val unlockSeconds: Int
-)
+    val unlockSeconds: Int,
+    val rotation: Double = 0.0
+) {
+    companion object {
+        val LENGTH_DIR = Vector(-1, 0, 0)
+        val WIDTH_DIR = Vector(0, 0, -1)
+    }
+
+    fun getLengthDir() : Vector =
+        LENGTH_DIR.clone().rotateAroundY(Math.toRadians(rotation))
+
+    fun getWidthDir() : Vector =
+        WIDTH_DIR.clone().rotateAroundY(Math.toRadians(rotation))
+}
 
 class GeneratorWarningIndicator(
     context: ForestContext,

@@ -49,7 +49,7 @@ class NewMotionSensorPerk(
             itemBuilderFn = {
                 name(Component.text("Motion Sensor").color(NamedTextColor.RED))
             },
-            offset = Vector(0.5, 0.5, 0.5),
+            offset = Vector(0.0, 0.5, 0.0),
         ),
         object : FakeBlockSelector.BlockSelectorListener {
             override fun onBlockPlace(placeContext: FakeBlockSelector.PlaceContext) {

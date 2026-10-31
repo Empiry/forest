@@ -1,6 +1,8 @@
 package com.empire.forest.lobby
 
 import com.empire.forest.ForestContext
+import com.empire.forest.config.ServerConfig
+import com.empire.ignite.Ignite
 import com.empire.ignite.game.application.UnspectateMatchEvent
 import com.empire.ignite.game.facets.system.PlayerRemoveReason
 import com.empire.ignite.match.event.PlayerQuitMatchEvent
@@ -9,9 +11,11 @@ import com.empire.ignite.util.item.ItemBuilder
 import com.empire.ignite.util.region.Region
 import com.empire.ignite.util.region.RegionPlayerTracker
 import com.empire.ignite.util.region.RegionPlayerTrackerCallback
+import com.empire.ignite.util.scoreboard.SillyScoreboard
 import io.papermc.paper.event.player.PlayerItemFrameChangeEvent
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.Material
@@ -34,27 +38,39 @@ import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
-import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.util.Vector
 
 class LobbyListener(
-    private val plugin: JavaPlugin,
+    private val plugin: Ignite,
+    private val config: ServerConfig,
     private val spawnLocation: Location,
     private val spawnEncompassingRegion: Region
 ) : Listener, IgniteResource {
-    companion object {
-        private val DO_NOT_MESS_WITH_ME : (Player) -> Boolean = { player ->
-            player.gameMode == GameMode.CREATIVE || player.isOp
-        }
-    }
 
+    private val lobbyScoreboard : SillyScoreboard<LobbyScoreboardAgent> = getLobbyScoreboard(plugin)
     private lateinit var spawnRegionPlayerTracker: RegionPlayerTracker
     private lateinit var lobbyQueueItem: ItemBuilder
     private lateinit var queueItemListener: UnloadableResource
+    private val DO_NOT_MESS_WITH_ME : (Player) -> Boolean = { player ->
+        if (config.prod) false
+        else player.gameMode == GameMode.CREATIVE || player.isOp
+    }
+
+    private val DO_NOT_MESS_WITH_ME_NO_PROD_CHECK : (Player) -> Boolean = { player ->
+        player.gameMode == GameMode.CREATIVE || player.isOp
+    }
+
+    init {
+        for (player in Bukkit.getOnlinePlayers()) {
+            lobbyScoreboard.safeBind(player)
+        }
+    }
 
     @EventHandler
     private fun onPlayerJoin(event: PlayerJoinEvent) {
         if (DO_NOT_MESS_WITH_ME(event.player)) return
+        lobbyScoreboard.safeBind(event.player)
+        event.player.getAttribute(Attribute.SCALE)?.baseValue = 1.2
         event.player.teleport(spawnLocation)
     }
 
@@ -82,6 +98,9 @@ class LobbyListener(
         if (event.match.context !is ForestContext) return
         healAndClearInventoryOfPlayers(listOf(event.player))
         event.player.teleport(spawnLocation)
+        GlobalResourceTrackers.scheduler.after(2L) {
+            lobbyScoreboard.safeBind(event.player)
+        }
     }
 
     @EventHandler
@@ -90,6 +109,9 @@ class LobbyListener(
         if (event.reason != PlayerRemoveReason.BY_WILL) return
         healAndClearInventoryOfPlayers(listOf(event.player))
         event.player.teleport(spawnLocation)
+        GlobalResourceTrackers.scheduler.after(2L) {
+            lobbyScoreboard.safeBind(event.player)
+        }
     }
 
     @EventHandler
@@ -102,7 +124,7 @@ class LobbyListener(
 
     @EventHandler
     private fun onBlockBreak(event: BlockBreakEvent) {
-        if (DO_NOT_MESS_WITH_ME(event.player)) return
+        if (DO_NOT_MESS_WITH_ME_NO_PROD_CHECK(event.player)) return
         if (event.player.world != spawnLocation.world) return
         if (event.player.location.toVector() !in spawnEncompassingRegion) return
         event.isCancelled = true
@@ -110,7 +132,7 @@ class LobbyListener(
 
     @EventHandler
     private fun onBlockPlace(event: BlockPlaceEvent) {
-        if (DO_NOT_MESS_WITH_ME(event.player)) return
+        if (DO_NOT_MESS_WITH_ME_NO_PROD_CHECK(event.player)) return
         if (event.player.world != spawnLocation.world) return
         if (event.player.location.toVector() !in spawnEncompassingRegion) return
         event.isCancelled = true
@@ -146,7 +168,7 @@ class LobbyListener(
 
     @EventHandler
     private fun onItemFrameChange(event: PlayerItemFrameChangeEvent) {
-        if (DO_NOT_MESS_WITH_ME(event.player)) return
+        if (DO_NOT_MESS_WITH_ME_NO_PROD_CHECK(event.player)) return
         if (event.player.world != spawnLocation.world) return
         if (event.player.location.toVector() !in spawnEncompassingRegion) return
         event.isCancelled = true
@@ -156,7 +178,6 @@ class LobbyListener(
     private fun onHunger(event: FoodLevelChangeEvent) {
         if (event.entity !is Player) return
         val player = event.entity as Player
-        if (DO_NOT_MESS_WITH_ME(player)) return
         if (player.world != spawnLocation.world) return
         if (player.location.toVector() !in spawnEncompassingRegion) return
         event.isCancelled = true
@@ -164,6 +185,7 @@ class LobbyListener(
     }
 
     private fun reset(player: Player) {
+        if (DO_NOT_MESS_WITH_ME(player)) return
         player.gameMode = GameMode.ADVENTURE
         player.health = player.getAttribute(Attribute.MAX_HEALTH)!!.value
         player.inventory.clear()
