@@ -10,6 +10,7 @@ import com.empire.ignite.util.entity.ManagedEntity
 import com.empire.ignite.util.entity.ManagedEntityOptions
 import com.empire.ignite.util.region.*
 import net.kyori.adventure.text.Component
+import org.bukkit.World
 import org.bukkit.entity.Display
 import org.bukkit.entity.Player
 import org.bukkit.entity.TextDisplay
@@ -21,6 +22,7 @@ class EscapeGate(
     plugin: JavaPlugin,
     private val context: ForestContext,
     private val region: Region,
+    private val postEffect: (World) -> Unit,
     private val escapeCallback: (Player) -> Unit
 ) : IgniteResource, RegionPlayerTrackerCallback {
     private val tracker = RegionPlayerTracker(plugin, region)
@@ -67,6 +69,7 @@ class EscapeGate(
             })
             dump.add(me)
         }
+        postEffect(context.world!!)
     }
 
     override fun onPlayerEnter(movementEvent: Cancellable, player: Player) {
@@ -82,7 +85,8 @@ class EscapeGate(
 }
 
 data class EscapeGateDescription(
-    val region: Region
+    val region: Region,
+    val postEffect: (World) -> Unit = {}
 )
 
 private fun center(region: Region) : List<Vector> =

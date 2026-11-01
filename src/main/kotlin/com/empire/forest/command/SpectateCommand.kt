@@ -4,10 +4,8 @@ import co.aikar.commands.BaseCommand
 import co.aikar.commands.annotation.CommandAlias
 import co.aikar.commands.annotation.Default
 import com.empire.forest.ForestContext
-import com.empire.forest.ForestStaticData
 import com.empire.ignite.Ignite
 import com.empire.ignite.game.facets.SpectatorFacet
-import com.empire.ignite.match.MatchV2
 import com.empire.ignite.player.IgnitePlayerTracker
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor

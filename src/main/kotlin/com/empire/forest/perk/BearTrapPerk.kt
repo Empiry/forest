@@ -32,7 +32,7 @@ import org.bukkit.plugin.java.JavaPlugin
 import java.util.UUID
 
 class BearTrapPerk(
-    private val plugin: JavaPlugin,
+     val plugin: JavaPlugin,
     private val context: ForestContext
 ) : ForestPerk<BearTrapPlayerData>, Listener {
     private var scannerTaskID = -1

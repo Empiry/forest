@@ -45,7 +45,7 @@ class QueueCommand(
                     val newMatch = plugin.matchManager.scheduleMatch(
                         MatchConfiguration(
                             "main", app,
-                            serverConfig.forest
+                            serverConfig.forest.mapConfigs.values.random()
                         )
                     )
                     newMatch.start()

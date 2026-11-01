@@ -1,6 +1,7 @@
 package com.empire.forest.config
 
-import com.empire.forest.ForestStaticData
+import com.empire.forest.ForestDataContainer
+import com.empire.forest.ForestMapData
 import com.empire.ignite.util.location.RawLocation
 import com.empire.ignite.util.region.CuboidRegion
 import com.empire.ignite.util.region.Region
@@ -25,7 +26,7 @@ fun getProdServerConfig(debug: Boolean) = ServerConfig(
 )
 
 val BUILD_SERVER_CONFIG = ServerConfig(
-    forest = ForestStaticDataConfig.MAIN_SERVER_FARM,
+    forest = ForestStaticDataConfig.getProdStaticData(true),
     lobby = LobbyConfig(
         lobbyWorld = "forestmapcopy",
         spawnRegion = CuboidRegion(
@@ -38,7 +39,7 @@ val BUILD_SERVER_CONFIG = ServerConfig(
 )
 
 private val TEST_SERVER_CONFIG = ServerConfig(
-    forest = ForestStaticDataConfig.TEST_SERVER_FARM,
+    forest = ForestStaticDataConfig.getProdStaticData(true),
     lobby = LobbyConfig(
         lobbyWorld = "world",
         spawnRegion = CuboidRegion(
@@ -55,7 +56,7 @@ private val TEST_SERVER_CONFIG = ServerConfig(
 
 
 data class ServerConfig(
-    val forest: ForestStaticData,
+    val forest: ForestDataContainer,
     val lobby: LobbyConfig,
     val prod: Boolean = false
 ) {}

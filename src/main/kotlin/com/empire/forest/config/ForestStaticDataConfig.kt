@@ -1,20 +1,26 @@
 package com.empire.forest.config
 
-import com.empire.forest.ForestStaticData
+import com.empire.forest.ForestDataContainer
+import com.empire.forest.ForestMapData
 import com.empire.forest.GeneratorSelection
 import com.empire.forest.gate.EscapeGateDescription
 import com.empire.forest.generator.GeneratorDescription
 import com.empire.ignite.util.location.RawLocation
 import com.empire.ignite.util.region.AggregateRegion
 import com.empire.ignite.util.region.CuboidRegion
+import com.empire.ignite.util.region.RegionUtils
+import com.empire.ignite.util.text.TextUtils.flattenComponents
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import org.bukkit.Material
 import org.bukkit.util.Vector
 
 private val DAMPENED_GENERATOR_CONTRIBUTION_MULTIPLIER: (Int) -> Double = { n -> (0.05 * (n - 1)) + 1 }
 private val TEST_CONTRIBUTION_MULTIPLIER: (Int) -> Double = { n -> 1.8 }
 private val FARM_SELECTION : GeneratorSelection = { allGenerators ->
     val shuffled = allGenerators.toMutableList().shuffled()
-    val spillover = shuffled.drop(7)
-    val generators = shuffled.take(7).toMutableList()
+    val spillover = shuffled.drop(6)
+    val generators = shuffled.take(6).toMutableList()
     // near the house area ish
     val houseGenerators = generators.filter { it.place.z in 521.0..524.0 }
     if (houseGenerators.size >= 2 && houseGenerators.any { gen -> gen.name == "Foyer" }) {
@@ -25,7 +31,7 @@ private val FARM_SELECTION : GeneratorSelection = { allGenerators ->
 }
 
 object ForestStaticDataConfig {
-    val MAIN_SERVER = ForestStaticData(
+    val MAIN_SERVER = ForestMapData(
         mapName = null,
         queueCountdownSeconds = 20,
         survivorReleaseSeconds = 20,
@@ -92,7 +98,200 @@ object ForestStaticDataConfig {
     )
 
     val mainServerDebug = true
-    val MAIN_SERVER_FARM = ForestStaticData(
+
+    private val FARM_OVERWRITE_REGIONS = mapOf(
+        "Garage" to CuboidRegion(Vector(-95, -4, 512), Vector(-96, -5, 514)),
+        "Barn" to CuboidRegion(Vector(-100, -4, 550), Vector(-102, -5, 551)),
+        "Cellar" to CuboidRegion(Vector(-139,-8,524), Vector(-140,-7,522)),
+        "Foyer" to CuboidRegion(Vector(-137, -2, 523), Vector(-135, -3, 522)),
+        "Upstairs" to CuboidRegion(Vector(-135,3,522), Vector(-134,4,524)),
+        "Pit" to CuboidRegion(Vector(-167,-15,573), Vector(-169,-14,572)),
+        "Storehouse" to CuboidRegion(Vector(-220, -2, 504), Vector(-218, -3, 505)),
+        "Fields" to CuboidRegion(Vector(-188, 1, 449), Vector(-187, 0, 447))
+    )
+
+    private val MANOR_OVERWRITE_REGIONS = mapOf(
+        "Balcony" to CuboidRegion(Vector(-478,73,1526), Vector(-477,72,1528)),
+        "Vacant" to CuboidRegion(Vector(-442,73,1504), Vector(-440,72,1505)),
+        "Library" to CuboidRegion(Vector(-447,73,1557), Vector(-449,72,1558)),
+        "Kitchen" to CuboidRegion(Vector(-438,65,1559), Vector(-440,64,1560)),
+        "Groundskeep" to CuboidRegion(Vector(-403,66,1611), Vector(-405,65,1612)),
+        "Garden" to CuboidRegion(Vector(-452,65,1430), Vector(-451,64,1432)),
+        "Hallway" to CuboidRegion(Vector(-432,65,1502), Vector(-431,64,1504)),
+        "Cellar" to CuboidRegion(Vector(-448,57,1530), Vector(-449,56,1528))
+    )
+
+    // Balcony
+    // -477.5 73.5 1527.5
+    // -478 73 1526 -477 72 1528
+    // rot 90
+
+    // Vacant
+    // -440.5 73.5 1505.5
+    // -442 73 1504 -440 72 1505
+
+    // Library
+    // -447.5 73.5 1558.5
+    // -447 73 1557 -449 72 1558
+
+    // Kitchen
+    // -438.5 65.5 1560.5
+    // -438 65 1559 -440 64 1560
+
+    // Groundskeep
+    // -403.5 66.5 1612.5
+    // -403 66 1611 -405 65 1612
+
+    // Garden
+    // -451.5 65.50 1431.5
+    // -452 65 1430 -451 64 1432
+
+    // Hallway
+    // -431.5 65.5 1503.5
+    // -432 65 1502 -431 64 1504
+
+    // Cellar
+    // -448 57 1530 -449 56 1528
+    // -448.5 57.50 1529.5
+    // rot 90
+
+    // Hunter
+    // -420 64 1524 0 0
+
+    // Survivor
+    // -503 63 1530 -509 63 1524
+    // -506 63 1526 -90 0
+
+    // spec -463 65 1527 -90 0
+
+    fun getManor(debug: Boolean) = ForestMapData(
+        mapName = "manor",
+        minRequiredGeneratorsFn = { ctx ->
+            if (ctx.survivorTeam.players.size >= 6) {
+                6
+            } else if (ctx.survivorTeam.players.size >= 4) {
+                4
+            } else {
+                3
+            }
+        },
+        generatorSelection = { allG ->
+            val shuffled = allG.toMutableList().shuffled()
+            val generators = shuffled.take(6).toMutableList()
+            generators
+        },
+        queueCountdownSeconds = if (debug) 5 else 30,
+        survivorReleaseSeconds = if (debug) 5 else 20,
+        hunterReleaseSeconds = if (debug) 5 else 15,
+        yLevelDeath = 30,
+        worldPath = "./gamemaps/manor",
+        survivorsSpawn = RawLocation(-506.0,63.0,1526.0,-90.0F,0.0F),
+        survivorOrientation = -90.0F to 0.0F,
+        huntersSpawn = RawLocation(-420.0,64.0,1524.0,0.0F,0.0F),
+        survivorsRegion = CuboidRegion(
+            Vector(-503.0,63.0,1530.0),
+            Vector(-509.0,63.0,1524.0),
+        ),
+        spectatorsSpawn = RawLocation(-463.0,65.0,1527.0,-90.0F,0.0F),
+        generators = listOf(
+            GeneratorDescription(
+                name = "Balcony",
+                place = RawLocation(-477.5,73.5,1527.5),
+                rotation = 90.0,
+                unlockSeconds = 60
+            ),
+            GeneratorDescription(
+                name = "Vacant",
+                place = RawLocation(-440.5,73.5,1505.5),
+                unlockSeconds = 60
+            ),
+            GeneratorDescription(
+                name = "Library",
+                place = RawLocation(-447.5,73.5,1558.5),
+                unlockSeconds = 60
+            ),
+            GeneratorDescription(
+                name = "Kitchen",
+                place = RawLocation(-438.5,65.5,1560.5),
+                unlockSeconds = 60
+            ),
+            GeneratorDescription(
+                name = "Groundskeep",
+                place = RawLocation(-403.5,66.5,1612.5),
+                unlockSeconds = 60
+            ),
+            GeneratorDescription(
+                name = "Garden",
+                place = RawLocation(-451.5,65.50,1431.5),
+                unlockSeconds = 60,
+                rotation = 90.0
+            ),
+            GeneratorDescription(
+                name = "Hallway",
+                place = RawLocation(-431.5,65.5,1503.5),
+                unlockSeconds = 60,
+                rotation = 90.0
+            ),
+            GeneratorDescription(
+                name = "Cellar",
+                place = RawLocation(-448.5,57.50,1529.5),
+                rotation = 90.0,
+                unlockSeconds = 60
+            )
+        ),
+        escape = EscapeGateDescription(
+            region = AggregateRegion(listOf(
+                CuboidRegion(
+                    Vector(-387,65,1578),
+                    Vector(-386,62,1586)
+                ),
+                CuboidRegion(
+                    Vector(-408,67,1574),
+                    Vector(-406,64,1573)
+                )
+            )),
+            postEffect = { wrld ->
+                RegionUtils.fillRegionReplacing(
+                    CuboidRegion(
+                            Vector(-387,65,1578),
+                                Vector(-387,62,1586)
+                    ),
+                    wrld,
+                    Material.AIR,
+                    { b -> b.type == Material.POLISHED_DEEPSLATE_WALL }
+                )
+                RegionUtils.fillRegionReplacing(
+                    CuboidRegion(
+                        Vector(-408,67,1574),
+                        Vector(-406,64,1574)
+                    ),
+                    wrld,
+                    Material.AIR,
+                    { b -> b.type == Material.POLISHED_DEEPSLATE_WALL }
+                )
+            }
+        ),
+        survivorSpawnBarrierRegion = CuboidRegion(
+            Vector(0.0, 0.0, 0.0),
+                Vector(0.0, 0.0, 0.0)
+        ),
+        hunterSpawnBarrierRegion = CuboidRegion(
+            Vector(0.0, 0.0, 0.0),
+            Vector(0.0, 0.0, 0.0)
+        ),
+        contributionMultiplier = DAMPENED_GENERATOR_CONTRIBUTION_MULTIPLIER,
+        overwriteRegions = MANOR_OVERWRITE_REGIONS,
+        credits =
+            flattenComponents(
+                Component.text("Redwood Manor").color(NamedTextColor.RED),
+                Component.text(" by ").color(NamedTextColor.GRAY),
+                Component.text("RyanDxxx").color(NamedTextColor.AQUA),
+                Component.text(" and ").color(NamedTextColor.GRAY),
+                Component.text("xykloptic").color(NamedTextColor.AQUA),
+            )
+    )
+
+    val MAIN_SERVER_FARM = ForestMapData(
         mapName = "farm",
         minRequiredGeneratorsFn = { ctx ->
             if (ctx.survivorTeam.players.size >= 6) {
@@ -141,12 +340,12 @@ object ForestStaticDataConfig {
             ),
             GeneratorDescription(
                 name = "Foyer",
-                place = RawLocation(-135.5,-2.0,522.5),
+                place = RawLocation(-135.5,-1.5,522.5),
                 unlockSeconds = 60
             ),
             GeneratorDescription(
                 name = "Pit",
-                place = RawLocation(-167.5,-14.0,572.5),
+                place = RawLocation(-167.5,-13.5,572.5),
                 unlockSeconds = 60
             ),
             GeneratorDescription(
@@ -157,7 +356,7 @@ object ForestStaticDataConfig {
             ),
             GeneratorDescription(
                 name = "Garage",
-                place = RawLocation(-95.5,-4.0,513.5),
+                place = RawLocation(-95.5,-3.5,513.5),
                 unlockSeconds = 60
             )
         ),
@@ -183,28 +382,20 @@ object ForestStaticDataConfig {
             Vector( -214,-3,444)
         ),
         contributionMultiplier = DAMPENED_GENERATOR_CONTRIBUTION_MULTIPLIER,
-        overwriteRegions = listOf(
-            // Garage
-            CuboidRegion(Vector(-95, -3, 512), Vector(-96, -5, 514)),
-            // Barn
-            CuboidRegion(Vector(-100, -4, 550), Vector(-102, -5, 551)),
-            // Cellar
-            CuboidRegion(Vector(-139,-8,524), Vector(-140,-7,522)),
-            // Foyer
-            CuboidRegion(Vector(-137, -2, 523), Vector(-135, -3, 522)),
-            // Upstairs
-            CuboidRegion(Vector(-135,3,522), Vector(-134,4,524)),
-            // Pit
-            CuboidRegion(Vector(-167, -13, 573), Vector(-169, -15, 572)),
-            // Storehouse
-            CuboidRegion(Vector(-220, -2, 504), Vector(-218, -3, 505)),
-            // Fields
-            CuboidRegion(Vector(-188, 1, 449), Vector(-187, 0, 447)),
-        )
+        overwriteRegions = FARM_OVERWRITE_REGIONS
     )
 
-    fun getProdStaticData(debug: Boolean) : ForestStaticData {
-        return ForestStaticData(
+    fun getProdStaticData(debug: Boolean) : ForestDataContainer {
+        return ForestDataContainer(
+            mapOf(
+                "Manor" to getManor(debug),
+                "Farm" to getFarmStaticData(debug)
+            )
+        )
+    }
+
+    fun getFarmStaticData(debug: Boolean) : ForestMapData {
+        return ForestMapData(
             debugLever = debug,
             mapName = "farm",
             minRequiredQueue = if (debug) 1 else 2,
@@ -255,12 +446,12 @@ object ForestStaticDataConfig {
                 ),
                 GeneratorDescription(
                     name = "Foyer",
-                    place = RawLocation(-135.5,-2.0,522.5),
+                    place = RawLocation(-135.5,-1.5,522.5),
                     unlockSeconds = 60
                 ),
                 GeneratorDescription(
                     name = "Pit",
-                    place = RawLocation(-167.5,-14.0,572.5),
+                    place = RawLocation(-167.5,-13.5,573.5),
                     unlockSeconds = 60
                 ),
                 GeneratorDescription(
@@ -271,8 +462,9 @@ object ForestStaticDataConfig {
                 ),
                 GeneratorDescription(
                     name = "Garage",
-                    place = RawLocation(-95.5,-4.0,513.5),
-                    unlockSeconds = 60
+                    place = RawLocation(-95.5,-3.5,513.5),
+                    unlockSeconds = 60,
+                    rotation = 90.0
                 )
             ),
             escape = EscapeGateDescription(
@@ -297,28 +489,17 @@ object ForestStaticDataConfig {
                 Vector( -214,-3,444)
             ),
             contributionMultiplier = DAMPENED_GENERATOR_CONTRIBUTION_MULTIPLIER,
-            overwriteRegions = listOf(
-                // Garage
-                CuboidRegion(Vector(-95, -3, 512), Vector(-96, -5, 514)),
-                // Barn
-                CuboidRegion(Vector(-100, -4, 550), Vector(-102, -5, 551)),
-                // Cellar
-                CuboidRegion(Vector(-139,-8,524), Vector(-140,-7,522)),
-                // Foyer
-                CuboidRegion(Vector(-137, -2, 523), Vector(-135, -3, 522)),
-                // Upstairs
-                CuboidRegion(Vector(-135,3,522), Vector(-134,4,524)),
-                // Pit
-                CuboidRegion(Vector(-167, -13, 573), Vector(-169, -15, 572)),
-                // Storehouse
-                CuboidRegion(Vector(-220, -2, 504), Vector(-218, -3, 505)),
-                // Fields
-                CuboidRegion(Vector(-188, 1, 449), Vector(-187, 0, 447)),
-            )
+            overwriteRegions = FARM_OVERWRITE_REGIONS,
+            credits =
+                flattenComponents(
+                    Component.text("Farm").color(NamedTextColor.YELLOW),
+                    Component.text(" by ").color(NamedTextColor.GRAY),
+                    Component.text("_Bill").color(NamedTextColor.YELLOW)
+                )
         )
     }
 
-    val TEST_SERVER_FARM = ForestStaticData(
+    val TEST_SERVER_FARM = ForestMapData(
         mapName = "farm",
         minRequiredGeneratorsFn = { ctx ->
             if (ctx.survivorTeam.players.size >= 9) {
@@ -370,7 +551,7 @@ object ForestStaticDataConfig {
             ),
             GeneratorDescription(
                 name = "Pit",
-                place = RawLocation(-168.0,-14.0,572.0),
+                place = RawLocation(-168.0,-14.0,572.5),
                 unlockSeconds = 12
             ),
             GeneratorDescription(
@@ -408,7 +589,7 @@ object ForestStaticDataConfig {
         contributionMultiplier = DAMPENED_GENERATOR_CONTRIBUTION_MULTIPLIER
     )
 
-    val MY_TEST_SERVER_OLD = ForestStaticData(
+    val MY_TEST_SERVER_OLD = ForestMapData(
         mapName = null,
         queueCountdownSeconds = 3,
         survivorReleaseSeconds = 4,
@@ -450,7 +631,7 @@ object ForestStaticDataConfig {
         contributionMultiplier = TEST_CONTRIBUTION_MULTIPLIER
     )
 
-    val MY_TEST_SERVER = ForestStaticData(
+    val MY_TEST_SERVER = ForestMapData(
         mapName = null,
         queueCountdownSeconds = 3,
         survivorReleaseSeconds = 4,

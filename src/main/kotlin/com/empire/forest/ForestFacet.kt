@@ -78,13 +78,14 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import org.bukkit.util.Vector
 import java.util.*
+import kotlin.random.Random
 
 class ForestFacet(
     plugin: Ignite,
     context: ForestContext,
     private val userDatabase: ForestUserDatabase,
     private val dump: ManagedResourceDump
-) : GameFacetV2<ForestStaticData, ForestContext>(plugin, context), DeathEvents, PlayerManagementFacetEvents, Listener {
+) : GameFacetV2<ForestMapData, ForestContext>(plugin, context), DeathEvents, PlayerManagementFacetEvents, Listener {
     private val escapees : MutableSet<UUID> = mutableSetOf()
     private val generatorProgressCallback = ForwardingCallback.create<Unit>()
     private val kitTracker: KitTracker<ForestKitKey, ForestContext> = KitTracker(plugin, ForestKitProvider)
@@ -133,6 +134,12 @@ class ForestFacet(
                 context.survivorsRegion?.random(0.4)?.toLocation(context.world!!) ?:
                 context.survivorsSpawn
             )
+            if (context.staticData.survivorOrientation != null) {
+                val l = player.location.clone()
+                l.yaw = context.staticData.survivorOrientation!!.first
+                l.pitch = context.staticData.survivorOrientation!!.second
+                player.teleport(l)
+            }
         }
         dump.add(object : UnloadableResource {
             override fun unload(external: Boolean) {
@@ -179,18 +186,32 @@ class ForestFacet(
         setupHunterKitStage()
         setupSurvivorKitStage()
 
-//        if (true) {
-//            survivalMode = ForestSurvivalMode(plugin, context)
-//        }
+        if (Random.nextBoolean()) {
+            survivalMode = ForestSurvivalMode(plugin, context)
+        }
 
         val chosenMode = if (survivalMode == null) Component.text("Hunted").color(ForestConstants.FOREST_COLOR)
-        else Component.text("Survival").color(NamedTextColor.YELLOW)
-        context.sendToAll(ForestMessaging.withPrefix(
+        else Component.text("Survive Until Dawn").color(NamedTextColor.YELLOW)
+        context.sendToAll(
+            Component.text(
+                "-".repeat(16)
+            ).color(NamedTextColor.DARK_GRAY).decorate(TextDecoration.STRIKETHROUGH)
+        )
+        if (context.staticData.credits != null) {
+            context.sendToAll(
+                context.staticData.credits!!
+            )
+        }
+        context.sendToAll(
             flattenComponents(
                 Component.text("Selected mode: ").color(NamedTextColor.GRAY),
-                chosenMode
+                chosenMode.decorate(TextDecoration.BOLD)
             )
-        ))
+        )
+        context.sendToAll(
+            Component.text("-".repeat(16))
+                .color(NamedTextColor.DARK_GRAY).decorate(TextDecoration.STRIKETHROUGH)
+        )
         survivalMode?.onEnd {
             finishGame()
         }
@@ -419,19 +440,21 @@ class ForestFacet(
                 val testBlocks = RegionUtils.asBlocks(
                     context.world!!, CuboidRegion(Vector(-188, 1, 449), Vector(-187, 0, 447))
                 )
-                for (overwriteRegion in context.staticData.overwriteRegions) {
-                    RegionUtils.fillRegion(
-                        overwriteRegion,
-                        context.world!!,
-                        Material.BARRIER
-                    )
-                }
                 context.sendToAll(ForestMessaging.createForestMessage("Survivors have been released!"))
 
                 val selectedGenerators = if (context.staticData.generatorSelection == null)
                     context.staticData.generators
                 else
                     context.staticData.generatorSelection!!.invoke(context.staticData.generators)
+                for (overwriteRegion in context.staticData.overwriteRegions) {
+                    if (selectedGenerators.any { it.name.equals(overwriteRegion.key, ignoreCase = true) }) {
+                        RegionUtils.fillRegion(
+                            overwriteRegion.value,
+                            context.world!!,
+                            Material.BARRIER
+                        )
+                    }
+                }
                 setupGeneratorTask(selectedGenerators) {
                     sendMessageToPlayers(
                         context.playerAccess.all,
@@ -461,7 +484,8 @@ class ForestFacet(
                     }
                     val gate = EscapeGate(
                         plugin, context,
-                        context.staticData.escape.region
+                        context.staticData.escape.region,
+                        context.staticData.escape.postEffect
                     ) { escapee ->
                         val survivorCount = context.survivorTeam.players.size
                         escapees += escapee.uniqueId

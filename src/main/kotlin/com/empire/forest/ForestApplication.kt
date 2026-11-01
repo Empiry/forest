@@ -58,7 +58,7 @@ import java.io.File
 import java.util.*
 import java.util.concurrent.Future
 
-class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>() {
+class ForestApplication : IgniteApplicationV2<ForestMapData, ForestContext>() {
     companion object {
         private val GAME_NAME = "Hunting Grounds"
     }
@@ -136,7 +136,7 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
         workspace: File,
         plugin: Ignite
     ): Pair<ForestContext, ExecutionNodeProducer> {
-        val forestData = staticData as ForestStaticData
+        val forestData = staticData as ForestMapData
         val dump = GlobalResourceTrackers.createResourceDump()
         val context = setupContext(plugin, forestData, dump)
         val definition = {
@@ -162,7 +162,7 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
                                     override fun onDequeue(player: Player) {}
                                 },
                                 options = QueueOptions(
-                                    min = this@ForestApplication.serverConfig!!.forest.minRequiredQueue,
+                                    min = forestData.minRequiredQueue,
                                     countdownLength = countdownTicks,
                                     chatMessageFormatter = ForestConstants.getQueueMessageFormatter(
                                         countdownTicks
@@ -272,7 +272,7 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
         return context to definition
     }
 
-    private fun setupContext(plugin: Ignite, forestData: ForestStaticData, dump: ManagedResourceDump) : ForestContext {
+    private fun setupContext(plugin: Ignite, forestData: ForestMapData, dump: ManagedResourceDump) : ForestContext {
         val context = ForestContext(
             this, forestData, interactiveData(),
             this@ForestApplication.serverConfig!!.lobby.spawnLocation.toLocationNonNull(
@@ -313,7 +313,11 @@ class ForestApplication : IgniteApplicationV2<ForestStaticData, ForestContext>()
 
 typealias GeneratorSelection = ((List<GeneratorDescription>) -> (List<GeneratorDescription>))
 
-class ForestStaticData(
+data class ForestDataContainer(
+    val mapConfigs: Map<String, ForestMapData>
+)
+
+class ForestMapData(
     val mapName: String? = null,
     val minRequiredGeneratorsFn : (ForestContext) -> Int = {-1},
     val generatorSelection: GeneratorSelection? = null,
@@ -323,6 +327,7 @@ class ForestStaticData(
     val yLevelDeath: Int,
     val worldPath: String,
     val survivorsSpawn: RawLocation,
+    val survivorOrientation: Pair<Float, Float>? = null,
     val survivorsRegion: CuboidRegion? = null,
     val huntersSpawn: RawLocation,
     val spectatorsSpawn: RawLocation,
@@ -331,16 +336,17 @@ class ForestStaticData(
     val survivorSpawnBarrierRegion: Region,
     val hunterSpawnBarrierRegion: Region,
     val contributionMultiplier: (Int) -> Double,
-    val overwriteRegions: List<Region> = listOf(),
+    val overwriteRegions: Map<String, Region> = mapOf(),
     val minRequiredQueue : Int = 1,
-    val debugLever: Boolean = false
+    val debugLever: Boolean = false,
+    val credits: Component? = null
 )
 class ForestContext(
-    application: IgniteApplicationV2<ForestStaticData, *>,
-    staticData: ForestStaticData, val interactiveData: ForestInteractiveData?,
+    application: IgniteApplicationV2<ForestMapData, *>,
+    staticData: ForestMapData, val interactiveData: ForestInteractiveData?,
     private val safeEvictLocation: Location,
     val plugin: Ignite
-) : IgniteExecutionContext<ForestStaticData>(application, staticData),
+) : IgniteExecutionContext<ForestMapData>(application, staticData),
     IMatchStateComponent, ITeamComponent, IWorldComponent, IDeathTrackerComponent, IPlayerAccessComponent {
     override var matchState: MatchState = MatchState.IDLE
     override val teams: MutableList<IgniteTeam> = mutableListOf()
