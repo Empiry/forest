@@ -22,6 +22,7 @@ class ForestSurvivalMode(
 
     override fun load() {
         gameTicks = BASE_GAME_TICKS + ((context.survivorTeam.players.size - 1) * (40L * 20L))
+//        if (context.staticData.debugLever) gameTicks = 20L * 5L
         val bar = SurvivalBossBar(
             plugin, context, gameTicks,
             ChangingSetUtils.unionContractsToView(

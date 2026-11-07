@@ -186,9 +186,9 @@ class ForestFacet(
         setupHunterKitStage()
         setupSurvivorKitStage()
 
-//        if (Random.nextBoolean()) {
-//            survivalMode = ForestSurvivalMode(plugin, context)
-//        }
+        if (Random.nextBoolean()) {
+            survivalMode = ForestSurvivalMode(plugin, context)
+        }
 
         val chosenMode = if (survivalMode == null) Component.text("Hunted").color(ForestConstants.FOREST_COLOR)
         else Component.text("Survive Until Dawn").color(NamedTextColor.YELLOW)
@@ -212,10 +212,10 @@ class ForestFacet(
             Component.text("-".repeat(16))
                 .color(NamedTextColor.DARK_GRAY).decorate(TextDecoration.STRIKETHROUGH)
         )
+        survivalMode?.load()
         survivalMode?.onEnd {
             finishGame()
         }
-        survivalMode?.load()
     }
 
     private fun setupHunterKitStage() {
