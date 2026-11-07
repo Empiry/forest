@@ -55,7 +55,7 @@ class BearTrapPerk(
         }
     }
     val cooldown: AbilityCooldown = AbilityCooldown(
-        plugin, 100L,
+        plugin, 20L * 3L,
         abilityUseListeners = listOf(
             object : AbilityUseListener {
                 override fun onAbilityCanUse(player: Player) {

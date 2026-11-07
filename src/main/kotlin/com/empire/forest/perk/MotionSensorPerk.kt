@@ -5,6 +5,9 @@ import com.empire.ignite.util.*
 import com.empire.ignite.util.collection.OnlinePlayerData
 import com.empire.ignite.util.entity.ClientEntity
 import com.empire.ignite.util.item.ItemBuilder
+import com.empire.ignite.util.text.TextUtils.flattenComponents
+import net.kyori.adventure.text.Component
+import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.NamespacedKey

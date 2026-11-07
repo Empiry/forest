@@ -68,6 +68,11 @@ class BearTrap(
     private fun onMove(event: PlayerMoveEvent) {
         if (event.player !in context.playerAccess.alive) return
         if (event.to.distanceSquared(location) > 0.3) return
+        if (planter != null && planter is Player && planter in context.survivorTeam.players) {
+            if (event.player in context.survivorTeam.players) {
+                return
+            }
+        }
         val player = event.player
         player.playSound(player.location.clone(), Sound.ENTITY_WITHER_BREAK_BLOCK, 1.0F, 0.4F)
         val dmg = 15.0
