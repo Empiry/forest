@@ -81,10 +81,10 @@ class NewMotionSensorPerk(
     private fun blockPlace(blockPlaceContext: FakeBlockSelector.PlaceContext) {
         val playerDataEntry = playerData[blockPlaceContext.player]
         if (playerDataEntry == null) {
-            blockPlaceContext.itemDisplay.remove()
+            blockPlaceContext.itemDisplay!!.remove()
             return
         }
-        val apparatus = MotionSensorApparatus(context, blockPlaceContext.itemDisplay)
+        val apparatus = MotionSensorApparatus(context, blockPlaceContext.itemDisplay!!)
         dump.addSelfTracking(apparatus)
         when (val result = playerDataEntry.buf.emplaceItem(UnloadableResource.fromPostHook(apparatus))) {
             is BoundedLRUAccessor.Result.Replaced<UnloadableResource> -> {

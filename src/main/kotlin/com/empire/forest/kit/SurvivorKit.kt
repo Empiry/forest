@@ -2,6 +2,7 @@ package com.empire.forest.kit
 
 import com.empire.forest.ForestContext
 import com.empire.forest.mechanic.survivalist.TallGrassInvisibility
+import com.empire.forest.perk.BearTrapConsumeConfig
 import com.empire.forest.perk.BearTrapPerk
 import com.empire.forest.perk.BearTrapPlayerData
 import com.empire.forest.perk.MedicPerk
@@ -99,7 +100,8 @@ enum class SurvivorKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestCont
                     PerkAbilityAdapter(
                         BearTrapPerk::class.java,
                         context, player
-                    ) { BearTrapPlayerData(trapCount = 8) }
+                    ) { BearTrapPlayerData(
+                        trapCount = 5, consumeConfig = BearTrapConsumeConfig.Limited(5)) }
                 )
             )
         )

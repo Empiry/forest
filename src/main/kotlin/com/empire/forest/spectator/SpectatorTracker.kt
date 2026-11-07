@@ -27,6 +27,8 @@ class SpectatorTracker(
         GlobalResourceTrackers.scheduler.after(2L) {
             event.player.give(compass.itemBuilder.build())
             compass.apply(event.player)
+            context.locateGeneratorsCallbackRegistration.sink(event.player to true)
+//            context.gameBossBar?.
         }
     }
 

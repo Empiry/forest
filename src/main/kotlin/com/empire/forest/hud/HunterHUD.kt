@@ -64,14 +64,16 @@ class HunterHUD(
         if (!isUsingHunterClass(player)) return
         if (hudData[player] != -1L && hudData[player] != null) return
         hudData[player] = Displays.getActionBar(player).displayQueueManager.submitTask {
-            val data = context.getPerk(BearTrapPerk::class.java)?.contextManager?.getData(player)
+            val btp = context.getPerk(BearTrapPerk::class.java) as? BearTrapPerk
+                ?: return@submitTask Component.empty()
+            val data = btp.contextManager.getData(player)
                 ?: return@submitTask Component.empty()
             val unicodeChar = min(max(0, data.lru.buffer.size), 8)
             var base = 0xE100
             base += unicodeChar
             val trapComponent = Component.text(String(Character.toChars(base)))
 
-            val remainingTime = data.activeTimer?.getRemainingTicks() ?: 0L
+            val remainingTime = btp.cooldown.getRemainingCooldownTicks(player)
             val timeComponent = Component.text(
                 "%.2f".format((remainingTime * 50) / 1000.0)
             ).color(

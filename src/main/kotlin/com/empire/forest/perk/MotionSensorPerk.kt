@@ -5,6 +5,7 @@ import com.empire.ignite.util.*
 import com.empire.ignite.util.collection.OnlinePlayerData
 import com.empire.ignite.util.entity.ClientEntity
 import com.empire.ignite.util.item.ItemBuilder
+import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.block.Block
@@ -32,7 +33,7 @@ class FakeBlockSelector(
     private val options: BlockSelectorOptions,
     private val listener: BlockSelectorListener = object : BlockSelectorListener {}
 ) : IgniteResource {
-    private val itemBuilder : ItemBuilder = ItemBuilder(Material.CARROT_ON_A_STICK) {
+    private val itemBuilder : ItemBuilder = ItemBuilder(Material.STICK) {
         unbreakable()
         itemModel(options.selectorItemModel)
     }
@@ -42,6 +43,8 @@ class FakeBlockSelector(
         OnlinePlayerData(plugin, onEvict = { p, data ->
             data.unload()
         })
+    private val dump = GlobalResourceTrackers.createResourceDump()
+    private var checkItemPredicate : ((ItemStack) -> Boolean)? = null
 
     private var item : ItemStack? = null
 
@@ -52,6 +55,8 @@ class FakeBlockSelector(
     override fun load() {
         activeListener = itemBuilderActiveListenerPokeable(plugin, itemBuilder, ::onItemActive)
         rightClickListener = itemBuilderRightClickListener(plugin, itemBuilder, ::onItemRightClick)
+        checkItemPredicate = itemCompare(plugin, itemBuilder)
+        dump.add(denyItemDrop(plugin, itemBuilder))
         item = itemBuilder.build()
     }
 
@@ -59,6 +64,13 @@ class FakeBlockSelector(
         val i = item!!.clone()
         i.amount = amount
         player.give(i)
+    }
+
+    fun remove(player: Player) {
+        player.inventory.storageContents.firstOrNull {
+            it != null && checkItemPredicate?.invoke(it) == true
+        }?.amount -= 1
+        pokeItemCheck(player)
     }
 
     fun pokeItemCheck(player: Player) {
@@ -118,7 +130,7 @@ class FakeBlockSelector(
                 val solidGround = targetSpotBlock.isSolid
                 if (solidGround && targetSpotBlock.type != Material.BARRIER) {
                     val targetBlock = targetSpot.block
-                    if (System.currentTimeMillis() - state.lastUsed > 75) {
+                    if (System.currentTimeMillis() - state.lastUsed > 35) {
                         state.itemDisplay?.destroy(player)
                         val clientEntity = ClientEntity.itemDisplay(
                             rayTraceSpot.clone().add(options.offset ?: Vector())
@@ -142,29 +154,35 @@ class FakeBlockSelector(
         val state = playerData[player] ?: return
         if (!listener.onTryUseRightClick(player)) return
         if (state.block == null || state.spot == null) return
-        val idisplay = state.block!!.world.spawn(
-            state.spot!!.toLocation(state.block!!.world).add(options.offset ?: Vector()),
-            ItemDisplay::class.java
-        )
-        idisplay.setItemStack(state.emplaceIStack)
-        listener.onBlockPlace(PlaceContext(idisplay, player, i))
+        var idisplay : ItemDisplay? = null
+        val location = state.spot!!.toLocation(state.block!!.world).add(options.offset ?: Vector())
+        if (listener.shouldSpawnItemDisplay()) {
+            idisplay = state.block!!.world.spawn(location, ItemDisplay::class.java)
+            idisplay.setItemStack(state.emplaceIStack)
+        }
+        listener.onBlockPlace(PlaceContext(idisplay, player, i, location))
         state.unload()
     }
 
     override fun unload(external: Boolean) {
         activeListener?.unload()
         rightClickListener?.unload()
+        dump.destroyAll()
         playerData.values.forEach { it.unload() }
         playerData.unload()
         activeListener = null
         rightClickListener = null
     }
 
-    data class PlaceContext(val itemDisplay: ItemDisplay, val player: Player, val item: ItemStack)
+    data class PlaceContext(
+        val itemDisplay: ItemDisplay?, val player: Player, val item: ItemStack,
+        val location: Location
+    )
     interface BlockSelectorListener {
         fun onBlockPlace(placeContext: PlaceContext) {}
         fun onTryUseItemActive(player: Player) : Boolean = true
         fun onTryUseRightClick(player: Player) : Boolean = true
+        fun shouldSpawnItemDisplay() : Boolean = true
     }
 }
 

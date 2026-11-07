@@ -398,7 +398,7 @@ object ForestStaticDataConfig {
         return ForestMapData(
             debugLever = debug,
             mapName = "farm",
-            minRequiredQueue = if (debug) 1 else 2,
+            minRequiredQueue = if (debug) 1 else 3,
             minRequiredGeneratorsFn = { ctx ->
                 if (ctx.survivorTeam.players.size >= 6) {
                     6
