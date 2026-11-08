@@ -17,7 +17,7 @@ class GameBossBar(
     private val generatorCount: Int,
     private val playerChangeSet: ChangingSet<Player>
 ) : IgniteResource {
-    private val bar: ManagedBossBar = ManagedBossBar(plugin.adventure())
+    private val bar: ManagedBossBar = ManagedBossBar()
     private var generatorsComplete = 0
 
     override fun load() {

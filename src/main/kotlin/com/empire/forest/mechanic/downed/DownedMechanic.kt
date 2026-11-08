@@ -191,7 +191,7 @@ class DownedEntityData(
         val tagSpawnLoc = downed.eyeLocation.clone().add(0.0, 0.5, 0.0).toVector()
         infoDisplay = ManagedEntity.textDisplay(
             tagSpawnLoc,
-            ClientEntity.textDisplay(tagSpawnLoc),
+            ClientEntity.textDisplay(context.world!!, tagSpawnLoc),
             options = setOf(ManagedEntityOptions.DYNAMIC_SCALING)
         )
 

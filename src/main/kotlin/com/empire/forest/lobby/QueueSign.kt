@@ -53,7 +53,12 @@ class QueueSign(
         if (context == null) {
             signSide.line(0, Component.empty())
             signSide.line(1, Component.text("Right click to ")
-                .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, "/q")))
+                .clickEvent(
+                    ClickEvent.clickEvent(
+                        ClickEvent.Action.RUN_COMMAND,
+                        ClickEvent.Payload.string("/q")
+                    )
+                ))
             signSide.line(2, Component.text("Queue!"))
             signSide.line(3, Component.empty())
         } else {
@@ -62,7 +67,8 @@ class QueueSign(
                     signSide.line(0, Component.empty())
                     signSide.line(1, Component.text("0").color(NamedTextColor.DARK_GREEN)
                         .append(Component.text(" queued").color(NamedTextColor.GREEN))
-                        .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, "/q"))
+                        .clickEvent(ClickEvent.clickEvent(
+                            ClickEvent.Action.RUN_COMMAND, ClickEvent.Payload.string("/q")))
                     )
                     signSide.line(2, Component.text("Be the change").decorate(TextDecoration.ITALIC))
                     signSide.line(3, Component.text("you want to see").decorate(TextDecoration.ITALIC))
@@ -77,7 +83,7 @@ class QueueSign(
                         .append(Component.text(
                             " queued!"
                         ).color(NamedTextColor.GREEN))
-                        .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, "/q"))
+                        .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND,ClickEvent.Payload.string("/q")))
                     )
                     if (queued == 0) {
                         signSide.line(2, Component.text("Be the change").decorate(TextDecoration.ITALIC))
@@ -91,7 +97,7 @@ class QueueSign(
                     signSide.line(0, Component.empty())
                     signSide.line(1, Component.text("Match started").color(NamedTextColor.RED))
                     signSide.line(2, Component.text("Spectate?").color(NamedTextColor.YELLOW)
-                        .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, "/spectate")))
+                        .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.RUN_COMMAND, ClickEvent.Payload.string("/spectate"))))
                     signSide.line(3, Component.empty())
                 }
                 MatchState.PANIC -> {

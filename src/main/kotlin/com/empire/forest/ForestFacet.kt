@@ -273,7 +273,7 @@ class ForestFacet(
         val chooseTimer = Timer(plugin, 20L * hunterWaitSeconds)
             .attach(object : TimerCallback {
                 private val bossBar: ManagedBossBar = ManagedBossBar(
-                    plugin.adventure(), BossBar.Color.RED,
+                    BossBar.Color.RED,
                     Component.text("Choose your kits!").color(NamedTextColor.RED)
                 )
                 init {
@@ -392,7 +392,7 @@ class ForestFacet(
         val chooseTimer = Timer(plugin, 20L * survivorWaitSeconds)
             .attach(object : TimerCallback {
                 private val bossBar: ManagedBossBar = ManagedBossBar(
-                    plugin.adventure(), BossBar.Color.RED,
+                    BossBar.Color.RED,
                     Component.text("Choose your kits!").color(ForestConstants.SURVIVORS_COLOR)
                 )
                 init {

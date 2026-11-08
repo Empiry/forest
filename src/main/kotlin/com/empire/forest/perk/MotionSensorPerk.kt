@@ -151,6 +151,7 @@ class FakeBlockSelector(
                     if (System.currentTimeMillis() - state.lastUsed > 35) {
                         state.itemDisplay?.destroy(player)
                         val clientEntity = ClientEntity.itemDisplay(
+                            player.location.world,
                             rayTraceSpot.clone().add(options.offset ?: Vector())
                         )
                         clientEntity.spawn(player)

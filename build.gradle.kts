@@ -19,7 +19,7 @@ dependencies {
     compileOnly(libs.ignite)
     compileOnly(libs.hackscommon)
     // paper api
-    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.3.build.+")
     // adventure for Bukkit
     compileOnly("net.kyori:adventure-platform-bukkit:4.4.1")
     // commands
@@ -28,9 +28,9 @@ dependencies {
     compileOnly("org.joml:joml:1.10.8")
 }
 
-// Java 21
+// Java 25
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }

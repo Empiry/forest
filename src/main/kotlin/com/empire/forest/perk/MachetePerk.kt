@@ -355,7 +355,7 @@ class MacheteIndicatorAnimation(
     init {
         val me = ManagedEntity.textDisplay(
         location.toVector(),
-            ClientEntity.textDisplay(location.toVector()),
+            ClientEntity.textDisplay(location.world, location.toVector()),
             setOf(ManagedEntityOptions.DYNAMIC_SCALING)
         )
         me.apply(player)

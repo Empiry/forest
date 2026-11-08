@@ -18,7 +18,7 @@ class SurvivalBossBar(
     private val totalTicks: Long,
     private val playerChangeSet: ChangingSet<Player>,
 ) : IgniteResource {
-    private val bar: ManagedBossBar = ManagedBossBar(plugin.adventure())
+    private val bar: ManagedBossBar = ManagedBossBar()
     private var remaining : Long = totalTicks
 
     override fun load() {

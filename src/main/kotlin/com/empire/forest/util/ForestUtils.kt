@@ -3,6 +3,7 @@ package com.empire.forest.util
 import com.empire.forest.ForestContext
 import com.empire.forest.config.BUILD_SERVER_CONFIG
 import com.empire.forest.config.ServerConfig
+import com.empire.forest.config.TEST_SERVER_CONFIG
 import com.empire.forest.config.getProdServerConfig
 import com.empire.forest.generator.GeneratorDescription
 import com.empire.hacks.common.builder.UpdateEntityMetadataConverter
@@ -145,6 +146,8 @@ object ForestUtils {
             return getProdServerConfig(false)
         } else if (staticConfigName == "prod-debug") {
             return getProdServerConfig(true)
+        } else if (staticConfigName == "test") {
+            return TEST_SERVER_CONFIG
         } else {
             return BUILD_SERVER_CONFIG
         }

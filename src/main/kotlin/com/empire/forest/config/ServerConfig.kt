@@ -38,7 +38,7 @@ val BUILD_SERVER_CONFIG = ServerConfig(
     )
 )
 
-private val TEST_SERVER_CONFIG = ServerConfig(
+val TEST_SERVER_CONFIG = ServerConfig(
     forest = ForestStaticDataConfig.getProdStaticData(true),
     lobby = LobbyConfig(
         lobbyWorld = "world",

@@ -33,7 +33,7 @@ class EscapeGate(
         tracker.callbacks.add(this)
         center(region).forEach { loc ->
             val me = ManagedEntity.textDisplay(
-                loc, ClientEntity.textDisplay(loc),
+                loc, ClientEntity.textDisplay(context.world!!, loc),
                 options = setOf(ManagedEntityOptions.DYNAMIC_SCALING)
             )
             for (player in context.playerAccess.alive) {

@@ -278,7 +278,7 @@ class GeneratorWarningIndicator(
     init {
         val me = ManagedEntity.textDisplay(
             location.toVector(),
-            ClientEntity.textDisplay(location.toVector()),
+            ClientEntity.textDisplay(context.world!!, location.toVector()),
             options = setOf(ManagedEntityOptions.DYNAMIC_SCALING)
         )
         context.hunterTeam.players.forEach { chud ->
