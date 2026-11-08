@@ -32,6 +32,7 @@ import com.empire.forest.perk.HeartbeatPerk
 import com.empire.forest.perk.JammerPerk
 import com.empire.forest.perk.MachetePerk
 import com.empire.forest.perk.MedicPerk
+import com.empire.forest.perk.RevivePerk
 import com.empire.forest.perk.NewMotionSensorPerk
 import com.empire.forest.perk.RoarPerk
 import com.empire.forest.perk.ShadowPerk
@@ -753,6 +754,7 @@ class ForestFacet(
                 ShadowPerk(plugin, context),
                 BloodlustPerk(plugin, context),
                 FearPerk(plugin, context),
+                RevivePerk(plugin, context),
                 MedicPerk(plugin, context),
                 BaldiPerk(plugin)
             )

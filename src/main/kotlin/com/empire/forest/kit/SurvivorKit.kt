@@ -14,57 +14,76 @@ import com.empire.ignite.util.item.ItemBuilder
 import com.empire.ignite.util.text.TextUtils.flattenComponents
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
+import net.kyori.adventure.text.format.TextDecoration
 import org.bukkit.Material
+import org.bukkit.NamespacedKey
 
 enum class SurvivorKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestContext>) {
     NAVIGATOR(ItemBuilder(Material.COMPASS) {
-        name(Component.text("Navigator").color(NamedTextColor.LIGHT_PURPLE))
+        name(Component.text("Navigator").decoration(TextDecoration.ITALIC, false))
 
         lore(
             InventoryUtils.postprocessLore(
                 listOf(
-                    Component.text("The default kit!").color(NamedTextColor.GRAY),
+                    Component.text("ꜱᴜʀᴠɪᴠᴏʀ ᴋɪᴛ").color(NamedTextColor.DARK_GRAY),
+                    Component.text(""),
                     flattenComponents(
-                        Component.text("Hold the ").color(NamedTextColor.GRAY),
-                        Component.text("compass ").color(NamedTextColor.RED),
-                        Component.text("to ").color(NamedTextColor.RED),
-                        Component.text("discover ").color(NamedTextColor.YELLOW),
-                        Component.text("generators!").color(NamedTextColor.GRAY),
-                    )
+                        Component.text(" | ").color(NamedTextColor.DARK_GRAY),
+                        Component.text("\"Spawns with a ").color(NamedTextColor.GRAY),
+                        Component.text("Compass").color(TextColor.fromHexString("#FFE100")),
+                    ),
+                    flattenComponents(
+                        Component.text(" | ").color(NamedTextColor.DARK_GRAY),
+                        Component.text("that shows all ").color(NamedTextColor.GRAY),
+                        Component.text("Generators").color(TextColor.fromHexString("#0083FF")),
+                    ),
+                    flattenComponents(
+                        Component.text(" | ").color(NamedTextColor.DARK_GRAY),
+                        Component.text("and their percentages.\"").color(NamedTextColor.GRAY),
+                    ),
+                    Component.text("")
                 )
             )
         )
 
         unbreakable()
+        hideStuff()
     }, GameKit() { player, context ->
         com.empire.ignite.game.kit.IgniteBundle(
             itemComponent = ItemKitComponent(
                 mapOf(
                     0 to context.locateGeneratorsItemBuilder.build()
                 )
-            ),
-//            abilityComponents = listOf(
-//                com.empire.ignite.game.kit.AbilityKitComponent(
-//                    PerkAbilityAdapter(
-//                        MedicPerk::class.java,
-//                        context, player
-//                    ) { }
-//                )
-//            )
+            )
         )
     }),
     SURVIVALIST(ItemBuilder(Material.TALL_GRASS) {
-        name(Component.text("Survivalist!").color(NamedTextColor.GREEN))
+        name(Component.text("Survivalist").decoration(TextDecoration.ITALIC, false))
+        itemModel(NamespacedKey("horror", "perks/stealthy"))
 
         lore(
             InventoryUtils.postprocessLore(
                 listOf(
-                    Component.text("You can hide in tall grass while sneaking").color(NamedTextColor.GRAY)
+                    Component.text("ꜱᴜʀᴠɪᴠᴏʀ ᴋɪᴛ").color(NamedTextColor.DARK_GRAY),
+                    Component.text(""),
+                    flattenComponents(
+                        Component.text(" | ").color(NamedTextColor.DARK_GRAY),
+                        Component.text("\"Allows you to go ").color(NamedTextColor.GRAY),
+                        Component.text("Invisible").color(TextColor.fromHexString("#8000FF")),
+                        Component.text(" by").color(NamedTextColor.GRAY),
+                    ),
+                    flattenComponents(
+                        Component.text(" | ").color(NamedTextColor.DARK_GRAY),
+                        Component.text("crouching for 2s in Tall Foliage.\"").color(NamedTextColor.GRAY),
+                    ),
+                    Component.text("")
                 )
             )
         )
 
         unbreakable()
+        hideStuff()
     }, GameKit() { player, context ->
         com.empire.ignite.game.kit.IgniteBundle(
             abilityComponents = listOf(
@@ -87,7 +106,7 @@ enum class SurvivorKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestCont
                         Component.text("hunter ").color(NamedTextColor.RED),
                     ),
                     Component.text("in their tracks").color(NamedTextColor.GRAY),
-                    Component.text("(8 bear traps)").color(NamedTextColor.GRAY),
+                    Component.text("(4 bear traps)").color(NamedTextColor.GRAY),
                 )
             )
         )
@@ -101,7 +120,41 @@ enum class SurvivorKit(val guiItem: ItemBuilder, val gameKit: GameKit<ForestCont
                         BearTrapPerk::class.java,
                         context, player
                     ) { BearTrapPlayerData(
-                        trapCount = 5, consumeConfig = BearTrapConsumeConfig.Limited(5)) }
+                        trapCount = 4, consumeConfig = BearTrapConsumeConfig.Limited(4)) }
+                )
+            )
+        )
+    }),
+    MEDIC(ItemBuilder(Material.STICK) {
+        itemModel(NamespacedKey("horror", "perks/bottle_of_pills"))
+        name(Component.text("Medic").decoration(TextDecoration.ITALIC, false))
+
+        lore(
+            InventoryUtils.postprocessLore(
+                listOf(
+                    Component.text("ꜱᴜʀᴠɪᴠᴏʀ ᴋɪᴛ").color(NamedTextColor.DARK_GRAY),
+                    Component.text(""),
+                    flattenComponents(
+                        Component.text(" | ").color(NamedTextColor.DARK_GRAY),
+                        Component.text("\"Spawns with 2x ").color(NamedTextColor.GRAY),
+                        Component.text("Bottle of Pills").color(TextColor.fromHexString("#0083FF")),
+                        Component.text(".\"").color(NamedTextColor.GRAY),
+                    ),
+                    Component.text("")
+                )
+            )
+        )
+
+        unbreakable()
+        hideStuff()
+    }, GameKit() { player, context ->
+        com.empire.ignite.game.kit.IgniteBundle(
+            abilityComponents = listOf(
+                com.empire.ignite.game.kit.AbilityKitComponent(
+                    PerkAbilityAdapter(
+                        MedicPerk::class.java,
+                        context, player
+                    ) { }
                 )
             )
         )

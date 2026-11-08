@@ -47,6 +47,8 @@ class SurvivorHealth(
         }
     }
 
+    fun getHealth(player: Player) : HealthPlayerData? = targets[player]
+
     private fun apply(player: Player) {
         if (player in targets) return
         val healthData = HealthPlayerData(player)

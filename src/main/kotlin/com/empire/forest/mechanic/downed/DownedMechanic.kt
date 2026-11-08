@@ -2,7 +2,7 @@ package com.empire.forest.mechanic.downed
 
 import com.empire.forest.ForestContext
 import com.empire.forest.constants.ForestConstants
-import com.empire.forest.perk.MedicPerk
+import com.empire.forest.perk.RevivePerk
 import com.empire.forest.util.ForestUtils.fakeGlow
 import com.empire.hacks.common.builder.ClientEntityMetadataHelpers
 import com.empire.ignite.display.DisplayUpdater
@@ -72,8 +72,8 @@ class DownedMechanic(
     }
 
     private fun tick() {
-        val medicPerk = context.getPerk(MedicPerk::class.java) ?: return
-        if (medicPerk !is MedicPerk) return
+        val revivePerk = context.getPerk(RevivePerk::class.java) ?: return
+        if (revivePerk !is RevivePerk) return
         val activeRevivers : MutableSet<Player> = mutableSetOf()
         val now = Clock.System.now()
         downedData.entries.toList().forEach { (_, value) ->
@@ -88,7 +88,7 @@ class DownedMechanic(
             }
             context.playerAccess.all.forEach { survivor ->
 //            context.survivorTeam.players.forEach { survivor ->
-                if (!medicPerk.using(survivor)) return@forEach
+                if (!revivePerk.using(survivor)) return@forEach
                 if (survivor.location.distanceSquared(downed.location) > 5*5) return@forEach
                 if (!HACKS.lookingAtEntity(survivor, downed, maxDistance = 7.0, raySize = 1.25))
                     return@forEach
@@ -195,10 +195,10 @@ class DownedEntityData(
             options = setOf(ManagedEntityOptions.DYNAMIC_SCALING)
         )
 
-        val medicPerk = context.getPerk(MedicPerk::class.java)
-        if (medicPerk != null && medicPerk is MedicPerk) {
+        val revivePerk = context.getPerk(RevivePerk::class.java)
+        if (revivePerk != null && revivePerk is RevivePerk) {
             unloadables += bindAtInterval(
-                { context.playerAccess.alive.filter { p -> medicPerk.using(p) }.toSet() },
+                { context.playerAccess.alive.filter { p -> revivePerk.using(p) }.toSet() },
                 5L,
                 { t ->
                         infoDisplay.apply(t)

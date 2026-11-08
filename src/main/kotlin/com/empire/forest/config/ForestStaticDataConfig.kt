@@ -181,7 +181,7 @@ object ForestStaticDataConfig {
             generators
         },
         queueCountdownSeconds = if (debug) 5 else 30,
-        survivorReleaseSeconds = if (debug) 5 else 20,
+        survivorReleaseSeconds = if (debug) 15 else 20,
         hunterReleaseSeconds = if (debug) 5 else 15,
         yLevelDeath = 30,
         worldPath = "./gamemaps/manor",
@@ -410,7 +410,7 @@ object ForestStaticDataConfig {
             },
             generatorSelection = FARM_SELECTION,
             queueCountdownSeconds = if (debug) 5 else 30,
-            survivorReleaseSeconds = if (debug) 5 else 20,
+            survivorReleaseSeconds = if (debug) 15 else 20,
             hunterReleaseSeconds = if (debug) 4 else 15,
             yLevelDeath = -26,
             worldPath = "./gamemaps/farm",

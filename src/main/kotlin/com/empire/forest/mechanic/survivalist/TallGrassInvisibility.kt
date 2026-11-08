@@ -23,11 +23,16 @@ class TallGrassInvisibility(
         }, 0L, 2L)
     }
 
+    companion object {
+        private val BLOCK_TYPES = listOf(
+            Material.TALL_GRASS, Material.LARGE_FERN,
+            Material.ROSE_BUSH, Material.PEONY,
+            Material.PITCHER_PLANT, Material.LILAC
+        )
+    }
+
     private fun checkTallGrass(player: Player) {
-        if (!(
-            player.location.block.type == Material.TALL_GRASS ||
-            player.location.block.type == Material.LARGE_FERN
-        )) return
+        if (player.location.block.type !in BLOCK_TYPES) return
         if (data[player] == null) {
             data[player] = TallGrassPlayerData()
         }

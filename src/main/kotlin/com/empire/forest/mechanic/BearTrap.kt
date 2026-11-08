@@ -12,6 +12,7 @@ import com.empire.ignite.util.entity.EntityModelBuilder
 import com.empire.ignite.util.item.ItemBuilder
 import com.empire.ignite.util.registerListener
 import com.empire.ignite.util.unregisterListener
+import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.Sound
@@ -76,10 +77,14 @@ class BearTrap(
         val player = event.player
         player.playSound(player.location.clone(), Sound.ENTITY_WITHER_BREAK_BLOCK, 1.0F, 0.4F)
         val dmg = 15.0
+//        if (player in context.hunterTeam.players) {
+//            player.damage(dmg, planter)
+//        } else {
         if (planter == null || planter !is Player)
             context.survivorHealth.syntheticDamage(player, dmg.toFloat())
         else
             context.survivorHealth.syntheticDamagePlayer(planter, player, dmg.toFloat())
+//        }
 
 
         freeze(player)

@@ -67,6 +67,28 @@ class FakeBlockSelector(
         val i = item!!.clone()
         i.amount = amount
         player.give(i)
+        if (player !in playerData.keys) {
+            playerData += player to FakePlayerBlockSelectorState(player,
+                ItemBuilder(Material.STONE) {
+                    itemModel(options.shadowItemModel)
+                }.build(),
+                ItemBuilder(Material.STONE) {
+                    itemModel(options.selectorItemModel)
+                }.build()
+            )
+            val unloadable = object : UnloadableResource, Listener {
+                @EventHandler
+                private fun onMove(event: PlayerMoveEvent) {
+                    check(event.player)
+                }
+
+                override fun unload(external: Boolean) {
+                    unregisterListener(this)
+                }
+            }
+            registerListener(plugin, unloadable)
+            playerData[player]?.task = unloadable
+        }
     }
 
     fun remove(player: Player) {
@@ -78,6 +100,12 @@ class FakeBlockSelector(
 
     fun pokeItemCheck(player: Player) {
         activeListener?.poke(player)
+        val state = playerData[player] ?: return
+        state.task?.unload()
+        state.itemDisplay?.destroy(player)
+        state.itemDisplay = null
+        state.block = null
+        state.task = null
     }
 
     private fun onItemActive(player: Player, active: Boolean) {
@@ -93,31 +121,18 @@ class FakeBlockSelector(
             )
         }
         val state = playerData[player] ?: return
-        state.task?.unload()
-        state.itemDisplay?.destroy(player)
-        state.itemDisplay = null
-        state.block = null
-        state.task = null
-        if (!listener.onTryUseItemActive(player)) return
-        if (active) {
-//            state.task = GlobalResourceTrackers.scheduler.repeatTask(2L) { check(player) }
-            val unloadable = object : UnloadableResource, Listener {
-                @EventHandler
-                private fun onMove(event: PlayerMoveEvent) {
-                    check(event.player)
-                }
-
-                override fun unload(external: Boolean) {
-                    unregisterListener(this)
-                }
-            }
-            registerListener(plugin, unloadable)
-            state.task = unloadable
-        }
+        state.active = active
     }
 
     private fun check(player: Player) {
         val state = playerData[player] ?: return
+        if (!state.active) {
+            state.itemDisplay?.destroy(player)
+            state.itemDisplay = null
+            state.block = null
+            state.task = null
+            return
+        }
         if (!listener.onTryUseItemActive(player)) return
         val rayTraceResult = player.rayTraceBlocks(5.0) ?: return
         if (
@@ -211,7 +226,8 @@ private class FakePlayerBlockSelectorState(
     var task: UnloadableResource? = null,
     var block: Block? = null,
     var lastUsed : Long = 0L,
-    var spot: Vector? = null
+    var spot: Vector? = null,
+    var active: Boolean = false
 ) : UnloadableResource {
     override fun unload(external: Boolean) {
         itemDisplay?.destroy(player)
