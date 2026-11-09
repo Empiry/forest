@@ -23,7 +23,7 @@ interface PlayerDataAccess<T> : UnloadableResource {
             }
         }
 
-        fun <T> adaptPlayerData(playerData: OnlinePlayerData<T>) : PlayerDataAccess<T> =
+        fun <T: UnloadableResource> adaptPlayerData(playerData: OnlinePlayerData<T>) : PlayerDataAccess<T> =
             object : PlayerDataAccess<T> {
                 override fun getData(player: Player) = playerData[player]
 
@@ -34,6 +34,7 @@ interface PlayerDataAccess<T> : UnloadableResource {
                 override fun players(): Set<Player> = playerData.keys.toSet()
 
                 override fun unload(external: Boolean) {
+                    playerData.values.forEach { it.unload() }
                     playerData.unload(external)
                 }
             }

@@ -67,6 +67,7 @@ class ForestGeneratorNameplate(
     }
 
     override fun unload(external: Boolean) {
+        taskMap.values.forEach { it.unload(external) }
         taskMap.unload()
     }
 }
